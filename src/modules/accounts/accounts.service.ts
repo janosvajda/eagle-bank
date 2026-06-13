@@ -12,6 +12,8 @@ import type {
 import type { LedgerGateway } from '../ledger/ledger.contracts.js';
 import { PrismaErrorCode } from '../../common/errors/prisma-error-codes.js';
 import { Currency } from '../../common/domain/banking.js';
+import type { FastifyBaseLogger } from 'fastify';
+import pino from 'pino';
 
 const ACCOUNT_NUMBER_RANGE = 1000000;
 const ACCOUNT_NUMBER_ALLOCATION_ATTEMPTS = 5;
@@ -22,6 +24,7 @@ export class AccountsService {
   constructor(
     private readonly accounts: AccountsRepository,
     private readonly ledger?: LedgerGateway,
+    private readonly logger: FastifyBaseLogger = pino({ enabled: false }),
   ) {}
 
   private generateAccountNumber(): string {
@@ -71,6 +74,14 @@ export class AccountsService {
             account.accountNumber,
             AccountStatus.LEDGER_CREATION_FAILED,
           );
+          this.logger.error(
+            {
+              accountNumber: account.accountNumber,
+              err: error,
+              userId,
+            },
+            'Ledger account creation failed after bank account persistence',
+          );
           throw error;
         }
       } catch (error) {
@@ -78,11 +89,26 @@ export class AccountsService {
           error instanceof Prisma.PrismaClientKnownRequestError &&
           error.code === PrismaErrorCode.UNIQUE_CONSTRAINT
         ) {
+          this.logger.warn(
+            { attempt, userId },
+            'Generated bank account number collided with an existing account',
+          );
           continue;
         }
+        this.logger.error(
+          { err: error, userId },
+          'Bank account creation failed',
+        );
         throw error;
       }
     }
+    this.logger.error(
+      {
+        allocationAttempts: ACCOUNT_NUMBER_ALLOCATION_ATTEMPTS,
+        userId,
+      },
+      'Bank account number allocation attempts exhausted',
+    );
     throw new AppError(
       httpConstants.HTTP_STATUS_INTERNAL_SERVER_ERROR,
       ErrorCode.INTERNAL_ERROR,
@@ -93,6 +119,7 @@ export class AccountsService {
   async getAuthorized(accountNumber: string, userId: string) {
     const account = await this.accounts.findByNumber(accountNumber);
     if (!account || account.status !== AccountStatus.ACTIVE) {
+      this.logger.warn({ accountNumber, userId }, 'Bank account lookup failed');
       throw new AppError(
         httpConstants.HTTP_STATUS_NOT_FOUND,
         ErrorCode.NOT_FOUND,
@@ -100,6 +127,10 @@ export class AccountsService {
       );
     }
     if (account.userId !== userId) {
+      this.logger.warn(
+        { accountNumber, ownerId: account.userId, userId },
+        'Bank account access was forbidden',
+      );
       throw new AppError(
         httpConstants.HTTP_STATUS_FORBIDDEN,
         ErrorCode.FORBIDDEN,
@@ -167,6 +198,10 @@ export class AccountsService {
           accountNumber,
           AccountStatus.LEDGER_CLOSURE_FAILED,
         );
+        this.logger.error(
+          { accountNumber, err: error, userId },
+          'Ledger account closure failed during bank account deletion',
+        );
         throw error;
       }
     }
@@ -177,12 +212,20 @@ export class AccountsService {
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === PrismaErrorCode.FOREIGN_KEY_CONSTRAINT
       ) {
+        this.logger.warn(
+          { accountNumber, userId },
+          'Bank account deletion rejected because transactions remain',
+        );
         throw new AppError(
           httpConstants.HTTP_STATUS_CONFLICT,
           ErrorCode.CONFLICT,
           'A bank account with transactions cannot be deleted',
         );
       }
+      this.logger.error(
+        { accountNumber, err: error, userId },
+        'Bank account deletion failed',
+      );
       throw error;
     }
   }

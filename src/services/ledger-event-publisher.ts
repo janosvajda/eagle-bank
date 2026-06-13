@@ -1,9 +1,11 @@
 import { loadConfig } from '../config/env.js';
 import { prisma } from '../db/prisma.js';
+import { LedgerEventPublisher } from '../modules/ledger/ledger-event-publisher.js';
+import { LedgerOutboxRepository } from '../modules/ledger/ledger-outbox.repository.js';
 import {
   createSqsClient,
-  LedgerEventPublisher,
-} from '../modules/ledger/ledger-event-publisher.js';
+  SqsLedgerEventSink,
+} from '../modules/ledger/ledger-event-sink.js';
 import pino from 'pino';
 
 const DEFAULT_POLL_INTERVAL_MS = 1000;
@@ -29,19 +31,22 @@ if (!queueUrl) {
 }
 
 const publisher = new LedgerEventPublisher(
-  prisma,
-  createSqsClient({
-    region: config.AWS_REGION,
-    ...(process.env.SQS_ENDPOINT ? { endpoint: process.env.SQS_ENDPOINT } : {}),
-    ...(config.AWS_ACCESS_KEY_ID
-      ? { accessKeyId: config.AWS_ACCESS_KEY_ID }
-      : {}),
-    ...(config.AWS_SECRET_ACCESS_KEY
-      ? { secretAccessKey: config.AWS_SECRET_ACCESS_KEY }
-      : {}),
-  }),
-  {
+  new LedgerOutboxRepository(prisma),
+  new SqsLedgerEventSink(
+    createSqsClient({
+      environment: config.NODE_ENV,
+      region: config.AWS_REGION,
+      ...(config.SQS_ENDPOINT ? { endpoint: config.SQS_ENDPOINT } : {}),
+      ...(config.AWS_ACCESS_KEY_ID
+        ? { accessKeyId: config.AWS_ACCESS_KEY_ID }
+        : {}),
+      ...(config.AWS_SECRET_ACCESS_KEY
+        ? { secretAccessKey: config.AWS_SECRET_ACCESS_KEY }
+        : {}),
+    }),
     queueUrl,
+  ),
+  {
     batchSize: Number(
       process.env.LEDGER_EVENT_PUBLISHER_BATCH_SIZE ?? DEFAULT_BATCH_SIZE,
     ),

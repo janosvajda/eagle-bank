@@ -23,11 +23,14 @@ import {
   HttpMethod,
   MediaType,
 } from '../../common/http/http.constants.js';
+import type { FastifyBaseLogger } from 'fastify';
+import pino from 'pino';
+import type { JsonValue } from '../../common/http/json.types.js';
 
 const AUTH_INTROSPECTION_TIMEOUT_MS = 300;
 const AUTH_REQUEST_TIMEOUT_MS = 1000;
 
-function responseMessage(payload: unknown, fallback: string): string {
+function responseMessage(payload: JsonValue, fallback: string): string {
   return typeof payload === 'object' &&
     payload !== null &&
     'message' in payload &&
@@ -40,6 +43,7 @@ export class AuthHttpClient implements PasswordHasher {
   constructor(
     private readonly baseUrl: string,
     private readonly internalSecret: string,
+    private readonly logger: FastifyBaseLogger = pino({ enabled: false }),
   ) {}
 
   login(input: LoginInput): Promise<LoginResult> {
@@ -79,7 +83,7 @@ export class AuthHttpClient implements PasswordHasher {
     path: string,
     init: RequestInit,
     internal = true,
-  ): Promise<unknown> {
+  ): Promise<JsonValue> {
     let response: Response;
     try {
       // Session introspection sits on every authenticated API request, so it has
@@ -107,7 +111,11 @@ export class AuthHttpClient implements PasswordHasher {
           ...init.headers,
         },
       });
-    } catch {
+    } catch (error) {
+      this.logger.error(
+        { err: error, path },
+        'Authentication service request failed',
+      );
       throw new AppError(
         httpConstants.HTTP_STATUS_SERVICE_UNAVAILABLE,
         ErrorCode.SERVICE_UNAVAILABLE,
@@ -115,8 +123,12 @@ export class AuthHttpClient implements PasswordHasher {
       );
     }
 
-    const payload: unknown = await response.json();
+    const payload = (await response.json()) as JsonValue;
     if (!response.ok) {
+      this.logger.warn(
+        { path, statusCode: response.status },
+        'Authentication service rejected request',
+      );
       throw new AppError(
         response.status,
         response.status === httpConstants.HTTP_STATUS_UNAUTHORIZED

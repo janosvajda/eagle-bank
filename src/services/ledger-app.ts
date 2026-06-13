@@ -5,6 +5,7 @@ import { registerErrorHandler } from '../common/errors/error-handler.js';
 import { AppError } from '../common/errors/AppError.js';
 import { ErrorCode } from '../common/errors/error-codes.js';
 import { LedgerService } from '../modules/ledger/ledger.service.js';
+import { LedgerRepository } from '../modules/ledger/ledger.repository.js';
 import { healthRoutes } from '../modules/health/health.routes.js';
 import { verifyInternalServiceToken } from '../common/auth/internal-service-jwt.js';
 import { ServiceIdentity } from '../common/auth/auth.constants.js';
@@ -38,7 +39,10 @@ export async function buildLedgerApp(options: {
 }): Promise<FastifyInstance> {
   const app = fastify({ logger: options.logger ?? false });
   registerErrorHandler(app);
-  const ledger = new LedgerService(options.prisma);
+  const ledger = new LedgerService(
+    new LedgerRepository(options.prisma),
+    app.log,
+  );
 
   // Ledger has no public ALB route. The hook still authenticates every internal
   // request so private-network access alone is never treated as authorization.

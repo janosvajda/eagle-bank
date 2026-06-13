@@ -54,12 +54,22 @@ describe('auth session stores', () => {
   });
 
   it('creates AWS and local DynamoDB clients', () => {
-    expect(createDynamoDbClient({ region: 'eu-west-2' })).toBeDefined();
+    expect(
+      createDynamoDbClient({ environment: 'prod', region: 'eu-west-2' }),
+    ).toBeDefined();
     expect(
       createDynamoDbClient({
+        environment: 'local',
         region: 'eu-west-2',
         endpoint: 'http://localhost:8000',
       }),
     ).toBeDefined();
+    expect(() =>
+      createDynamoDbClient({
+        environment: 'preprod',
+        region: 'eu-west-2',
+        endpoint: 'http://localhost:8000',
+      }),
+    ).toThrow('not allowed');
   });
 });

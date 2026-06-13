@@ -29,9 +29,18 @@ describe('loadConfig', () => {
   });
 
   it('accepts the local Docker Compose environment', () => {
-    expect(loadConfig({ ...required, NODE_ENV: 'local' }).NODE_ENV).toBe(
-      'local',
-    );
+    expect(
+      loadConfig({
+        ...required,
+        NODE_ENV: 'local',
+        DYNAMODB_ENDPOINT: 'http://dynamodb-local:8000',
+        SQS_ENDPOINT: 'http://localstack:4566',
+      }),
+    ).toMatchObject({
+      NODE_ENV: 'local',
+      DYNAMODB_ENDPOINT: 'http://dynamodb-local:8000',
+      SQS_ENDPOINT: 'http://localstack:4566',
+    });
   });
 
   it('rejects unsupported environments and weak secrets', () => {
@@ -39,5 +48,12 @@ describe('loadConfig', () => {
       loadConfig({ ...required, NODE_ENV: 'development' }),
     ).toThrow();
     expect(() => loadConfig({ ...required, JWT_SECRET: 'short' })).toThrow();
+    expect(() =>
+      loadConfig({
+        ...required,
+        NODE_ENV: 'prod',
+        SQS_ENDPOINT: 'http://localstack:4566',
+      }),
+    ).toThrow('SQS_ENDPOINT is not allowed in prod');
   });
 });

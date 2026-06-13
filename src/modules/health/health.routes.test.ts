@@ -12,14 +12,14 @@ describe('healthRoutes', () => {
   });
 
   it.each([
-    ['ready', vi.fn().mockResolvedValue([{ '?column?': 1 }]), 200, false],
+    ['ready', vi.fn().mockResolvedValue(null), 200, false],
     ['not_ready', vi.fn().mockRejectedValue(new Error('down')), 503, true],
   ])(
     'reports %s dependency state',
-    async (status, queryRaw, code, logsError) => {
+    async (status, findFirst, code, logsError) => {
       const app = fastify();
       const errorLog = vi.spyOn(app.log, 'error');
-      await app.register(healthRoutes({ $queryRaw: queryRaw } as never));
+      await app.register(healthRoutes({ user: { findFirst } } as never));
       const response = await app.inject({ method: 'GET', url: '/ready' });
       expect(response.statusCode).toBe(code);
       expect(response.json()).toEqual({ status });

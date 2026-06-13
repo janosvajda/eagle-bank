@@ -1,11 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
-import {
-  LedgerEventPublisher,
-  createSqsClient,
-} from './ledger-event-publisher.js';
+import { LedgerEventPublisher } from './ledger-event-publisher.js';
 
 const options = {
-  queueUrl: 'http://queue',
   batchSize: 10,
   maxAttempts: 3,
   leaseMs: 1000,
@@ -13,28 +9,33 @@ const options = {
   backoffMaxMs: 100,
 };
 
-function setup(events: any[], send = vi.fn().mockResolvedValue({})) {
+type OutboxEventFixture = {
+  id: string;
+  eventId: string;
+  eventType: string;
+  payload: object;
+  attempts: number;
+};
+
+function setup(
+  events: OutboxEventFixture[],
+  publish = vi.fn().mockResolvedValue(undefined),
+) {
   const logger = {
     error: vi.fn(),
     info: vi.fn(),
     warn: vi.fn(),
   };
-  const tx = {
-    $queryRaw: vi.fn().mockResolvedValue(events.map(({ id }) => ({ id }))),
-    ledgerOutboxEvent: {
-      updateMany: vi.fn(),
-      findMany: vi.fn().mockResolvedValue(events),
-    },
-  };
-  const db = {
-    $transaction: vi.fn((callback) => callback(tx)),
-    ledgerOutboxEvent: { update: vi.fn() },
+  const outbox = {
+    claimBatch: vi.fn().mockResolvedValue(events),
+    markPublished: vi.fn().mockResolvedValue(undefined),
+    markFailed: vi.fn().mockResolvedValue(undefined),
   };
   return {
-    db,
+    outbox,
     publisher: new LedgerEventPublisher(
-      db as never,
-      { send } as never,
+      outbox as never,
+      { publish } as never,
       options,
       logger as never,
     ),
@@ -51,13 +52,9 @@ describe('LedgerEventPublisher', () => {
       payload: { id: 1 },
       attempts: 1,
     };
-    const { db, logger, publisher } = setup([event]);
+    const { outbox, logger, publisher } = setup([event]);
     await expect(publisher.publishBatch()).resolves.toBe(1);
-    expect(db.ledgerOutboxEvent.update).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({ status: 'PUBLISHED' }),
-      }),
-    );
+    expect(outbox.markPublished).toHaveBeenCalledWith('1', expect.any(Date));
     expect(logger.info).toHaveBeenCalledWith(
       { claimedEventCount: 1 },
       'Ledger outbox events claimed',
@@ -79,17 +76,16 @@ describe('LedgerEventPublisher', () => {
       payload: {},
       attempts: 1,
     };
-    const { db, logger, publisher } = setup(
+    const { outbox, logger, publisher } = setup(
       [event],
       vi.fn().mockRejectedValue(new Error('failed')),
     );
     await publisher.publishBatch();
-    expect(db.ledgerOutboxEvent.update).toHaveBeenCalledWith(
+    expect(outbox.markFailed).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({
-          status: 'FAILED',
-          lastError: 'failed',
-        }),
+        eventId: '1',
+        errorMessage: 'failed',
+        status: 'FAILED',
       }),
     );
     expect(logger.warn).toHaveBeenCalledWith(
@@ -104,7 +100,7 @@ describe('LedgerEventPublisher', () => {
     );
   });
 
-  it('dead-letters terminal non-Error failures and creates clients', async () => {
+  it('dead-letters terminal non-Error failures', async () => {
     vi.spyOn(Math, 'random').mockReturnValue(0);
     const event = {
       id: '1',
@@ -113,15 +109,13 @@ describe('LedgerEventPublisher', () => {
       payload: {},
       attempts: 3,
     };
-    const { db, logger, publisher } = setup(
+    const { outbox, logger, publisher } = setup(
       [event],
       vi.fn().mockRejectedValue('failed'),
     );
     await publisher.publishBatch();
-    expect(db.ledgerOutboxEvent.update).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({ status: 'DEAD' }),
-      }),
+    expect(outbox.markFailed).toHaveBeenCalledWith(
+      expect.objectContaining({ eventId: '1', status: 'DEAD' }),
     );
     expect(logger.error).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -133,12 +127,5 @@ describe('LedgerEventPublisher', () => {
       }),
       'Ledger event dead-lettered',
     );
-    expect(createSqsClient({ region: 'eu-west-2' })).toBeDefined();
-    expect(
-      createSqsClient({
-        region: 'eu-west-2',
-        endpoint: 'http://localhost:4566',
-      }),
-    ).toBeDefined();
   });
 });

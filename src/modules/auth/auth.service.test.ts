@@ -16,7 +16,8 @@ describe('AuthService', () => {
     const users = { findByEmail: vi.fn().mockResolvedValue(user) };
     const sign = vi.fn().mockReturnValue('signed-token');
     const info = vi.fn();
-    const app = { jwt: { sign }, log: { info } };
+    const warn = vi.fn();
+    const app = { jwt: { sign }, log: { info, warn } };
     const sessions = {
       create: vi.fn().mockResolvedValue({
         sessionId: 'session-id',

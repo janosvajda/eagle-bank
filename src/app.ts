@@ -17,6 +17,7 @@ import { transactionsRoutes } from './modules/transactions/transactions.routes.j
 import { registerOpenApiValidation } from './common/openapi/openapi-validation.js';
 import { healthRoutes } from './modules/health/health.routes.js';
 import { LedgerService } from './modules/ledger/ledger.service.js';
+import { LedgerRepository } from './modules/ledger/ledger.repository.js';
 import { LedgerHttpClient } from './modules/ledger/ledger.client.js';
 import {
   createDynamoDbClient,
@@ -62,6 +63,7 @@ export async function buildApp(
     ? new AuthHttpClient(
         options.config.AUTH_SERVICE_BASE_URL,
         options.config.INTERNAL_SERVICE_JWT_SECRET ?? options.config.JWT_SECRET,
+        app.log,
       )
     : undefined;
   const authSessions =
@@ -73,6 +75,7 @@ export async function buildApp(
         ? new InMemoryAuthSessionStore()
         : new DynamoDbAuthSessionStore(
             createDynamoDbClient({
+              environment: options.config.NODE_ENV,
               region: options.config.AWS_REGION ?? 'eu-west-2',
               ...(options.config.DYNAMODB_ENDPOINT
                 ? { endpoint: options.config.DYNAMODB_ENDPOINT }
@@ -95,7 +98,7 @@ export async function buildApp(
   await registerOpenApiValidation(app);
 
   const usersRepository = new UsersRepository(options.prisma);
-  const usersService = new UsersService(usersRepository, remoteAuth);
+  const usersService = new UsersService(usersRepository, remoteAuth, app.log);
 
   // The same façade supports a split ECS deployment and a compact in-process
   // test topology; domain services depend only on the LedgerGateway contract.
@@ -103,16 +106,19 @@ export async function buildApp(
     ? new LedgerHttpClient(
         options.config.LEDGER_SERVICE_BASE_URL,
         options.config.INTERNAL_SERVICE_JWT_SECRET ?? options.config.JWT_SECRET,
+        app.log,
       )
-    : new LedgerService(options.prisma);
+    : new LedgerService(new LedgerRepository(options.prisma), app.log);
   const accountsService = new AccountsService(
     new AccountsRepository(options.prisma),
     ledgerService,
+    app.log,
   );
   const transactionsService = new TransactionsService(
     new TransactionsRepository(options.prisma),
     accountsService,
     ledgerService,
+    app.log,
   );
   const authService =
     remoteAuth ??

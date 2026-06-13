@@ -88,6 +88,8 @@ describe('EagleBankStack', () => {
     output.resourceCountIs('AWS::SQS::Queue', 4);
     output.resourceCountIs('AWS::RDS::DBInstance', 1);
     output.resourceCountIs('AWS::Logs::LogGroup', 6);
+    output.resourceCountIs('AWS::Logs::MetricFilter', 6);
+    output.resourceCountIs('AWS::CloudWatch::Dashboard', 1);
 
     output.allResourcesProperties('AWS::ECS::Service', {
       NetworkConfiguration: {
@@ -131,6 +133,29 @@ describe('EagleBankStack', () => {
     });
   });
 
+  it('surfaces structured application errors on an operations dashboard', () => {
+    const output = template();
+    output.allResourcesProperties('AWS::Logs::MetricFilter', {
+      FilterPattern: '{ $.level >= 50 }',
+      MetricTransformations: [
+        Match.objectLike({
+          MetricNamespace: 'EagleBank/test',
+          MetricValue: '1',
+        }),
+      ],
+    });
+    output.hasResourceProperties('AWS::CloudWatch::Dashboard', {
+      DashboardName: 'eagle-bank-test-operations',
+      DashboardBody: Match.anyValue(),
+    });
+    const dashboards = output.findResources('AWS::CloudWatch::Dashboard');
+    const dashboardBody = JSON.stringify(
+      Object.values(dashboards)[0]?.Properties?.DashboardBody,
+    );
+    expect(dashboardBody).toContain('Recent application errors');
+    expect(dashboardBody).toContain('filter level >= 50');
+  });
+
   it('provides deployable database and private-service configuration', () => {
     const output = template();
     const api = container(output, 'api');
@@ -145,6 +170,8 @@ describe('EagleBankStack', () => {
       'http://ledger-service:3002',
     );
     expect(apiEnvironment.DATABASE_NAME).toBe('eagle_bank');
+    expect(apiEnvironment).not.toHaveProperty('DYNAMODB_ENDPOINT');
+    expect(apiEnvironment).not.toHaveProperty('SQS_ENDPOINT');
     expect(JSON.stringify(api.Command)).toContain('export DATABASE_URL=');
     expect(JSON.stringify(auth.Command)).toContain('export DATABASE_URL=');
     expect(JSON.stringify(migration.Command)).toContain(

@@ -9,7 +9,11 @@ import {
   PutCommand,
 } from '@aws-sdk/lib-dynamodb';
 import { MILLISECONDS_PER_SECOND } from '../../common/constants.js';
-import { LOCAL_AWS_CREDENTIAL } from '../../common/config/runtime.constants.js';
+import {
+  LOCAL_AWS_CREDENTIAL,
+  type Environment,
+  isAwsDeploymentEnvironment,
+} from '../../common/config/runtime.constants.js';
 import type {
   AuthSession,
   AuthSessionStore,
@@ -110,11 +114,17 @@ export class DynamoDbAuthSessionStore implements AuthSessionStore {
 }
 
 export function createDynamoDbClient(options: {
+  environment: Environment;
   region: string;
   endpoint?: string;
   accessKeyId?: string;
   secretAccessKey?: string;
 }): DynamoDBClient {
+  if (options.endpoint && isAwsDeploymentEnvironment(options.environment)) {
+    throw new Error(
+      'DynamoDB endpoint overrides are not allowed in AWS environments',
+    );
+  }
   const config: DynamoDBClientConfig = { region: options.region };
 
   // Explicit endpoints and placeholder credentials are local-only. On AWS,

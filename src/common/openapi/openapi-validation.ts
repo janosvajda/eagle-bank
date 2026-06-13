@@ -107,7 +107,7 @@ export async function registerOpenApiValidation(
       strict: false,
     },
     customizeAjv: (ajv) => {
-      (addFormats as unknown as (value: typeof ajv) => void)(ajv);
+      addFormats.default(ajv);
       ajv.addFormat('double', {
         type: AJV_NUMBER_FORMAT_TYPE,
         validate: Number.isFinite,

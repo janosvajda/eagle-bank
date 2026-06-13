@@ -10,7 +10,11 @@ export async function authenticate(
 ): Promise<void> {
   try {
     await request.jwtVerify();
-  } catch {
+  } catch (error) {
+    request.log.warn(
+      { err: error, method: request.method, path: request.url },
+      'JWT verification failed',
+    );
     throw new AppError(
       httpConstants.HTTP_STATUS_UNAUTHORIZED,
       ErrorCode.UNAUTHORIZED,
@@ -28,6 +32,15 @@ export async function authenticate(
     session.revokedAt ||
     session.expiresAtEpoch <= Math.floor(Date.now() / MILLISECONDS_PER_SECOND)
   ) {
+    request.log.warn(
+      {
+        method: request.method,
+        path: request.url,
+        sessionId: request.user.sid,
+        userId: request.user.sub,
+      },
+      'Authentication session validation failed',
+    );
     throw new AppError(
       httpConstants.HTTP_STATUS_UNAUTHORIZED,
       ErrorCode.UNAUTHORIZED,
