@@ -1,6 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import { constants as httpConstants } from 'node:http2';
 import argon2 from 'argon2';
+import type { FastifyBaseLogger } from 'fastify';
+import pino from 'pino';
 import { AppError } from '../../common/errors/AppError.js';
 import { ErrorCode } from '../../common/errors/error-codes.js';
 import { mapUser } from './users.mapper.js';
@@ -14,11 +16,16 @@ export class UsersService {
     private readonly passwordHasher: PasswordHasher = {
       hash: (password) => argon2.hash(password),
     },
+    private readonly logger: FastifyBaseLogger = pino({ enabled: false }),
   ) {}
 
   async create(input: CreateUserInput) {
     const email = input.email.toLowerCase();
     if (await this.users.findByEmail(email)) {
+      this.logger.warn(
+        { conflictField: 'email' },
+        'User creation rejected because the email already exists',
+      );
       throw new AppError(
         httpConstants.HTTP_STATUS_CONFLICT,
         ErrorCode.CONFLICT,
@@ -45,13 +52,19 @@ export class UsersService {
 
   async getAuthorized(targetId: string, authenticatedId: string) {
     const user = await this.users.findById(targetId);
-    if (!user)
+    if (!user) {
+      this.logger.warn({ targetId }, 'User lookup failed');
       throw new AppError(
         httpConstants.HTTP_STATUS_NOT_FOUND,
         ErrorCode.NOT_FOUND,
         'User was not found',
       );
+    }
     if (user.id !== authenticatedId) {
+      this.logger.warn(
+        { authenticatedId, targetId },
+        'User access was forbidden',
+      );
       throw new AppError(
         httpConstants.HTTP_STATUS_FORBIDDEN,
         ErrorCode.FORBIDDEN,
@@ -97,6 +110,10 @@ export class UsersService {
   async delete(targetId: string, authenticatedId: string): Promise<void> {
     await this.getAuthorized(targetId, authenticatedId);
     if ((await this.users.countAccounts(targetId)) > 0) {
+      this.logger.warn(
+        { targetId },
+        'User deletion rejected because active accounts remain',
+      );
       throw new AppError(
         httpConstants.HTTP_STATUS_CONFLICT,
         ErrorCode.CONFLICT,

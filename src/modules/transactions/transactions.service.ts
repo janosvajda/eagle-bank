@@ -10,12 +10,15 @@ import type { TransactionsRepository } from './transactions.repository.js';
 import type { CreateTransactionInput } from './transactions.schemas.js';
 import type { LedgerGateway } from '../ledger/ledger.contracts.js';
 import { TransactionType } from '../../common/domain/banking.js';
+import type { FastifyBaseLogger } from 'fastify';
+import pino from 'pino';
 
 export class TransactionsService {
   constructor(
     private readonly transactions: TransactionsRepository,
     private readonly accounts: AccountsService,
     private readonly ledger?: LedgerGateway,
+    private readonly logger: FastifyBaseLogger = pino({ enabled: false }),
   ) {}
 
   async create(
@@ -53,6 +56,10 @@ export class TransactionsService {
             data: { balance: { decrement: amount } },
           });
           if (updated.count === 0) {
+            this.logger.warn(
+              { accountNumber, transactionType: input.type, userId },
+              'Transaction rejected because funds were insufficient',
+            );
             throw new AppError(
               httpConstants.HTTP_STATUS_UNPROCESSABLE_ENTITY,
               ErrorCode.INSUFFICIENT_FUNDS,
@@ -110,6 +117,10 @@ export class TransactionsService {
       account.id,
     );
     if (!transaction) {
+      this.logger.warn(
+        { accountNumber, transactionId, userId },
+        'Transaction lookup failed',
+      );
       throw new AppError(
         httpConstants.HTTP_STATUS_NOT_FOUND,
         ErrorCode.NOT_FOUND,

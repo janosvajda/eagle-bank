@@ -9,7 +9,9 @@ export function healthRoutes(prisma: PrismaClient): FastifyPluginAsync {
 
     app.get('/ready', async (request, reply) => {
       try {
-        await prisma.$queryRaw`SELECT 1`;
+        // A minimal ORM read verifies connectivity, authentication, schema
+        // availability, and Prisma query execution without embedding SQL.
+        await prisma.user.findFirst({ select: { id: true } });
         return { status: HealthStatus.READY };
       } catch (error) {
         request.log.error({ err: error }, 'Readiness dependency check failed');

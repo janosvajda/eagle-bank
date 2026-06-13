@@ -1,14 +1,8 @@
 import { randomUUID } from 'node:crypto';
-import {
-  OutboxStatus,
-  Prisma,
-  type LedgerOutboxEvent,
-  type PrismaClient,
-} from '@prisma/client';
-import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs';
+import { OutboxStatus, type LedgerOutboxEvent } from '@prisma/client';
 import type { Logger } from 'pino';
-import { LOCAL_AWS_CREDENTIAL } from '../../common/config/runtime.constants.js';
-import { SqsMessageDataType } from './ledger.constants.js';
+import type { LedgerOutboxRepository } from './ledger-outbox.repository.js';
+import type { LedgerEventSink } from './ledger-event-sink.js';
 
 const EXPONENTIAL_BACKOFF_BASE = 2;
 const JITTER_DIVISOR = 4;
@@ -16,7 +10,6 @@ const MINIMUM_JITTER_RANGE_MS = 1;
 const MAX_ERROR_MESSAGE_LENGTH = 1000;
 
 export interface LedgerEventPublisherOptions {
-  queueUrl: string;
   batchSize: number;
   maxAttempts: number;
   leaseMs: number;
@@ -26,8 +19,8 @@ export interface LedgerEventPublisherOptions {
 
 export class LedgerEventPublisher {
   constructor(
-    private readonly db: PrismaClient,
-    private readonly sqs: SQSClient,
+    private readonly outbox: LedgerOutboxRepository,
+    private readonly eventSink: LedgerEventSink,
     private readonly options: LedgerEventPublisherOptions,
     private readonly logger: Logger,
   ) {}
@@ -44,27 +37,8 @@ export class LedgerEventPublisher {
       try {
         // Publishing happens after the claim transaction. If this process dies,
         // the processing lease eventually makes the event claimable again.
-        await this.sqs.send(
-          new SendMessageCommand({
-            QueueUrl: this.options.queueUrl,
-            MessageBody: JSON.stringify(event.payload),
-            MessageAttributes: {
-              eventType: {
-                DataType: SqsMessageDataType.STRING,
-                StringValue: event.eventType,
-              },
-            },
-          }),
-        );
-        await this.db.ledgerOutboxEvent.update({
-          where: { id: event.id },
-          data: {
-            status: OutboxStatus.PUBLISHED,
-            publishedAt: new Date(),
-            processingLeaseExpiresAt: null,
-            lastError: null,
-          },
-        });
+        await this.eventSink.publish(event);
+        await this.outbox.markPublished(event.id, new Date());
         this.logger.info(
           { eventId: event.eventId, eventType: event.eventType },
           'Ledger event published',
@@ -77,35 +51,12 @@ export class LedgerEventPublisher {
   }
 
   private claim(): Promise<LedgerOutboxEvent[]> {
-    const leaseExpiry = new Date(Date.now() + this.options.leaseMs);
-    return this.db.$transaction(async (tx) => {
-      // SKIP LOCKED allows multiple publisher instances to claim different rows
-      // without blocking or publishing the same row concurrently.
-      const rows = await tx.$queryRaw<Array<{ id: string }>>`
-        SELECT "id"
-        FROM "LedgerOutboxEvent"
-        WHERE (
-          ("status" IN (${OutboxStatus.PENDING}::"OutboxStatus", ${OutboxStatus.FAILED}::"OutboxStatus") AND "nextAttemptAt" <= NOW())
-          OR
-          ("status" = ${OutboxStatus.PROCESSING}::"OutboxStatus" AND "processingLeaseExpiresAt" <= NOW())
-        )
-        ORDER BY "createdAt" ASC
-        FOR UPDATE SKIP LOCKED
-        LIMIT ${this.options.batchSize}
-      `;
-      if (rows.length === 0) return [];
-      await tx.ledgerOutboxEvent.updateMany({
-        where: { id: { in: rows.map(({ id }) => id) } },
-        data: {
-          status: OutboxStatus.PROCESSING,
-          processingLeaseExpiresAt: leaseExpiry,
-          attempts: { increment: 1 },
-        },
-      });
-      return tx.ledgerOutboxEvent.findMany({
-        where: { id: { in: rows.map(({ id }) => id) } },
-        orderBy: { createdAt: Prisma.SortOrder.asc },
-      });
+    const now = new Date();
+    return this.outbox.claimBatch({
+      batchSize: this.options.batchSize,
+      leaseExpiresAt: new Date(now.getTime() + this.options.leaseMs),
+      now,
+      processingToken: randomUUID(),
     });
   }
 
@@ -125,17 +76,14 @@ export class LedgerEventPublisher {
 
     // Backoff reduces pressure during outages; jitter prevents synchronized
     // retries from multiple publisher instances.
-    await this.db.ledgerOutboxEvent.update({
-      where: { id: event.id },
-      data: {
-        status: dead ? OutboxStatus.DEAD : OutboxStatus.FAILED,
-        nextAttemptAt: new Date(Date.now() + delay + jitter),
-        processingLeaseExpiresAt: null,
-        lastError:
-          error instanceof Error
-            ? error.message.slice(0, MAX_ERROR_MESSAGE_LENGTH)
-            : `Publish failure ${randomUUID()}`,
-      },
+    await this.outbox.markFailed({
+      eventId: event.id,
+      errorMessage:
+        error instanceof Error
+          ? error.message.slice(0, MAX_ERROR_MESSAGE_LENGTH)
+          : `Publish failure ${randomUUID()}`,
+      nextAttemptAt: new Date(Date.now() + delay + jitter),
+      status: dead ? OutboxStatus.DEAD : OutboxStatus.FAILED,
     });
     const context = {
       attempts,
@@ -155,26 +103,4 @@ export class LedgerEventPublisher {
       );
     }
   }
-}
-
-export function createSqsClient(options: {
-  region: string;
-  endpoint?: string;
-  accessKeyId?: string;
-  secretAccessKey?: string;
-}): SQSClient {
-  // LocalStack requires an endpoint and placeholder credentials. In ECS they
-  // are omitted so the SDK uses the task role and regional SQS endpoint.
-  return new SQSClient({
-    region: options.region,
-    ...(options.endpoint
-      ? {
-          endpoint: options.endpoint,
-          credentials: {
-            accessKeyId: options.accessKeyId ?? LOCAL_AWS_CREDENTIAL,
-            secretAccessKey: options.secretAccessKey ?? LOCAL_AWS_CREDENTIAL,
-          },
-        }
-      : {}),
-  });
 }

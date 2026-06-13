@@ -185,6 +185,7 @@ model LedgerOutboxEvent {
   attempts                 Int          @default(0)
   nextAttemptAt            DateTime     @default(now())
   processingLeaseExpiresAt DateTime?
+  processingToken          String?      @db.Uuid
   lastError                String?
   publishedAt              DateTime?
   createdAt                DateTime     @default(now())
@@ -192,4 +193,5 @@ model LedgerOutboxEvent {
 
   @@index([status, nextAttemptAt, createdAt])
   @@index([status, processingLeaseExpiresAt])
+  @@index([processingToken])
 }

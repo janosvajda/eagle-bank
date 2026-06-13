@@ -23,10 +23,16 @@ import {
   HttpMethod,
   MediaType,
 } from '../../common/http/http.constants.js';
+import type { FastifyBaseLogger } from 'fastify';
+import pino from 'pino';
+import type { JsonValue } from '../../common/http/json.types.js';
 
 const LEDGER_REQUEST_TIMEOUT_MS = 2000;
 
-function responseMessage(payload: unknown, fallback: string): string {
+function responseMessage(
+  payload: JsonValue | undefined,
+  fallback: string,
+): string {
   return typeof payload === 'object' &&
     payload !== null &&
     'message' in payload &&
@@ -39,6 +45,7 @@ export class LedgerHttpClient implements LedgerGateway {
   constructor(
     private readonly baseUrl: string,
     private readonly internalSecret: string,
+    private readonly logger: FastifyBaseLogger = pino({ enabled: false }),
   ) {}
 
   async createAccount(
@@ -111,7 +118,7 @@ export class LedgerHttpClient implements LedgerGateway {
   private async request(
     path: string,
     init: RequestInit = {},
-  ): Promise<unknown> {
+  ): Promise<JsonValue | undefined> {
     let response: Response;
     try {
       // Every private call is audience-bound to Ledger; no static internal
@@ -131,7 +138,8 @@ export class LedgerHttpClient implements LedgerGateway {
           ...init.headers,
         },
       });
-    } catch {
+    } catch (error) {
+      this.logger.error({ err: error, path }, 'Ledger service request failed');
       throw new AppError(
         httpConstants.HTTP_STATUS_SERVICE_UNAVAILABLE,
         ErrorCode.SERVICE_UNAVAILABLE,
@@ -139,11 +147,15 @@ export class LedgerHttpClient implements LedgerGateway {
       );
     }
 
-    const payload: unknown =
+    const payload =
       response.status === httpConstants.HTTP_STATUS_NO_CONTENT
         ? undefined
-        : await response.json();
+        : ((await response.json()) as JsonValue);
     if (!response.ok) {
+      this.logger.warn(
+        { path, statusCode: response.status },
+        'Ledger service rejected request',
+      );
       throw new AppError(
         response.status,
         response.status === httpConstants.HTTP_STATUS_NOT_FOUND

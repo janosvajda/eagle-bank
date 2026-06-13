@@ -5,6 +5,7 @@ import {
 } from '@prisma/client';
 import { describe, expect, it, vi } from 'vitest';
 import type { PostLedgerTransactionCommand } from './ledger.contracts.js';
+import { LedgerRepository } from './ledger.repository.js';
 import { LedgerService } from './ledger.service.js';
 
 const createdAt = new Date('2026-01-01T12:00:00.000Z');
@@ -70,9 +71,9 @@ function database(
     options.foundAccount === undefined ? account() : options.foundAccount;
   const createdTransaction = options.createdTransaction ?? transaction();
   const tx = {
-    $queryRaw: vi.fn().mockResolvedValue([]),
     ledgerAccount: {
       findUnique: vi.fn().mockResolvedValue(foundAccount),
+      updateMany: vi.fn().mockResolvedValue({ count: 1 }),
       update: vi.fn().mockResolvedValue(foundAccount),
     },
     ledgerIdempotencyKey: {
@@ -107,7 +108,11 @@ function database(
     },
     $transaction: vi.fn(async (callback) => callback(tx)),
   };
-  return { db, tx, service: new LedgerService(db as never) };
+  return {
+    db,
+    tx,
+    service: new LedgerService(new LedgerRepository(db as never)),
+  };
 }
 
 describe('LedgerService account lifecycle', () => {
@@ -241,8 +246,12 @@ describe('LedgerService transactions', () => {
         balanceAfter: new Prisma.Decimal('125.50'),
       }),
     });
-    expect(tx.ledgerAccount.update).toHaveBeenCalledWith({
-      where: { id: account().id },
+    expect(tx.ledgerAccount.updateMany).toHaveBeenCalledWith({
+      where: {
+        id: account().id,
+        status: 'ACTIVE',
+        version: account().version,
+      },
       data: {
         availableBalance: new Prisma.Decimal('125.50'),
         version: { increment: 1 },
@@ -392,6 +401,39 @@ describe('LedgerService transactions', () => {
       statusCode: 422,
       code: 'BALANCE_LIMIT_EXCEEDED',
     });
+  });
+
+  it('retries optimistic balance conflicts and succeeds', async () => {
+    const { db, service, tx } = database();
+    tx.ledgerAccount.updateMany
+      .mockResolvedValueOnce({ count: 0 })
+      .mockResolvedValueOnce({ count: 1 });
+
+    await expect(service.postTransaction(command())).resolves.toMatchObject({
+      id: transaction().transactionId,
+    });
+    expect(db.$transaction).toHaveBeenCalledTimes(2);
+  });
+
+  it('returns service unavailable when balance conflicts persist', async () => {
+    const { db, service, tx } = database();
+    tx.ledgerAccount.updateMany.mockResolvedValue({ count: 0 });
+
+    await expect(service.postTransaction(command())).rejects.toMatchObject({
+      statusCode: 503,
+      code: 'SERVICE_UNAVAILABLE',
+    });
+    expect(db.$transaction).toHaveBeenCalledTimes(3);
+  });
+
+  it('does not reinterpret non-concurrency persistence failures', async () => {
+    const persistenceError = new Error('database unavailable');
+    const { service, tx } = database();
+    tx.ledgerTransaction.create.mockRejectedValue(persistenceError);
+
+    await expect(service.postTransaction(command())).rejects.toBe(
+      persistenceError,
+    );
   });
 
   it('lists transactions in account order and maps optional references', async () => {

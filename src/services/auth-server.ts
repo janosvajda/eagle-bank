@@ -9,6 +9,7 @@ import { buildAuthApp } from './auth-app.js';
 const config = loadConfig();
 const sessions = new DynamoDbAuthSessionStore(
   createDynamoDbClient({
+    environment: config.NODE_ENV,
     region: config.AWS_REGION,
     ...(config.DYNAMODB_ENDPOINT ? { endpoint: config.DYNAMODB_ENDPOINT } : {}),
     ...(config.AWS_ACCESS_KEY_ID

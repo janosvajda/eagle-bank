@@ -92,6 +92,7 @@ CREATE TABLE "LedgerOutboxEvent" (
   "attempts" INTEGER NOT NULL DEFAULT 0,
   "nextAttemptAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "processingLeaseExpiresAt" TIMESTAMP(3),
+  "processingToken" UUID,
   "lastError" TEXT,
   "publishedAt" TIMESTAMP(3),
   "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -115,6 +116,8 @@ CREATE INDEX "LedgerOutboxEvent_status_nextAttemptAt_createdAt_idx"
   ON "LedgerOutboxEvent"("status", "nextAttemptAt", "createdAt");
 CREATE INDEX "LedgerOutboxEvent_status_processingLeaseExpiresAt_idx"
   ON "LedgerOutboxEvent"("status", "processingLeaseExpiresAt");
+CREATE INDEX "LedgerOutboxEvent_processingToken_idx"
+  ON "LedgerOutboxEvent"("processingToken");
 CREATE INDEX "LedgerOutboxEvent_due_partial_idx"
   ON "LedgerOutboxEvent"("nextAttemptAt", "createdAt")
   WHERE "status" IN ('PENDING', 'FAILED');

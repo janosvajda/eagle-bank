@@ -94,7 +94,7 @@ export default tseslint.config(
   {
     files: ['**/*.test.ts', 'tests/**/*.ts'],
     rules: {
-      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-explicit-any': 'error',
       'no-magic-numbers': 'off',
       'no-restricted-syntax': 'off',
     },

@@ -24,6 +24,10 @@ export class AuthService {
       ? await argon2.verify(user.passwordHash, input.password)
       : false;
     if (!user || !valid) {
+      this.app.log.warn(
+        { authenticationResult: 'invalid_credentials' },
+        'Authentication attempt rejected',
+      );
       throw new AppError(
         httpConstants.HTTP_STATUS_UNAUTHORIZED,
         ErrorCode.UNAUTHORIZED,

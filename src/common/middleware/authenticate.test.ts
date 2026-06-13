@@ -2,6 +2,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { authenticate } from './authenticate.js';
 
 describe('authenticate', () => {
+  const log = { warn: vi.fn() };
+
   it('allows a valid JWT', async () => {
     const jwtVerify = vi.fn().mockResolvedValue(undefined);
     const get = vi.fn().mockResolvedValue({
@@ -15,6 +17,7 @@ describe('authenticate', () => {
           jwtVerify,
           user: { sub: 'usr-owner', sid: 'session-id', jti: 'token-id' },
           server: { authSessions: { get } },
+          log,
         } as never,
         {} as never,
       ),
@@ -25,7 +28,7 @@ describe('authenticate', () => {
   it('maps JWT verification failures to 401', async () => {
     const jwtVerify = vi.fn().mockRejectedValue(new Error('invalid'));
     await expect(
-      authenticate({ jwtVerify } as never, {} as never),
+      authenticate({ jwtVerify, log } as never, {} as never),
     ).rejects.toMatchObject({
       statusCode: 401,
       message: 'Access token is missing or invalid',
@@ -46,6 +49,7 @@ describe('authenticate', () => {
           server: {
             authSessions: { get: vi.fn().mockResolvedValue(session) },
           },
+          log,
         } as never,
         {} as never,
       ),

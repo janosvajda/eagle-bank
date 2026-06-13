@@ -4,6 +4,7 @@ import {
   Stack,
   type StackProps,
   aws_certificatemanager as acm,
+  aws_cloudwatch as cloudwatch,
   aws_dynamodb as dynamodb,
   aws_ec2 as ec2,
   aws_ecs as ecs,
@@ -70,6 +71,11 @@ const WAF_KNOWN_BAD_INPUTS_RULE_PRIORITY = 2;
 const WAF_SQLI_RULE_PRIORITY = 3;
 const WAF_IP_REPUTATION_RULE_PRIORITY = 4;
 const WAF_RATE_LIMIT_RULE_PRIORITY = 5;
+const PINO_ERROR_LEVEL = 50;
+const DASHBOARD_METRIC_PERIOD_MINUTES = 5;
+const DASHBOARD_WIDTH = 24;
+const DASHBOARD_HALF_WIDTH = 12;
+const ERROR_LOG_QUERY_HEIGHT = 8;
 
 interface RuntimeDefinition {
   id: string;
@@ -426,6 +432,71 @@ export class EagleBankStack extends Stack {
       { includeApplicationSecrets: false },
     );
 
+    const runtimeTasks = [
+      apiTask,
+      authTask,
+      ledgerTask,
+      workerTask,
+      publisherTask,
+      migrationTask,
+    ];
+    const errorMetrics = runtimeTasks.map(({ logGroup }, index) => {
+      const metricName = `service-errors-${index}`;
+      const filter = new logs.MetricFilter(this, `ServiceErrorFilter${index}`, {
+        logGroup,
+        filterPattern: logs.FilterPattern.numberValue(
+          '$.level',
+          '>=',
+          PINO_ERROR_LEVEL,
+        ),
+        metricNamespace: `EagleBank/${config.stage}`,
+        metricName,
+        metricValue: '1',
+        defaultValue: 0,
+      });
+      return filter.metric({
+        label: logGroup.logGroupName,
+        period: Duration.minutes(DASHBOARD_METRIC_PERIOD_MINUTES),
+        statistic: cloudwatch.Stats.SUM,
+      });
+    });
+
+    // Pino writes structured JSON to CloudWatch Logs. The dashboard exposes
+    // both an error-rate graph and the underlying searchable error records.
+    const dashboard = new cloudwatch.Dashboard(this, 'OperationsDashboard', {
+      dashboardName: `${config.resourcePrefix}-operations`,
+    });
+    dashboard.addWidgets(
+      new cloudwatch.GraphWidget({
+        title: 'Application errors by service',
+        left: errorMetrics,
+        width: DASHBOARD_HALF_WIDTH,
+      }),
+      new cloudwatch.GraphWidget({
+        title: 'Persistence and queue health',
+        left: [
+          database.metricCPUUtilization(),
+          eventsDlq.metricApproximateNumberOfMessagesVisible(),
+          commandsDlq.metricApproximateNumberOfMessagesVisible(),
+        ],
+        width: DASHBOARD_HALF_WIDTH,
+      }),
+      new cloudwatch.LogQueryWidget({
+        title: 'Recent application errors',
+        logGroupNames: runtimeTasks.map(
+          ({ logGroup }) => logGroup.logGroupName,
+        ),
+        queryString: [
+          'fields @timestamp, @log, level, msg, err.message',
+          `filter level >= ${PINO_ERROR_LEVEL}`,
+          'sort @timestamp desc',
+          'limit 100',
+        ].join('\n'),
+        width: DASHBOARD_WIDTH,
+        height: ERROR_LOG_QUERY_HEIGHT,
+      }),
+    );
+
     // Task roles receive only the service-specific data-plane permissions.
     // Secret access required for ECS injection is handled by execution roles.
     sessions.grantReadWriteData(authTask.task.taskRole);
@@ -652,6 +723,9 @@ export class EagleBankStack extends Stack {
     });
     new CfnOutput(this, 'ServicesActivated', {
       value: String(props.activateServices ?? false),
+    });
+    new CfnOutput(this, 'OperationsDashboardName', {
+      value: dashboard.dashboardName,
     });
   }
 
