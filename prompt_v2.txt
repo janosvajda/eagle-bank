@@ -1,0 +1,2604 @@
+# Eagle Bank — Senior Production-Shaped Implementation Specification
+
+## 0. Purpose
+
+You are implementing a senior-level take-home coding assessment project for Eagle Bank.
+
+This document is the implementation contract.
+
+The implementation must satisfy:
+
+1. The Eagle Bank PDF scenarios.
+2. The supplied OpenAPI specification.
+3. The architecture and production-readiness requirements in this specification.
+
+The supplied OpenAPI file is the authoritative public API contract, except for the explicitly listed corrections in this document.
+
+The final project must be runnable locally through Docker Compose.
+
+The project must also include AWS CDK code modelling a future deployable AWS architecture.
+
+---
+
+# 1. Fixed technology stack
+
+Use exactly this stack:
+
+* TypeScript
+* Node.js 24+
+* pnpm 10.x
+* Turborepo
+* Fastify
+* Prisma
+* PostgreSQL
+* Docker Compose
+* Vitest
+* Zod
+* argon2
+* JWT bearer authentication
+* DynamoDB Local for local auth session storage
+* AWS DynamoDB for future auth session storage
+* LocalStack for local SQS emulation
+* AWS SDK for JavaScript v3
+* Pino structured logging
+* Transactional outbox pattern
+* SQS for reliable event publishing
+* AWS CDK v2 in TypeScript
+* AWS WAF
+* Application Load Balancer
+* ECS Fargate
+* RDS PostgreSQL
+* DynamoDB
+* SQS
+* Secrets Manager
+* CloudWatch Logs
+
+Do not replace these technologies with alternatives.
+
+Root `package.json` must include:
+
+```json
+{
+  "engines": {
+    "node": ">=24"
+  },
+  "packageManager": "pnpm@10.x"
+}
+```
+
+---
+
+# 2. Architecture overview
+
+The project is a modular monorepo with separated runtime services.
+
+The public API remains OpenAPI-compatible, but production responsibilities are separated into services.
+
+Runtime services:
+
+```text
+api
+auth-service
+ledger-service
+ledger-worker
+ledger-event-publisher
+postgres
+postgres-test
+dynamodb-local
+localstack
+```
+
+Optional future service:
+
+```text
+domain-event-publisher
+```
+
+Do not use the service name `outbox-worker`.
+
+The word `outbox` may be used for the database pattern and table names, but not for the deployable service name.
+
+Use:
+
+```text
+ledger-event-publisher
+```
+
+because it describes the business responsibility: publishing committed Ledger events reliably.
+
+---
+
+# 3. Service responsibilities
+
+## 3.1 API service
+
+The API service is the public OpenAPI façade.
+
+It owns:
+
+* public user routes
+* public account routes
+* public transaction routes as façade endpoints
+* request validation
+* OpenAPI response mapping
+* authentication enforcement
+* ownership checks
+* user profile persistence in PostgreSQL
+* account metadata persistence in PostgreSQL
+* delegation to Auth service for login path via ALB routing
+* delegation to Ledger service for money movement and transaction reads
+
+The API service must not:
+
+* verify passwords directly
+* issue JWTs directly
+* write auth session records to DynamoDB
+* mutate ledger balances
+* create ledger transaction rows
+* create ledger entries
+* own transaction idempotency
+* publish Ledger events
+* directly write Ledger-owned tables
+
+The API service may:
+
+* validate the public request shape
+* verify ownership of user/account resources
+* call Ledger service internally
+* map Ledger service responses to OpenAPI responses
+
+## 3.2 Auth service
+
+The Auth service owns authentication.
+
+It owns:
+
+* `POST /v1/auth/login`
+* password verification
+* JWT issuing
+* token/session metadata persistence in DynamoDB
+* auth readiness checks
+* auth-specific logging and redaction
+
+The Auth service reads user credential data from PostgreSQL because users remain in PostgreSQL.
+
+The Auth service stores auth session/token metadata in DynamoDB.
+
+The Auth service must not:
+
+* own user profile data
+* own bank accounts
+* own ledger accounts
+* own transactions
+* mutate balances
+
+## 3.3 Ledger service
+
+The Ledger service owns all money movement.
+
+It owns:
+
+* ledger account creation
+* ledger account closure
+* deposits
+* withdrawals
+* immutable ledger transactions
+* ledger entries
+* account balance mutation
+* transaction idempotency
+* insufficient-funds checks
+* maximum-balance checks
+* row-level locking/concurrency control
+* Ledger outbox event creation
+* internal Ledger command API
+* internal Ledger query API
+
+The Ledger service is private.
+
+It must not be publicly exposed through the ALB.
+
+The API service calls the Ledger service over private service-to-service communication.
+
+## 3.4 Ledger worker
+
+The Ledger worker is the future asynchronous command processor.
+
+It owns:
+
+* consuming Ledger commands from SQS FIFO when async command processing is enabled
+* preserving per-account command ordering
+* delegating commands to Ledger domain handlers
+* command retry and DLQ behaviour
+
+For this take-home, the synchronous API-to-Ledger path is required for OpenAPI compatibility. The Ledger worker may be implemented as deployable architecture and tested minimally, but the design must be present in Docker/CDK/README.
+
+## 3.5 Ledger event publisher
+
+The Ledger event publisher owns reliable publication of committed Ledger events.
+
+It owns:
+
+* polling Ledger outbox table
+* concurrency-safe event claiming
+* processing leases
+* lease recovery
+* event publishing to LocalStack SQS locally
+* event publishing to AWS SQS/EventBridge-style target in CDK architecture
+* retry with exponential backoff and jitter
+* marking events `PUBLISHED`, `FAILED`, or `DEAD`
+* structured logs for event publishing
+
+The Ledger event publisher must not:
+
+* process banking commands
+* mutate balances
+* create ledger transactions
+* consume public API requests
+
+---
+
+# 4. OpenAPI contract rule
+
+Before implementing or modifying anything:
+
+1. Locate and read the provided OpenAPI YAML file.
+2. Preserve the provided OpenAPI file and its existing location unless relocation is explicitly justified.
+3. Use the OpenAPI file as the source of truth for:
+
+   * paths
+   * HTTP methods
+   * route parameters
+   * request bodies
+   * response bodies
+   * required fields
+   * optional fields
+   * validation rules
+   * enum values
+   * status codes
+   * error response shapes
+4. Do not invent public request fields that conflict with OpenAPI.
+5. Do not invent public response fields that conflict with OpenAPI.
+6. Do not rename OpenAPI fields.
+7. Do not change OpenAPI response shapes except for the explicit corrections below.
+8. If the PDF and OpenAPI conflict, report the conflict before coding.
+9. If no OpenAPI file exists, stop and report that the API contract is missing.
+
+---
+
+# 5. Required OpenAPI corrections
+
+The original OpenAPI contains known defects and omissions. Correct these explicitly.
+
+## 5.1 Authentication endpoint
+
+Add:
+
+```text
+POST /v1/auth/login
+```
+
+Request body:
+
+```json
+{
+  "email": "user@example.com",
+  "password": "password"
+}
+```
+
+Response body must include a JWT token according to the chosen auth response schema.
+
+The endpoint is implemented by Auth service.
+
+The OpenAPI file still documents it as part of the single public Eagle Bank API.
+
+## 5.2 Bearer authentication
+
+Add JWT bearer security scheme if missing.
+
+All assessment endpoints are protected except:
+
+```text
+POST /v1/users
+POST /v1/auth/login
+GET /health
+GET /ready
+```
+
+## 5.3 Password support
+
+Correct `CreateUserRequest`:
+
+* add required `password`
+* accept password only on user creation
+* never return password
+* never return passwordHash
+
+`UserResponse` must never contain password or passwordHash.
+
+## 5.4 Identifier corrections
+
+Correct transaction ID pattern from:
+
+```text
+^tan-[A-Za-z0-9]$
+```
+
+to:
+
+```text
+^tan-[A-Za-z0-9]+$
+```
+
+Reason: the original pattern allows exactly one character after `tan-`, while examples use values such as `tan-123abc`.
+
+Convert custom regex definitions incorrectly expressed as `format` into `pattern`.
+
+This applies to:
+
+* `userId`
+* `accountNumber`
+* `phoneNumber`
+* `transactionId`
+
+Preserve standard OpenAPI formats such as:
+
+* `email`
+* `date-time`
+
+## 5.5 Create-user 400 response
+
+If `POST /v1/users` has no 400 schema, add:
+
+```yaml
+content:
+  application/json:
+    schema:
+      $ref: '#/components/schemas/BadRequestErrorResponse'
+```
+
+## 5.6 Transaction amount
+
+Original OpenAPI allows amount `0.00`.
+
+Correct domain rule:
+
+* transaction amount must be greater than `0`
+* zero-value deposit or withdrawal returns `400 Bad Request`
+* update OpenAPI validation accordingly
+
+## 5.7 Maximum balance
+
+OpenAPI defines maximum account balance as `10000.00`.
+
+Enforce it.
+
+A deposit that would exceed `10000.00` returns:
+
+```text
+422 Unprocessable Entity
+```
+
+It must not:
+
+* create transaction
+* create ledger entry
+* mutate balance
+* create Ledger event
+
+---
+
+# 6. Public URL variable names
+
+The public account route parameter is:
+
+```text
+accountNumber
+```
+
+Do not use `{accountId}` in public routes.
+
+Correct public routes:
+
+```text
+POST   /v1/accounts
+GET    /v1/accounts
+
+GET    /v1/accounts/{accountNumber}
+PATCH  /v1/accounts/{accountNumber}
+DELETE /v1/accounts/{accountNumber}
+
+POST   /v1/accounts/{accountNumber}/transactions
+GET    /v1/accounts/{accountNumber}/transactions
+
+GET    /v1/accounts/{accountNumber}/transactions/{transactionId}
+
+POST   /v1/users
+
+GET    /v1/users/{userId}
+PATCH  /v1/users/{userId}
+DELETE /v1/users/{userId}
+
+POST   /v1/auth/login
+```
+
+Internal database models may use:
+
+```text
+accountId
+```
+
+But `accountId` must not appear as the public account route parameter.
+
+---
+
+# 7. Environments
+
+Use exactly these environment names:
+
+```text
+test
+preprod
+prod
+```
+
+Do not use:
+
+```text
+dev
+staging
+production
+```
+
+Local Docker is local runtime, not a deployment environment name.
+
+---
+
+# 8. Local database architecture
+
+Production runtime uses one PostgreSQL database.
+
+Local Docker Compose provides two PostgreSQL services:
+
+```text
+postgres
+postgres-test
+```
+
+`postgres` is used by local API, Auth service, Ledger service, Ledger event publisher, and Ledger worker.
+
+`postgres-test` is used only by automated tests.
+
+Tests must never truncate, reset, clear, or mutate the local development database.
+
+Test commands must use:
+
+```text
+TEST_DATABASE_URL
+```
+
+Development commands use:
+
+```text
+DATABASE_URL
+```
+
+---
+
+# 9. DynamoDB auth storage
+
+Users remain in PostgreSQL.
+
+Auth session/token metadata is stored in DynamoDB.
+
+DynamoDB table:
+
+```text
+eagle-bank-auth-sessions
+```
+
+Local runtime uses DynamoDB Local.
+
+AWS runtime uses DynamoDB.
+
+Recommended table design:
+
+```text
+pk = USER#<userId>
+sk = SESSION#<sessionId>
+```
+
+Attributes:
+
+* `userId`
+* `sessionId`
+* `tokenId`
+* `issuedAt`
+* `expiresAt`
+* `expiresAtEpoch`
+* `revokedAt`
+* `lastUsedAt`
+* `createdAt`
+* `updatedAt`
+
+Enable TTL on:
+
+```text
+expiresAtEpoch
+```
+
+JWT payload:
+
+* `sub = userId`
+* `sid = sessionId`
+* `jti = tokenId`
+* `iat`
+* `exp`
+
+Minimum implementation:
+
+* Auth service issues JWT.
+* Auth service stores session metadata in DynamoDB.
+* API verifies JWT signature and expiry locally.
+* README documents that strict revocation would require API-to-auth-service introspection or short-lived tokens.
+
+Preferred enhanced implementation:
+
+* API verifies JWT signature and expiry.
+* API calls Auth service or DynamoDB-backed introspection to verify session state.
+* Revoked/missing session returns `401`.
+
+---
+
+# 10. Monorepo structure
+
+Use this Turborepo layout.
+
+```text
+apps/
+  api/
+    src/
+      app.ts
+      app.test.ts
+      server.ts
+      server.test.ts
+      composition-root.ts
+      composition-root.test.ts
+
+      plugins/
+        auth.plugin.ts
+        auth.plugin.test.ts
+        error-handler.plugin.ts
+        error-handler.plugin.test.ts
+        request-context.plugin.ts
+        request-context.plugin.test.ts
+        logger.plugin.ts
+        logger.plugin.test.ts
+
+      routes/
+        users.routes.ts
+        users.routes.test.ts
+        accounts.routes.ts
+        accounts.routes.test.ts
+        transactions.routes.ts
+        transactions.routes.test.ts
+        health.routes.ts
+        health.routes.test.ts
+
+      clients/
+        ledger.client.ts
+        ledger.client.test.ts
+        auth.client.ts
+        auth.client.test.ts
+
+    test/
+      integration/
+        users.integration.test.ts
+        accounts.integration.test.ts
+        transactions.integration.test.ts
+        auth-boundary.integration.test.ts
+        health.integration.test.ts
+
+      e2e/
+        create-user-login-create-account-deposit.e2e.test.ts
+        create-user-login-create-account-withdraw.e2e.test.ts
+        insufficient-funds.e2e.test.ts
+        ownership-security.e2e.test.ts
+
+      helpers/
+        create-test-app.ts
+        database.ts
+        factories.ts
+        auth.ts
+        log-capture.ts
+
+    package.json
+    tsconfig.json
+
+  auth-service/
+    src/
+      app.ts
+      app.test.ts
+      server.ts
+      server.test.ts
+      composition-root.ts
+      composition-root.test.ts
+
+      routes/
+        auth.routes.ts
+        auth.routes.test.ts
+        health.routes.ts
+        health.routes.test.ts
+
+      services/
+        login.service.ts
+        login.service.test.ts
+        session.service.ts
+        session.service.test.ts
+        token.service.ts
+        token.service.test.ts
+        password-hasher.ts
+        password-hasher.test.ts
+
+      repositories/
+        user-credentials.repository.ts
+        user-credentials.repository.test.ts
+        auth-session.repository.ts
+        auth-session.repository.test.ts
+
+    test/
+      integration/
+        login.integration.test.ts
+        dynamodb-session.integration.test.ts
+        health.integration.test.ts
+
+    package.json
+    tsconfig.json
+
+  ledger-service/
+    src/
+      app.ts
+      app.test.ts
+      server.ts
+      server.test.ts
+      composition-root.ts
+      composition-root.test.ts
+
+      routes/
+        ledger-command.routes.ts
+        ledger-command.routes.test.ts
+        ledger-query.routes.ts
+        ledger-query.routes.test.ts
+        health.routes.ts
+        health.routes.test.ts
+
+      services/
+        create-ledger-account.service.ts
+        create-ledger-account.service.test.ts
+        close-ledger-account.service.ts
+        close-ledger-account.service.test.ts
+        post-transaction.service.ts
+        post-transaction.service.test.ts
+        ledger-query.service.ts
+        ledger-query.service.test.ts
+        ledger-idempotency.service.ts
+        ledger-idempotency.service.test.ts
+
+      repositories/
+        ledger-account.repository.ts
+        ledger-account.repository.test.ts
+        ledger-transaction.repository.ts
+        ledger-transaction.repository.test.ts
+        ledger-entry.repository.ts
+        ledger-entry.repository.test.ts
+        ledger-outbox.repository.ts
+        ledger-outbox.repository.test.ts
+
+    test/
+      integration/
+        create-ledger-account.integration.test.ts
+        close-ledger-account.integration.test.ts
+        post-deposit.integration.test.ts
+        post-withdrawal.integration.test.ts
+        insufficient-funds.integration.test.ts
+        balance-limit.integration.test.ts
+        idempotency.integration.test.ts
+        ledger-query.integration.test.ts
+        ledger-concurrency.integration.test.ts
+        ledger-outbox.integration.test.ts
+        health.integration.test.ts
+
+    package.json
+    tsconfig.json
+
+  ledger-worker/
+    src/
+      worker.ts
+      worker.test.ts
+      command-consumer.ts
+      command-consumer.test.ts
+      command-handler.ts
+      command-handler.test.ts
+      retry-policy.ts
+      retry-policy.test.ts
+
+    test/
+      integration/
+        ledger-command-consumer.integration.test.ts
+        ledger-command-retry.integration.test.ts
+
+    package.json
+    tsconfig.json
+
+  ledger-event-publisher/
+    src/
+      publisher.ts
+      publisher.test.ts
+      poller.ts
+      poller.test.ts
+      event-claiming.ts
+      event-claiming.test.ts
+      lease-recovery.ts
+      lease-recovery.test.ts
+      retry-policy.ts
+      retry-policy.test.ts
+      sqs-ledger-event-publisher.ts
+      sqs-ledger-event-publisher.test.ts
+      composition-root.ts
+      composition-root.test.ts
+
+    test/
+      integration/
+        publish-ledger-events.integration.test.ts
+        retry-ledger-events.integration.test.ts
+        dead-ledger-events.integration.test.ts
+        lease-recovery.integration.test.ts
+        multi-publisher-claiming.integration.test.ts
+
+    package.json
+    tsconfig.json
+
+packages/
+  config/
+    src/
+      env.ts
+      env.test.ts
+      index.ts
+
+    package.json
+    tsconfig.json
+
+  logger/
+    src/
+      logger.ts
+      logger.test.ts
+      redaction.ts
+      redaction.test.ts
+      request-logger.ts
+      request-logger.test.ts
+      index.ts
+
+    package.json
+    tsconfig.json
+
+  database/
+    prisma/
+      schema.prisma
+      migrations/
+      seed.ts
+
+    src/
+      prisma.ts
+      prisma.test.ts
+      transaction.ts
+      transaction.test.ts
+      index.ts
+
+    package.json
+    tsconfig.json
+
+  dynamodb/
+    src/
+      dynamodb-client.ts
+      dynamodb-client.test.ts
+      tables.ts
+      tables.test.ts
+      index.ts
+
+    package.json
+    tsconfig.json
+
+  contracts/
+    openapi/
+      <preserve-provided-openapi-file-name>
+
+    src/
+      schemas/
+        users.schemas.ts
+        users.schemas.test.ts
+        accounts.schemas.ts
+        accounts.schemas.test.ts
+        transactions.schemas.ts
+        transactions.schemas.test.ts
+
+      index.ts
+
+    test/
+      contract-shape.test.ts
+
+    package.json
+    tsconfig.json
+
+  auth-contracts/
+    src/
+      auth.schemas.ts
+      auth.schemas.test.ts
+      auth.types.ts
+      index.ts
+
+    package.json
+    tsconfig.json
+
+  ledger-contracts/
+    src/
+      ledger-command.schemas.ts
+      ledger-command.schemas.test.ts
+      ledger-query.schemas.ts
+      ledger-query.schemas.test.ts
+      ledger-event.schemas.ts
+      ledger-event.schemas.test.ts
+      ledger.types.ts
+      index.ts
+
+    package.json
+    tsconfig.json
+
+  ledger-domain/
+    src/
+      ledger.rules.ts
+      ledger.rules.test.ts
+      ledger.mapper.ts
+      ledger.mapper.test.ts
+      ledger-events.ts
+      ledger-events.test.ts
+      ledger.types.ts
+      index.ts
+
+    package.json
+    tsconfig.json
+
+  errors/
+    src/
+      AppError.ts
+      AppError.test.ts
+      error-codes.ts
+      http-errors.ts
+      http-errors.test.ts
+      index.ts
+
+    package.json
+    tsconfig.json
+
+  money/
+    src/
+      money.ts
+      money.test.ts
+      index.ts
+
+    package.json
+    tsconfig.json
+
+  test-support/
+    src/
+      database.ts
+      factories.ts
+      auth.ts
+      dynamodb.ts
+      sqs.ts
+      ledger.ts
+      index.ts
+
+    package.json
+    tsconfig.json
+
+infra/
+  bin/
+    eagle-bank.ts
+
+  lib/
+    eagle-bank-stack.ts
+    networking.ts
+    database.ts
+    dynamodb.ts
+    messaging.ts
+    waf.ts
+    api-service.ts
+    auth-service.ts
+    ledger-service.ts
+    ledger-worker.ts
+    ledger-event-publisher.ts
+    migration-task.ts
+    observability.ts
+    security.ts
+
+  test/
+    eagle-bank-stack.test.ts
+
+  package.json
+  tsconfig.json
+  cdk.json
+
+Root files:
+- package.json
+- pnpm-workspace.yaml
+- turbo.json
+- tsconfig.base.json
+- docker-compose.yml
+- Dockerfile
+- .dockerignore
+- .env.example
+- README.md
+```
+
+---
+
+# 11. Colocated unit-test rule
+
+Every executable source file must have a sibling `.test.ts` file.
+
+Examples:
+
+```text
+ledger.rules.ts
+ledger.rules.test.ts
+
+post-transaction.service.ts
+post-transaction.service.test.ts
+
+money.ts
+money.test.ts
+```
+
+Declaration-only files are excluded.
+
+Examples:
+
+```text
+*.types.ts
+files that only export TypeScript types or interfaces
+```
+
+Integration and E2E tests live under `test/`.
+
+---
+
+# 12. Dependency rules
+
+Allowed:
+
+* `apps/api` may depend on contracts, auth contracts, ledger contracts, logger, errors, money, database for user/account metadata only.
+* `apps/auth-service` may depend on database, dynamodb, auth-contracts, logger, errors.
+* `apps/ledger-service` may depend on database, ledger-contracts, ledger-domain, logger, errors, money.
+* `apps/ledger-worker` may depend on ledger-contracts, logger, errors, SQS helpers, and ledger-service command handlers if shared.
+* `apps/ledger-event-publisher` may depend on database, ledger-contracts, logger, errors, SQS helpers.
+* `contracts` must not depend on services.
+* `ledger-domain` must not depend on Fastify.
+* `money` must not depend on services or database.
+* `logger` must not depend on domain services.
+
+Forbidden:
+
+* API must not mutate ledger balances.
+* API must not write ledger transactions.
+* API must not write ledger entries.
+* API must not publish Ledger events.
+* Auth service must not own user profile data.
+* Ledger service must not be public.
+* Ledger event publisher must not process commands.
+* Fastify types must not leak into domain packages.
+* Prisma models must not be returned directly from public routes.
+
+---
+
+# 13. Database ownership
+
+PostgreSQL stores:
+
+* users
+* account metadata
+* ledger accounts
+* ledger transactions
+* ledger entries
+* ledger outbox events
+* idempotency keys
+* migration state
+
+DynamoDB stores:
+
+* auth session/token metadata
+
+## 13.1 Users table
+
+Users remain in PostgreSQL.
+
+Fields:
+
+* `id`
+* OpenAPI user fields
+* `email`
+* `passwordHash`
+* `createdAt`
+* `updatedAt`
+* `deletedAt` if needed
+
+Auth service may read:
+
+* `id`
+* `email`
+* `passwordHash`
+
+Auth service must not mutate profile fields.
+
+## 13.2 Account metadata table
+
+API owns account metadata.
+
+Fields:
+
+* `id` internal UUID
+* `accountNumber` public unique identifier
+* `userId`
+* OpenAPI account fields
+* `createdAt`
+* `updatedAt`
+* `deletedAt`
+
+## 13.3 Ledger-owned tables
+
+Ledger service owns:
+
+```text
+ledger_accounts
+ledger_transactions
+ledger_entries
+ledger_outbox_events
+ledger_idempotency_keys
+```
+
+Recommended model:
+
+```text
+ledger_accounts
+  id
+  accountId
+  accountNumber
+  currency
+  availableBalance
+  status
+  version
+  createdAt
+  updatedAt
+
+ledger_transactions
+  id
+  transactionId
+  accountId
+  accountNumber
+  userId
+  type
+  amount
+  currency
+  reference
+  status
+  idempotencyKey
+  createdAt
+
+ledger_entries
+  id
+  ledgerTransactionId
+  accountId
+  direction
+  amount
+  currency
+  balanceAfter
+  createdAt
+```
+
+For this take-home, single-entry ledger records are acceptable if documented.
+
+README must document that real banking systems typically evolve toward double-entry bookkeeping.
+
+---
+
+# 14. Account lifecycle and Ledger account creation
+
+When public API creates an account, a corresponding Ledger account must exist before deposits or withdrawals can succeed.
+
+Because the assessment expects create account followed by transaction creation to work predictably, use deterministic synchronous coordination.
+
+Flow:
+
+1. API creates account metadata in PostgreSQL.
+2. API calls Ledger service to create Ledger account.
+3. Ledger service creates `ledger_account`.
+4. API returns OpenAPI account response.
+
+If Ledger account creation fails:
+
+* return a controlled error
+* do not leave inconsistent state if practical
+* use transaction/compensation where practical
+* document the trade-off
+
+Future production evolution:
+
+* API emits `AccountCreated`
+* Ledger service consumes it
+* account readiness becomes eventually consistent
+* saga/process manager coordinates failures
+
+For this assessment, use synchronous coordination and document the future event-driven path.
+
+---
+
+# 15. Account deletion and immutable transactions
+
+Transactions are immutable financial records.
+
+Physical deletion of an account with existing transactions conflicts with preserving transaction history.
+
+Decision:
+
+* If account has no Ledger transactions, `DELETE /v1/accounts/{accountNumber}` may physically delete metadata and close/remove corresponding Ledger account.
+* If account has one or more Ledger transactions, `DELETE /v1/accounts/{accountNumber}` soft-deletes account metadata and closes Ledger account.
+
+Soft-deleted/closed account public behaviour:
+
+* `GET /v1/accounts/{accountNumber}` returns `404`.
+* `PATCH /v1/accounts/{accountNumber}` returns `404`.
+* repeated `DELETE /v1/accounts/{accountNumber}` returns `404`.
+* `POST /v1/accounts/{accountNumber}/transactions` returns `404`.
+* `GET /v1/accounts/{accountNumber}/transactions` returns `404`.
+* `GET /v1/accounts/{accountNumber}/transactions/{transactionId}` returns `404`.
+* `GET /v1/accounts` excludes soft-deleted accounts.
+
+Historical rows remain preserved internally.
+
+A soft-deleted account still counts as an account when evaluating user deletion.
+
+Therefore:
+
+```text
+DELETE /v1/users/{userId}
+```
+
+returns `409 Conflict` if the user has any account, including a soft-deleted account.
+
+---
+
+# 16. Ledger command model
+
+Command:
+
+```text
+PostTransactionCommand
+```
+
+Fields:
+
+* `commandId`
+* `idempotencyKey`
+* `userId`
+* `accountNumber`
+* internal `accountId`
+* `type`
+* `amount`
+* `currency`
+* `reference`
+* `requestId`
+* `correlationId`
+* `createdAt`
+
+Command results:
+
+```text
+TransactionPosted
+TransactionRejected
+```
+
+`TransactionPosted` includes:
+
+* `transactionId`
+* `accountNumber`
+* `type`
+* `amount`
+* `currency`
+* `balanceAfter`
+* `createdAt`
+
+`TransactionRejected` includes:
+
+* `reason`
+* `errorCode`
+* `accountNumber`
+* `type`
+* `amount`
+* `currency`
+
+Rejection reasons:
+
+* `INSUFFICIENT_FUNDS`
+* `BALANCE_LIMIT_EXCEEDED`
+* `ACCOUNT_NOT_FOUND`
+* `ACCOUNT_CLOSED`
+* `INVALID_AMOUNT`
+* `DUPLICATE_IDEMPOTENCY_KEY`
+
+---
+
+# 17. Synchronous public API façade over Ledger service
+
+The public OpenAPI endpoint expects a normal transaction response, not an async `202 Accepted`.
+
+Therefore implement the public endpoint as a synchronous façade over the private Ledger service.
+
+Flow:
+
+```text
+POST /v1/accounts/{accountNumber}/transactions
+  -> API authenticates user
+  -> API validates request shape
+  -> API verifies account ownership
+  -> API submits PostTransactionCommand to Ledger service
+  -> Ledger service posts transaction atomically
+  -> Ledger service creates Ledger outbox event
+  -> API maps Ledger result to OpenAPI response
+```
+
+Use internal HTTP from API to Ledger service for this take-home.
+
+Production evolution can move command submission to SQS FIFO:
+
+```text
+API -> SQS FIFO command queue
+Ledger worker -> process command
+Ledger worker -> emit result event
+API -> wait/poll/correlate result with timeout
+```
+
+For the take-home:
+
+* public API remains synchronous
+* Ledger service is separated
+* Ledger events are event-driven after commit
+
+---
+
+# 18. Ledger transaction atomicity
+
+Ledger service must use a PostgreSQL transaction.
+
+Deposit flow:
+
+1. Receive command.
+2. Validate idempotency.
+3. Load Ledger account by `accountNumber`.
+4. Lock account row using `SELECT ... FOR UPDATE`.
+5. Validate amount > 0.
+6. Validate resulting balance <= `10000.00`.
+7. Create Ledger transaction.
+8. Create Ledger entry.
+9. Update Ledger account balance.
+10. Store idempotency result.
+11. Insert `TransactionPosted` into Ledger outbox.
+12. Commit.
+13. Return transaction result.
+
+Withdrawal flow:
+
+1. Receive command.
+2. Validate idempotency.
+3. Load Ledger account by `accountNumber`.
+4. Lock account row using `SELECT ... FOR UPDATE`.
+5. Validate amount > 0.
+6. Validate sufficient funds.
+7. Create Ledger transaction.
+8. Create Ledger entry.
+9. Update Ledger account balance.
+10. Store idempotency result.
+11. Insert `TransactionPosted` into Ledger outbox.
+12. Commit.
+13. Return transaction result.
+
+Failure rules:
+
+* insufficient funds returns `422`
+* balance limit exceeded returns `422`
+* invalid amount returns `400`
+* no transaction row is created for rejected commands
+* no Ledger entry is created for rejected commands
+* no `TransactionPosted` event is created for rejected commands
+
+---
+
+# 19. Ledger idempotency
+
+Idempotency belongs to Ledger service.
+
+Header:
+
+```text
+Idempotency-Key
+```
+
+Rules:
+
+* Optional at public API boundary unless OpenAPI requires it.
+* Strongly recommended for `POST /v1/accounts/{accountNumber}/transactions`.
+* API passes idempotency key to Ledger service.
+* Ledger service stores idempotency key with request hash and result.
+* Same key and same command returns original result.
+* Same key and different command returns `409 Conflict`.
+
+Scope:
+
+* `userId`
+* `accountNumber`
+* `idempotencyKey`
+
+Store:
+
+* `idempotencyKey`
+* `userId`
+* `accountNumber`
+* `requestHash`
+* `status`
+* `responsePayload`
+* `createdAt`
+* `expiresAt`
+
+---
+
+# 20. Ledger outbox and event publisher
+
+Ledger service writes Ledger events to:
+
+```text
+ledger_outbox_events
+```
+
+Ledger event publisher publishes those events reliably.
+
+Event statuses:
+
+* `PENDING`
+* `PROCESSING`
+* `PUBLISHED`
+* `FAILED`
+* `DEAD`
+
+Ledger event publisher flow:
+
+1. Poll `ledger_outbox_events`.
+2. Atomically claim pending/failed events using row locking.
+3. Mark claimed events `PROCESSING`.
+4. Set processing lease.
+5. Publish event to SQS.
+6. Mark event `PUBLISHED` on success.
+7. Mark event `FAILED` and schedule retry on retryable failure.
+8. Mark event `DEAD` after max attempts.
+9. Recover expired processing leases.
+
+Claiming must use PostgreSQL semantics equivalent to:
+
+```sql
+SELECT ...
+FOR UPDATE SKIP LOCKED
+```
+
+Delivery semantics:
+
+* at-least-once
+* duplicate messages are possible after crashes
+* downstream consumers must be idempotent
+
+---
+
+# 21. Ledger events
+
+Required Ledger event:
+
+```text
+TransactionPosted
+```
+
+Payload:
+
+* `eventId`
+* `eventType`
+* `occurredAt`
+* `transactionId`
+* `accountNumber`
+* internal `accountId`
+* `userId`
+* `type`
+* `amount`
+* `currency`
+* `balanceAfter`
+* `reference`
+* `requestId`
+* `correlationId`
+
+Optional future events:
+
+* `AccountBalanceChanged`
+* `TransactionRejected`
+
+Do not implement `TransactionRejected` unless explicitly designed.
+
+Insufficient funds must not create `TransactionPosted`.
+
+---
+
+# 22. SQS and LocalStack
+
+LocalStack must create:
+
+```text
+eagle-bank-events
+eagle-bank-events-dlq
+eagle-bank-ledger-commands.fifo
+eagle-bank-ledger-command-dlq.fifo
+eagle-bank-ledger-events
+eagle-bank-ledger-events-dlq
+```
+
+Ledger command queue:
+
+* FIFO
+* message group ID = `accountNumber`
+* deduplication ID = `idempotencyKey` or `commandId`
+
+Ledger events queue:
+
+* receives `TransactionPosted`
+* future consumers can process audit, notifications, fraud, analytics, reporting
+
+DLQ semantics:
+
+* Ledger event publisher `FAILED`/`DEAD` handles failures to publish messages.
+* SQS DLQ handles future consumer-processing failures.
+* DLQ is not the event publisher retry path.
+
+---
+
+# 23. Authentication and authorization
+
+Public endpoints:
+
+```text
+POST /v1/users
+POST /v1/auth/login
+GET /health
+GET /ready
+```
+
+Protected endpoints:
+
+All others.
+
+JWT validation:
+
+* `sub = userId`
+* `sid = sessionId`
+* `jti = tokenId`
+* `iat`
+* `exp`
+
+API authorization rules:
+
+* user can access only own user record
+* user can access only own accounts
+* user can create/list/fetch transactions only through own accounts
+* API verifies ownership before calling Ledger service
+* if another user’s account is requested, return `403`
+* if missing account is requested, return `404`
+
+---
+
+# 24. Authorization order
+
+User routes:
+
+1. Authenticate.
+2. Fetch target user by `userId`.
+3. If missing, return `404`.
+4. If target user is not authenticated user, return `403`.
+5. Continue.
+
+Account routes:
+
+1. Authenticate.
+2. Fetch account metadata by `accountNumber`.
+3. If missing, return `404`.
+4. If soft-deleted, return `404`.
+5. If account belongs to another user, return `403`.
+6. Continue.
+
+Transaction create/list/detail:
+
+1. Authenticate.
+2. Fetch account metadata by `accountNumber`.
+3. If missing, return `404`.
+4. If soft-deleted, return `404`.
+5. If account belongs to another user, return `403`.
+6. Call Ledger service.
+7. Map Ledger result to OpenAPI response.
+
+---
+
+# 25. API scenarios
+
+## Users
+
+`POST /v1/users`:
+
+* creates user
+* required data includes password
+* returns `400` when required data missing
+* never returns password/passwordHash
+
+`GET /v1/users/{userId}`:
+
+* own user returns `200`
+* another user returns `403`
+* missing user returns `404`
+
+`PATCH /v1/users/{userId}`:
+
+* own user updates
+* another user returns `403`
+* missing user returns `404`
+
+`DELETE /v1/users/{userId}`:
+
+* own user with no accounts deletes
+* user with any account returns `409`
+* another user returns `403`
+* missing user returns `404`
+
+## Accounts
+
+`POST /v1/accounts`:
+
+* creates account metadata
+* creates Ledger account
+* returns OpenAPI account response
+* missing required data returns `400`
+
+`GET /v1/accounts`:
+
+* lists only authenticated user’s non-deleted accounts
+
+`GET /v1/accounts/{accountNumber}`:
+
+* own account returns `200`
+* another user returns `403`
+* missing account returns `404`
+* soft-deleted account returns `404`
+
+`PATCH /v1/accounts/{accountNumber}`:
+
+* own account updates
+* another user returns `403`
+* missing/soft-deleted account returns `404`
+
+`DELETE /v1/accounts/{accountNumber}`:
+
+* own account with no Ledger transactions may be physically deleted
+* own account with Ledger transactions is soft-deleted and Ledger account closed
+* another user returns `403`
+* missing account returns `404`
+* repeated delete after soft delete returns `404`
+
+## Transactions
+
+`POST /v1/accounts/{accountNumber}/transactions`:
+
+* API delegates to Ledger service
+* deposit succeeds
+* withdrawal succeeds with funds
+* insufficient funds returns `422`
+* balance limit exceeded returns `422`
+* amount `0.00` returns `400`
+* missing required fields returns `400`
+* another user’s account returns `403` without calling Ledger
+* missing account returns `404`
+* soft-deleted account returns `404`
+
+`GET /v1/accounts/{accountNumber}/transactions`:
+
+* API delegates query to Ledger service
+* own account returns transactions
+* another user returns `403`
+* missing/soft-deleted account returns `404`
+
+`GET /v1/accounts/{accountNumber}/transactions/{transactionId}`:
+
+* API delegates query to Ledger service
+* own transaction returns `200`
+* wrong accountNumber returns `404`
+* another user’s account returns `403`
+* missing transaction returns `404`
+* missing/soft-deleted account returns `404`
+
+---
+
+# 26. Money handling
+
+External API representation matches OpenAPI.
+
+Internally:
+
+* use Prisma Decimal mapped to PostgreSQL numeric
+* do not use JavaScript floating point arithmetic
+* centralise money operations in `packages/money`
+
+Rules:
+
+* amount > 0
+* currency = `GBP`
+* balance >= 0
+* balance <= `10000.00`
+* insufficient funds = `422`
+* balance limit exceeded = `422`
+* invalid amount = `400`
+
+---
+
+# 27. Logging
+
+Use Pino.
+
+Every service must use structured logs.
+
+Include:
+
+* `service`
+* `requestId`
+* `correlationId`
+* `userId` where available
+* `accountNumber` where relevant
+* `transactionId` where relevant
+* `eventId` for Ledger event publisher
+* `statusCode`
+* `latencyMs`
+* `errorCode`
+
+Redact:
+
+* password
+* passwordHash
+* authorization
+* accessToken
+* refreshToken
+* jwt
+* token
+* cookie
+* set-cookie
+* secret
+* DATABASE_URL
+* JWT_SECRET
+
+Never log:
+
+* raw password
+* passwordHash
+* JWT
+* full Authorization header
+* database connection string with credentials
+
+---
+
+# 28. Request and correlation IDs
+
+Each public request must have:
+
+* `requestId`
+* `correlationId`
+
+Headers:
+
+* accept incoming `x-correlation-id`
+* generate if missing
+* always generate `x-request-id`
+* return both headers in responses
+
+Pass both IDs from API to:
+
+* Auth service if applicable
+* Ledger service
+* Ledger event payloads
+* logs
+
+---
+
+# 29. Health and readiness
+
+API:
+
+* `/health`: process health only
+* `/ready`: PostgreSQL connectivity only
+
+Auth service:
+
+* `/health`: process health only
+* `/ready`: PostgreSQL and DynamoDB connectivity
+
+Ledger service:
+
+* `/health`: process health only
+* `/ready`: PostgreSQL connectivity
+
+Ledger event publisher:
+
+* readiness checks PostgreSQL and SQS connectivity
+
+Ledger worker:
+
+* readiness checks SQS and PostgreSQL if enabled
+
+API readiness must not fail because DynamoDB or SQS is unavailable if API does not directly depend on them.
+
+---
+
+# 30. Docker Compose
+
+Services:
+
+```text
+api
+auth-service
+ledger-service
+ledger-worker
+ledger-event-publisher
+postgres
+postgres-test
+dynamodb-local
+localstack
+```
+
+Do not use:
+
+```text
+outbox-worker
+```
+
+DynamoDB Local must create:
+
+```text
+eagle-bank-auth-sessions
+```
+
+LocalStack must create queues listed in the SQS section.
+
+Tests must use `postgres-test`.
+
+Local development uses `postgres`.
+
+---
+
+# 31. AWS CDK architecture
+
+CDK must model:
+
+* VPC
+* public subnets for ALB
+* private subnets for ECS services
+* isolated/private subnets for RDS
+* AWS WAF Web ACL
+* WAF association with ALB
+* Application Load Balancer
+* ECS cluster
+* API Fargate service
+* Auth Fargate service
+* Ledger Fargate service
+* Ledger worker Fargate service
+* Ledger event publisher Fargate service
+* migration task
+* RDS PostgreSQL
+* DynamoDB auth sessions table
+* SQS Ledger command FIFO queue
+* SQS Ledger command DLQ
+* SQS Ledger events queue
+* SQS Ledger events DLQ
+* Secrets Manager secrets
+* CloudWatch log groups
+* least-privilege IAM roles
+* security groups
+
+Public ingress:
+
+```text
+Client -> AWS WAF -> ALB
+```
+
+ALB routes:
+
+```text
+/v1/auth/* -> auth-service
+/v1/*      -> api
+```
+
+Ledger service is private.
+
+Ledger worker is private.
+
+Ledger event publisher is private.
+
+No ECS task is directly publicly reachable.
+
+---
+
+# 32. WAF requirements
+
+WAF must protect the ALB.
+
+Rules:
+
+* AWS managed common rule set
+* known bad inputs rule set
+* SQL injection rule set
+* Amazon IP reputation list
+* rate-based rule
+
+Rate limits:
+
+* `test`: permissive
+* `preprod`: moderate
+* `prod`: stricter
+
+CDK tests must verify:
+
+* Web ACL exists
+* Web ACL has managed rule groups
+* Web ACL has rate-based rule
+* Web ACL is associated with ALB
+
+---
+
+# 33. CDK migration strategy
+
+CDK must model a database migration task.
+
+Deployment order:
+
+1. Deploy infrastructure.
+2. Run migration task.
+3. Deploy/update API.
+4. Deploy/update Auth service.
+5. Deploy/update Ledger service.
+6. Deploy/update Ledger worker.
+7. Deploy/update Ledger event publisher.
+
+Migration task:
+
+* can use same container image with migration command
+* can use dedicated migration image
+* must reach RDS
+* must read DB secret
+* logs to CloudWatch
+
+---
+
+# 34. Environment variables
+
+Application:
+
+* `NODE_ENV`
+* `PORT`
+* `LOG_LEVEL`
+* `DATABASE_URL`
+* `JWT_SECRET`
+* `JWT_EXPIRES_IN`
+
+API:
+
+* `LEDGER_SERVICE_BASE_URL`
+* `AUTH_SERVICE_BASE_URL`
+
+Auth service:
+
+* `AUTH_SERVICE_PORT`
+* `DYNAMODB_ENDPOINT`
+* `DYNAMODB_AUTH_SESSIONS_TABLE`
+* `AUTH_SESSION_TTL_SECONDS`
+* `DATABASE_URL`
+* `JWT_SECRET`
+* `JWT_EXPIRES_IN`
+
+Ledger service:
+
+* `LEDGER_SERVICE_PORT`
+* `DATABASE_URL`
+* `LEDGER_MAX_BALANCE`
+* `LEDGER_CURRENCY`
+
+Ledger event publisher:
+
+* `LEDGER_EVENT_PUBLISHER_POLL_INTERVAL_MS`
+* `LEDGER_EVENT_PUBLISHER_BATCH_SIZE`
+* `LEDGER_EVENT_PUBLISHER_MAX_ATTEMPTS`
+* `LEDGER_EVENT_PUBLISHER_BACKOFF_BASE_MS`
+* `LEDGER_EVENT_PUBLISHER_BACKOFF_MAX_MS`
+* `LEDGER_EVENT_PUBLISHER_PROCESSING_LEASE_MS`
+
+SQS:
+
+* `AWS_REGION`
+* `AWS_ACCESS_KEY_ID`
+* `AWS_SECRET_ACCESS_KEY`
+* `SQS_ENDPOINT`
+* `SQS_LEDGER_EVENTS_QUEUE_URL`
+* `SQS_LEDGER_EVENTS_DLQ_URL`
+* `SQS_LEDGER_COMMANDS_QUEUE_URL`
+* `SQS_LEDGER_COMMANDS_DLQ_URL`
+
+Testing:
+
+* `TEST_DATABASE_URL`
+
+---
+
+# 35. Testing strategy
+
+Testing must include:
+
+1. Colocated unit tests.
+2. Package integration tests.
+3. Service integration tests.
+4. API-to-service integration tests.
+5. Ledger integration tests.
+6. Ledger concurrency tests.
+7. Ledger event publisher tests.
+8. E2E tests across API, Auth, Ledger, PostgreSQL, DynamoDB, and LocalStack.
+9. CDK assertion tests.
+10. Logging and redaction tests.
+11. OpenAPI contract tests.
+
+Coverage target:
+
+```text
+100% statements
+100% branches
+100% functions
+100% lines
+```
+
+Coverage is required but is not proof of correctness.
+
+Integration, E2E, concurrency, and failure-mode tests are mandatory.
+
+---
+
+# 36. Required Auth tests
+
+Auth service tests:
+
+* login succeeds with valid credentials
+* login fails with invalid email
+* login fails with invalid password
+* login writes auth session metadata to DynamoDB
+* login returns JWT with `sub`, `sid`, `jti`, `iat`, `exp`
+* login never returns passwordHash
+* auth-service `/ready` returns `200` when PostgreSQL and DynamoDB reachable
+* auth-service `/ready` returns `503` when DynamoDB unavailable if practical
+* auth-service logs redact password
+* auth-service logs redact JWT
+
+API auth integration:
+
+* protected route accepts valid JWT issued by Auth service
+* protected route rejects expired JWT
+* protected route rejects invalid JWT
+* protected route rejects missing JWT
+
+DynamoDB tests:
+
+* session record written with correct `pk` and `sk`
+* TTL attribute set
+* tokenId and sessionId persisted
+* revokedAt nullable on active session
+
+---
+
+# 37. Required Ledger unit tests
+
+`ledger.rules.test.ts`:
+
+* deposit with positive amount valid
+* withdrawal with positive amount valid
+* amount zero invalid
+* negative amount invalid
+* unsupported currency invalid
+* deposit within balance limit valid
+* deposit exceeding maximum balance rejected
+* withdrawal with sufficient funds valid
+* withdrawal with insufficient funds rejected
+* closed ledger account rejects deposit
+* closed ledger account rejects withdrawal
+* balance cannot become negative
+* balance cannot exceed `10000.00`
+* Decimal calculations do not use JavaScript floating point arithmetic
+
+`ledger.mapper.test.ts`:
+
+* maps internal Ledger transaction to OpenAPI transaction response
+* does not expose internal accountId unless contract requires it
+* maps Decimal amount correctly
+* maps transaction type correctly
+* maps createdAt correctly
+
+`ledger-events.test.ts`:
+
+* builds `TransactionPosted`
+* includes eventId
+* includes transactionId
+* includes accountNumber
+* includes userId
+* includes amount and currency
+* includes balanceAfter
+* includes requestId
+* includes correlationId
+* excludes secrets/tokens
+
+---
+
+# 38. Required Ledger integration tests
+
+These must run against PostgreSQL test database with real Prisma/PostgreSQL behaviour.
+
+## create-ledger-account.integration.test.ts
+
+* creates Ledger account for accountNumber
+* initializes balance
+* rejects duplicate accountNumber deterministically
+* stores internal accountId relation
+* creates account in GBP
+* closed account cannot be recreated unless explicitly allowed
+
+## close-ledger-account.integration.test.ts
+
+* closes Ledger account
+* closed Ledger account rejects posting
+* missing Ledger account returns not found
+* close operation deterministic if repeated
+
+## post-deposit.integration.test.ts
+
+* posts deposit successfully
+* creates immutable Ledger transaction
+* creates Ledger entry
+* updates Ledger account balance
+* stores balanceAfter
+* creates `TransactionPosted` outbox event
+* returns Ledger result matching contract
+* rejects amount `0.00`
+* rejects negative amount
+* rejects unsupported currency
+* rejects deposit exceeding `10000.00`
+* failed deposit creates no Ledger transaction
+* failed deposit creates no Ledger entry
+* failed deposit creates no outbox event
+* failed deposit does not mutate balance
+
+## post-withdrawal.integration.test.ts
+
+* posts withdrawal successfully
+* creates immutable Ledger transaction
+* creates Ledger entry
+* updates Ledger account balance
+* stores balanceAfter
+* creates `TransactionPosted` outbox event
+* rejects amount `0.00`
+* rejects negative amount
+* rejects unsupported currency
+* rejects insufficient funds
+* failed withdrawal creates no Ledger transaction
+* failed withdrawal creates no Ledger entry
+* failed withdrawal creates no outbox event
+* failed withdrawal does not mutate balance
+
+## insufficient-funds.integration.test.ts
+
+* withdrawal greater than balance returns `INSUFFICIENT_FUNDS`
+* maps to public API `422`
+* no transaction created
+* no Ledger entry created
+* no `TransactionPosted`
+* balance unchanged
+
+## balance-limit.integration.test.ts
+
+* deposit exactly up to `10000.00` succeeds
+* deposit above `10000.00` fails
+* failed deposit returns `BALANCE_LIMIT_EXCEEDED`
+* maps to public API `422`
+* no transaction created
+* no entry created
+* no event created
+
+## idempotency.integration.test.ts
+
+* first request with idempotency key posts transaction
+* retry with same key/body returns original result
+* retry creates no duplicate transaction
+* retry creates no duplicate entry
+* retry creates no duplicate event
+* same key with different amount returns `409`
+* same key with different type returns `409`
+* same key with different accountNumber returns `409`
+* idempotency scoped by userId/accountNumber/key
+* request hash stored
+* response payload stored
+* expiry stored if implemented
+
+## ledger-query.integration.test.ts
+
+* list transactions for accountNumber returns deterministic order
+* fetch transaction by transactionId succeeds
+* wrong accountNumber returns not found
+* missing transaction returns not found
+* closed account returns not found for public query semantics
+* internal-only fields not exposed
+
+## ledger-outbox.integration.test.ts
+
+* successful deposit creates one pending outbox event
+* successful withdrawal creates one pending outbox event
+* failed withdrawal creates no outbox event
+* failed balance-limit deposit creates no outbox event
+* outbox payload validates against Ledger event schema
+* outbox includes correlationId and requestId
+* outbox starts as `PENDING`
+
+---
+
+# 39. Required Ledger concurrency tests
+
+`ledger-concurrency.integration.test.ts` is mandatory.
+
+Use real PostgreSQL transactions.
+
+Required tests:
+
+* two concurrent withdrawals from same account cannot both spend same balance
+* concurrent withdrawals cannot produce negative balance
+* one withdrawal succeeds and one fails when combined amount exceeds balance
+* concurrent deposits both succeed and final balance is correct
+* concurrent deposit and withdrawal produce valid final balance
+* account row is locked during posting
+* idempotent concurrent duplicate requests create only one transaction
+* same idempotency key with different body returns deterministic conflict
+* concurrent requests for different accounts do not block unnecessarily
+
+Implementation expectation:
+
+* use `SELECT ... FOR UPDATE` or equivalent row-level locking
+* balance check and mutation inside same PostgreSQL transaction
+* document isolation level and locking strategy
+
+---
+
+# 40. Required API-to-Ledger integration tests
+
+API transaction tests must verify delegation.
+
+Required tests:
+
+* API deposit calls Ledger service
+* API withdrawal calls Ledger service
+* API maps Ledger success to OpenAPI response
+* API maps insufficient funds to `422`
+* API maps balance limit exceeded to `422`
+* API maps invalid amount to `400`
+* API maps account closed/not found to `404`
+* API verifies ownership before calling Ledger
+* API returns `403` for another user’s account and does not call Ledger
+* API does not write Ledger transaction rows directly
+* API does not mutate Ledger account balance directly
+* API passes requestId to Ledger
+* API passes correlationId to Ledger
+* API passes idempotency key to Ledger
+
+At least one E2E test must use the real Ledger service.
+
+---
+
+# 41. Required E2E tests
+
+E2E tests must run with:
+
+* API service
+* Auth service
+* Ledger service
+* PostgreSQL test database
+* DynamoDB Local
+* LocalStack
+
+## create-user-login-create-account-deposit.e2e.test.ts
+
+1. Create user.
+2. Login through Auth service.
+3. Create account through API.
+4. Ledger account is created.
+5. Deposit through public API.
+6. Ledger service posts transaction.
+7. Public API returns OpenAPI transaction response.
+8. Account balance reflects deposit.
+9. Transaction list returns deposit.
+10. Ledger event exists and is publishable.
+
+## create-user-login-create-account-withdraw.e2e.test.ts
+
+1. Create user.
+2. Login.
+3. Create account.
+4. Deposit.
+5. Withdraw.
+6. Balance updated correctly.
+7. Transaction list contains both transactions.
+8. Ledger events exist for both transactions.
+
+## insufficient-funds.e2e.test.ts
+
+1. Create user.
+2. Login.
+3. Create account.
+4. Attempt withdrawal with insufficient funds.
+5. Public API returns `422`.
+6. Ledger has no transaction.
+7. Ledger has no event.
+8. Balance unchanged.
+
+## ownership-security.e2e.test.ts
+
+1. Create user A and B.
+2. User A creates account.
+3. User B attempts deposit to user A account.
+4. Public API returns `403`.
+5. Ledger service is not called.
+6. No transaction created.
+7. No Ledger event created.
+
+---
+
+# 42. Required Ledger event publisher tests
+
+Do not call these outbox worker tests.
+
+Use Ledger event publisher terminology.
+
+## publish-ledger-events.integration.test.ts
+
+* claims pending Ledger event
+* publishes event to LocalStack SQS
+* marks event `PUBLISHED`
+* stores `publishedAt`
+* does not alter Ledger transaction data
+* published message matches `TransactionPosted` schema
+
+## retry-ledger-events.integration.test.ts
+
+* failed publish increments attempts
+* failed publish sets status `FAILED`
+* failed publish sets `nextAttemptAt`
+* retry uses exponential backoff with jitter
+* retry eventually publishes successfully
+* successful retry marks event `PUBLISHED`
+
+## dead-ledger-events.integration.test.ts
+
+* event becomes `DEAD` after max attempts
+* `lastError` stored
+* dead event logged at error level
+* dead event not retried automatically
+* dead event does not affect committed Ledger transaction
+
+## lease-recovery.integration.test.ts
+
+* expired `PROCESSING` event recoverable
+* non-expired `PROCESSING` event not reclaimed
+* recovered event can be published
+* recovery increments or preserves attempts according to documented policy
+
+## multi-publisher-claiming.integration.test.ts
+
+* two publisher instances cannot claim same event
+* batch claiming uses `FOR UPDATE SKIP LOCKED`
+* events distributed across publishers
+* no duplicate SQS messages under normal operation
+* at-least-once semantics documented for crash cases
+
+---
+
+# 43. Contract tests
+
+Verify:
+
+* OpenAPI uses `{accountNumber}`
+* OpenAPI does not expose `{accountId}` in public route paths
+* transaction response matches OpenAPI
+* account response matches OpenAPI
+* user response never includes passwordHash
+* login response matches OpenAPI
+* `POST /v1/users` 400 uses `BadRequestErrorResponse`
+* transactionId pattern corrected to `^tan-[A-Za-z0-9]+$`
+* custom regexes use `pattern`, not non-standard `format`
+
+---
+
+# 44. CDK tests
+
+Verify:
+
+* VPC exists
+* ALB exists
+* WAF Web ACL exists
+* WAF associated with ALB
+* WAF managed rules exist
+* WAF rate-based rule exists
+* RDS PostgreSQL exists
+* RDS not publicly accessible
+* DynamoDB auth sessions table exists
+* DynamoDB TTL configured
+* SQS Ledger command FIFO queue exists
+* SQS Ledger command DLQ exists
+* SQS Ledger events queue exists
+* SQS Ledger events DLQ exists
+* ECS API service exists
+* ECS Auth service exists
+* ECS Ledger service exists
+* ECS Ledger worker exists
+* ECS Ledger event publisher exists
+* Migration task exists
+* API behind ALB
+* Auth service behind ALB for `/v1/auth/*`
+* Ledger service private
+* Ledger worker private
+* Ledger event publisher private
+* Auth service can read/write DynamoDB
+* Ledger event publisher can publish to SQS
+* Worker can consume Ledger command queue
+* API does not have unnecessary DynamoDB permissions
+* CloudWatch log groups exist
+
+---
+
+# 45. README requirements
+
+README must include:
+
+1. Project overview
+2. Assessment scope
+3. OpenAPI contract-first approach
+4. OpenAPI corrections made
+5. Tech stack
+6. Why Turborepo
+7. Why modular monolith plus separated services
+8. Why API is a façade
+9. Why Auth service is separate
+10. Why users stay in PostgreSQL
+11. Why auth sessions use DynamoDB
+12. Why Ledger service is separate
+13. Why Ledger owns money movement
+14. Why Ledger event publisher exists
+15. Why not call it outbox worker
+16. Why Fastify
+17. Why Prisma
+18. Why PostgreSQL
+19. Why LocalStack
+20. Why DynamoDB Local
+21. Why AWS CDK
+22. Runtime architecture diagram
+23. AWS architecture diagram
+24. Docker architecture diagram
+25. Ledger transaction flow
+26. Ledger event publishing flow
+27. Auth login flow
+28. API-to-Ledger delegation flow
+29. WAF and ALB protection
+30. Environment variables
+31. Local setup
+32. Running API
+33. Running Auth service
+34. Running Ledger service
+35. Running Ledger event publisher
+36. Running tests
+37. Money handling
+38. Transaction atomicity
+39. Ledger concurrency strategy
+40. Idempotency
+41. Account deletion and immutable transaction history
+42. Logging/redaction
+43. Request/correlation IDs
+44. Readiness and health checks
+45. CDK infrastructure
+46. Migration deployment strategy
+47. Testing strategy
+48. Coverage target
+49. Assumptions
+50. Trade-offs
+51. Completed endpoints
+52. Incomplete items, if any
+53. Future production improvements
+54. GitHub submission note
+55. Follow-up walkthrough notes
+
+README must explicitly say:
+
+The public API service implements the OpenAPI contract, but it does not own the banking Ledger. Deposits, withdrawals, immutable transaction records, idempotency, and balance mutation are owned by a separate Ledger service. This keeps money movement isolated behind a dedicated boundary.
+
+The Ledger event publisher is a background service that publishes committed Ledger events from the Ledger outbox table to the event queue. It is named after its business responsibility rather than the outbox implementation pattern.
+
+---
+
+# 46. Package scripts
+
+Root scripts:
+
+* `dev`
+* `build`
+* `start`
+* `test`
+* `test:watch`
+* `test:coverage`
+* `lint`
+* `typecheck`
+* `format`
+* `db:generate`
+* `db:migrate`
+* `db:deploy`
+* `db:reset`
+* `db:studio`
+* `docker:up`
+* `docker:down`
+* `api:dev`
+* `auth:dev`
+* `ledger:dev`
+* `ledger-worker:dev`
+* `ledger-event-publisher:dev`
+* `infra:synth`
+* `infra:diff`
+* `infra:deploy`
+* `infra:destroy`
+* `infra:test`
+
+Turbo pipeline:
+
+* `build`
+* `test`
+* `lint`
+* `typecheck`
+
+---
+
+# 47. Implementation order
+
+1. Inspect OpenAPI.
+2. Report conflicts.
+3. Apply OpenAPI corrections.
+4. Confirm `accountNumber` public route parameter.
+5. Scaffold Turborepo.
+6. Add Node/pnpm constraints.
+7. Add Docker Compose.
+8. Add PostgreSQL services.
+9. Add DynamoDB Local.
+10. Add LocalStack queues.
+11. Add Prisma schema.
+12. Add config package.
+13. Add logger package.
+14. Add errors package.
+15. Add money package.
+16. Add database package.
+17. Add dynamodb package.
+18. Add contracts packages.
+19. Add Auth service.
+20. Add API service.
+21. Add Ledger domain.
+22. Add Ledger service.
+23. Add Ledger event publisher.
+24. Add Ledger worker architecture.
+25. Add request/correlation IDs.
+26. Add WAF/ALB CDK model.
+27. Add RDS/DynamoDB/SQS CDK model.
+28. Add migration task CDK model.
+29. Implement user creation.
+30. Implement login.
+31. Implement auth session persistence.
+32. Implement account creation with Ledger account creation.
+33. Implement account fetch/list/update/delete.
+34. Implement Ledger deposit.
+35. Implement Ledger withdrawal.
+36. Implement Ledger transaction queries.
+37. Implement API transaction façade.
+38. Implement Ledger event publisher.
+39. Add unit tests.
+40. Add Ledger integration tests.
+41. Add Ledger concurrency tests.
+42. Add API-to-Ledger tests.
+43. Add E2E tests.
+44. Add CDK tests.
+45. Add README.
+46. Run typecheck.
+47. Run build.
+48. Run tests with coverage.
+49. Fix failures.
+50. Final review against this specification.
+
+---
+
+# 48. Completion criteria
+
+Before final response, confirm:
+
+* OpenAPI inspected
+* OpenAPI corrections made
+* public routes use `accountNumber`
+* Auth service separate
+* Users remain PostgreSQL
+* Auth sessions stored in DynamoDB
+* API service does not own login
+* Ledger service separate
+* API does not mutate balances
+* API does not write Ledger transactions
+* API delegates money movement to Ledger service
+* Ledger service owns deposits/withdrawals
+* Ledger service owns idempotency
+* Ledger service owns immutable transactions
+* Ledger service uses row-level locking or documented equivalent
+* concurrent withdrawal tests pass
+* Ledger event publisher exists
+* no service named `outbox-worker`
+* Ledger event publisher publishes `TransactionPosted`
+* Docker Compose includes all required services
+* CDK includes WAF and ALB
+* CDK includes Auth service
+* CDK includes Ledger service
+* CDK includes Ledger event publisher
+* CDK includes DynamoDB
+* CDK includes SQS queues
+* CDK includes migration task
+* WAF protects public ALB
+* Ledger service private
+* tests pass
+* coverage reported
+* README explains architecture and trade-offs
+
+---
+
+# 49. Final response format
+
+When complete, provide:
+
+* implemented features
+* endpoint list
+* public route parameter summary
+* OpenAPI corrections made
+* monorepo package summary
+* runtime services summary
+* Auth service summary
+* Ledger service summary
+* Ledger event publisher summary
+* testing summary
+* Ledger integration testing summary
+* Ledger concurrency testing summary
+* E2E testing summary
+* CDK architecture summary
+* Docker commands
+* CDK commands
+* build/typecheck summary
+* coverage summary
+* assumptions
+* trade-offs
+* incomplete items

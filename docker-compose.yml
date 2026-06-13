@@ -1,0 +1,33 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: eagle
+      POSTGRES_PASSWORD: eagle
+      POSTGRES_DB: eagle_bank
+    ports:
+      - "5432:5432"
+    volumes:
+      - eagle-bank-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eagle -d eagle_bank"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: .
+    environment:
+      NODE_ENV: prod
+      PORT: 3000
+      DATABASE_URL: postgresql://eagle:eagle@db:5432/eagle_bank?schema=public
+      JWT_SECRET: docker-prod-secret-at-least-32-characters
+      JWT_EXPIRES_IN: 1h
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  eagle-bank-data:
