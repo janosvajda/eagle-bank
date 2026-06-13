@@ -9,32 +9,713 @@ movement, and a no-AWS-account local runtime.
 
 Prerequisites: Docker and Docker Compose only.
 
+Use separate terminals so requests and live service logs are visible at the
+same time.
+
+**Terminal 1 - start the application**
+
+From the repository root, start the complete stack and wait for its health
+checks to pass:
+
 ```bash
-docker compose up --build
+docker compose up --build -d --wait
 ```
 
-The public API is `http://localhost:3000`.
+When the command returns successfully, the application is ready at
+`http://localhost:3000`.
+
+**Terminal 2 - follow live logs**
+
+Keep this command running while testing the application:
 
 ```bash
-curl http://localhost:3000/health
-curl http://localhost:3000/ready
+docker compose logs --follow api auth-service ledger-service
+```
+
+Pressing `Ctrl+C` stops only the log stream. The application continues running
+in Docker.
+
+**Terminal 3 - test the application**
+
+Run the automated end-to-end check:
+
+```bash
 ./scripts/smoke-test.sh
-docker compose logs -f api auth-service ledger-service
+```
+
+The smoke test runs inside the API container, so it requires no host Node.js,
+pnpm, `curl`, or `jq` installation. The manual requests in
+[Example Requests](#example-requests) are also run from Terminal 3.
+
+**Terminal 1 - stop the application**
+
+After testing, stop all services:
+
+```bash
 docker compose down
 ```
 
-To test a completely clean volume:
+To remove all local database state as well:
 
 ```bash
 docker compose down -v
-docker compose up --build
 ```
 
 Compose waits for PostgreSQL and the local AWS emulators, applies only
 unapplied Prisma migrations, creates the DynamoDB table and SQS queues
 idempotently, then starts the application services.
 
+## Development And Tests
+
+Host development requires Node.js 24+ and pnpm 10.12.1. Install dependencies
+and generate the Prisma client once:
+
+```bash
+corepack enable
+pnpm install
+pnpm db:generate
+```
+
+Run static checks, colocated unit tests, and offline infrastructure tests:
+
+```bash
+pnpm typecheck
+pnpm test:unit
+pnpm infra:test
+pnpm infra:synth
+```
+
+Unit tests are colocated with executable source. Integration tests use the
+separate `postgres-test` service and must never target the development
+database. Start that database, apply migrations to it, and then run the
+integration suite:
+
+```bash
+docker compose up -d postgres-test
+TEST_DATABASE_URL='postgresql://eagle:eagle@localhost:5433/eagle_bank_test?schema=public' \
+DATABASE_URL="$TEST_DATABASE_URL" pnpm db:deploy
+TEST_DATABASE_URL='postgresql://eagle:eagle@localhost:5433/eagle_bank_test?schema=public' \
+DATABASE_URL="$TEST_DATABASE_URL" pnpm test:integration
+```
+
+Other scripts include `api:dev`, `auth:dev`, `ledger:dev`,
+`ledger-worker:dev`, `ledger-event-publisher:dev`, `test:coverage`, `lint`,
+`format`, `docker:up`, and `docker:down`.
+
+## Example Requests
+
+This section is a manual, sequential API walkthrough. Use the three-terminal
+setup from [Quick Start](#quick-start).
+
+**Terminal 1 - start the stack**
+
+```bash
+docker compose up --build -d --wait
+```
+
+**Terminal 2 - watch logs while sending requests**
+
+```bash
+docker compose logs --follow api auth-service ledger-service
+```
+
+**Terminal 3 - run the requests**
+
+Open the repository root, ensure `curl` and `jq` are installed, and run every
+code block below in order in this same shell.
+
+Later commands use shell variables created by earlier commands, including
+`ACCESS_TOKEN`, `USER_ID`, and `ACCOUNT_NUMBER`. Closing the terminal, opening
+a new shell, or skipping a setup block loses those values.
+
+First confirm that the stack is running and ready:
+
+```bash
+docker compose ps
+curl --fail --silent --show-error http://localhost:3000/ready | jq
+```
+
+All required services should be running, and the readiness response should
+contain `"status": "ready"`.
+
+Initialize the shell variables used throughout the walkthrough:
+
+```bash
+BASE_URL="http://localhost:3000"
+EMAIL="reviewer-$(date +%s)@example.com"
+PASSWORD="ReviewPassword123!"
+```
+
+Routes under `/internal/auth/*` and `/internal/ledger/*` are intentionally not
+client examples. They require short-lived service JWTs and are available only
+for authenticated communication between application services.
+
+### Health check
+
+```bash
+curl --fail-with-body --silent --show-error \
+  "$BASE_URL/health" | jq
+```
+
+### Create a user
+
+```bash
+CREATE_USER_RESPONSE=$(
+  curl --fail-with-body --silent --show-error \
+    --request POST \
+    --header "Content-Type: application/json" \
+    --data "{
+      \"name\": \"Review User\",
+      \"address\": {
+        \"line1\": \"1 Eagle Street\",
+        \"town\": \"London\",
+        \"county\": \"Greater London\",
+        \"postcode\": \"SW1A 1AA\"
+      },
+      \"phoneNumber\": \"+447700900123\",
+      \"email\": \"$EMAIL\",
+      \"password\": \"$PASSWORD\"
+    }" \
+    "$BASE_URL/v1/users"
+)
+
+echo "$CREATE_USER_RESPONSE" | jq
+USER_ID=$(echo "$CREATE_USER_RESPONSE" | jq --raw-output '.id')
+```
+
+### Log in
+
+```bash
+LOGIN_RESPONSE=$(
+  curl --fail-with-body --silent --show-error \
+    --request POST \
+    --header "Content-Type: application/json" \
+    --data "{
+      \"email\": \"$EMAIL\",
+      \"password\": \"$PASSWORD\"
+    }" \
+    "$BASE_URL/v1/auth/login"
+)
+
+echo "$LOGIN_RESPONSE" | jq
+ACCESS_TOKEN=$(echo "$LOGIN_RESPONSE" | jq --raw-output '.accessToken')
+```
+
+### Fetch and update the user
+
+```bash
+curl --fail-with-body --silent --show-error \
+  --header "Authorization: Bearer $ACCESS_TOKEN" \
+  "$BASE_URL/v1/users/$USER_ID" | jq
+
+curl --fail-with-body --silent --show-error \
+  --request PATCH \
+  --header "Authorization: Bearer $ACCESS_TOKEN" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "name": "Updated Review User",
+    "phoneNumber": "+447700900124"
+  }' \
+  "$BASE_URL/v1/users/$USER_ID" | jq
+```
+
+### Create and list accounts
+
+```bash
+CREATE_ACCOUNT_RESPONSE=$(
+  curl --fail-with-body --silent --show-error \
+    --request POST \
+    --header "Authorization: Bearer $ACCESS_TOKEN" \
+    --header "Content-Type: application/json" \
+    --data '{
+      "name": "Everyday Account",
+      "accountType": "personal"
+    }' \
+    "$BASE_URL/v1/accounts"
+)
+
+echo "$CREATE_ACCOUNT_RESPONSE" | jq
+ACCOUNT_NUMBER=$(
+  echo "$CREATE_ACCOUNT_RESPONSE" | jq --raw-output '.accountNumber'
+)
+
+curl --fail-with-body --silent --show-error \
+  --header "Authorization: Bearer $ACCESS_TOKEN" \
+  "$BASE_URL/v1/accounts" | jq
+```
+
+### Fetch and update the account
+
+```bash
+curl --fail-with-body --silent --show-error \
+  --header "Authorization: Bearer $ACCESS_TOKEN" \
+  "$BASE_URL/v1/accounts/$ACCOUNT_NUMBER" | jq
+
+curl --fail-with-body --silent --show-error \
+  --request PATCH \
+  --header "Authorization: Bearer $ACCESS_TOKEN" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "name": "Updated Everyday Account"
+  }' \
+  "$BASE_URL/v1/accounts/$ACCOUNT_NUMBER" | jq
+```
+
+### Deposit money
+
+Use a unique idempotency key for each financial command. Repeating the same
+request with the same key returns the original result without applying the
+deposit twice.
+
+```bash
+DEPOSIT_KEY="reviewer-deposit-$(date +%s)"
+
+DEPOSIT_RESPONSE=$(
+  curl --fail-with-body --silent --show-error \
+    --request POST \
+    --header "Authorization: Bearer $ACCESS_TOKEN" \
+    --header "Idempotency-Key: $DEPOSIT_KEY" \
+    --header "Content-Type: application/json" \
+    --data '{
+      "amount": 100.00,
+      "currency": "GBP",
+      "type": "deposit",
+      "reference": "Initial funding"
+    }' \
+    "$BASE_URL/v1/accounts/$ACCOUNT_NUMBER/transactions"
+)
+
+echo "$DEPOSIT_RESPONSE" | jq
+TRANSACTION_ID=$(echo "$DEPOSIT_RESPONSE" | jq --raw-output '.id')
+```
+
+Idempotent replay:
+
+```bash
+curl --fail-with-body --silent --show-error \
+  --request POST \
+  --header "Authorization: Bearer $ACCESS_TOKEN" \
+  --header "Idempotency-Key: $DEPOSIT_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "amount": 100.00,
+    "currency": "GBP",
+    "type": "deposit",
+    "reference": "Initial funding"
+  }' \
+  "$BASE_URL/v1/accounts/$ACCOUNT_NUMBER/transactions" | jq
+```
+
+### Withdraw money
+
+```bash
+curl --fail-with-body --silent --show-error \
+  --request POST \
+  --header "Authorization: Bearer $ACCESS_TOKEN" \
+  --header "Idempotency-Key: reviewer-withdrawal-$(date +%s)" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "amount": 25.00,
+    "currency": "GBP",
+    "type": "withdrawal",
+    "reference": "Cash withdrawal"
+  }' \
+  "$BASE_URL/v1/accounts/$ACCOUNT_NUMBER/transactions" | jq
+```
+
+### List and fetch transactions
+
+```bash
+curl --fail-with-body --silent --show-error \
+  --header "Authorization: Bearer $ACCESS_TOKEN" \
+  "$BASE_URL/v1/accounts/$ACCOUNT_NUMBER/transactions" | jq
+
+curl --fail-with-body --silent --show-error \
+  --header "Authorization: Bearer $ACCESS_TOKEN" \
+  "$BASE_URL/v1/accounts/$ACCOUNT_NUMBER/transactions/$TRANSACTION_ID" | jq
+```
+
+### Required failure scenarios
+
+These requests cover the failure cases required by the original assessment.
+The helper prints the response body followed by its HTTP status. Expected
+`4xx` responses are not treated as shell failures.
+
+```bash
+show_response() {
+  local method="$1"
+  shift
+
+  curl --silent --show-error \
+    --request "$method" \
+    --write-out '\nHTTP %{http_code}\n' \
+    "$@"
+}
+```
+
+#### Authentication errors: HTTP 401
+
+Missing or invalid bearer credentials return
+`Access token is missing or invalid`.
+
+```bash
+show_response GET \
+  "$BASE_URL/v1/accounts"
+
+show_response GET \
+  --header "Authorization: Bearer invalid-token" \
+  "$BASE_URL/v1/accounts"
+
+show_response POST \
+  --header "Content-Type: application/json" \
+  --data "{
+    \"email\": \"$EMAIL\",
+    \"password\": \"incorrect-password\"
+  }" \
+  "$BASE_URL/v1/auth/login"
+```
+
+The login request returns HTTP `401` with `Invalid email or password`.
+
+#### Invalid request data: HTTP 400
+
+The API returns `Invalid details supplied` and a validation `details` array
+when required request data is missing.
+
+```bash
+show_response POST \
+  --header "Content-Type: application/json" \
+  --data '{}' \
+  "$BASE_URL/v1/users"
+
+show_response POST \
+  --header "Authorization: Bearer $ACCESS_TOKEN" \
+  --header "Content-Type: application/json" \
+  --data '{}' \
+  "$BASE_URL/v1/accounts"
+
+show_response POST \
+  --header "Authorization: Bearer $ACCESS_TOKEN" \
+  --header "Idempotency-Key: invalid-transaction-$(date +%s)" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "currency": "GBP",
+    "type": "deposit"
+  }' \
+  "$BASE_URL/v1/accounts/$ACCOUNT_NUMBER/transactions"
+```
+
+#### Prepare cross-owner and account-relationship checks
+
+Create another user and account, plus a second account belonging to the first
+user. These resources let the following examples distinguish forbidden access
+from a resource that does not exist under an otherwise authorized account.
+
+```bash
+OTHER_EMAIL="other-reviewer-$(date +%s)@example.com"
+
+OTHER_USER_RESPONSE=$(
+  curl --fail-with-body --silent --show-error \
+    --request POST \
+    --header "Content-Type: application/json" \
+    --data "{
+      \"name\": \"Other Review User\",
+      \"address\": {
+        \"line1\": \"2 Eagle Street\",
+        \"town\": \"London\",
+        \"county\": \"Greater London\",
+        \"postcode\": \"SW1A 1AA\"
+      },
+      \"phoneNumber\": \"+447700900125\",
+      \"email\": \"$OTHER_EMAIL\",
+      \"password\": \"$PASSWORD\"
+    }" \
+    "$BASE_URL/v1/users"
+)
+OTHER_USER_ID=$(echo "$OTHER_USER_RESPONSE" | jq --raw-output '.id')
+
+OTHER_LOGIN_RESPONSE=$(
+  curl --fail-with-body --silent --show-error \
+    --request POST \
+    --header "Content-Type: application/json" \
+    --data "{
+      \"email\": \"$OTHER_EMAIL\",
+      \"password\": \"$PASSWORD\"
+    }" \
+    "$BASE_URL/v1/auth/login"
+)
+OTHER_ACCESS_TOKEN=$(
+  echo "$OTHER_LOGIN_RESPONSE" | jq --raw-output '.accessToken'
+)
+
+OTHER_ACCOUNT_RESPONSE=$(
+  curl --fail-with-body --silent --show-error \
+    --request POST \
+    --header "Authorization: Bearer $OTHER_ACCESS_TOKEN" \
+    --header "Content-Type: application/json" \
+    --data '{
+      "name": "Other User Account",
+      "accountType": "personal"
+    }' \
+    "$BASE_URL/v1/accounts"
+)
+OTHER_ACCOUNT_NUMBER=$(
+  echo "$OTHER_ACCOUNT_RESPONSE" | jq --raw-output '.accountNumber'
+)
+
+SECOND_ACCOUNT_RESPONSE=$(
+  curl --fail-with-body --silent --show-error \
+    --request POST \
+    --header "Authorization: Bearer $ACCESS_TOKEN" \
+    --header "Content-Type: application/json" \
+    --data '{
+      "name": "Second Review Account",
+      "accountType": "personal"
+    }' \
+    "$BASE_URL/v1/accounts"
+)
+SECOND_ACCOUNT_NUMBER=$(
+  echo "$SECOND_ACCOUNT_RESPONSE" | jq --raw-output '.accountNumber'
+)
+```
+
+#### User authorization and lookup errors: HTTP 403 and 404
+
+Reading, updating, or deleting another user returns HTTP `403` with
+`You are not allowed to access this user`.
+
+```bash
+show_response GET \
+  --header "Authorization: Bearer $ACCESS_TOKEN" \
+  "$BASE_URL/v1/users/$OTHER_USER_ID"
+
+show_response PATCH \
+  --header "Authorization: Bearer $ACCESS_TOKEN" \
+  --header "Content-Type: application/json" \
+  --data '{"name":"Forbidden update"}' \
+  "$BASE_URL/v1/users/$OTHER_USER_ID"
+
+show_response DELETE \
+  --header "Authorization: Bearer $ACCESS_TOKEN" \
+  "$BASE_URL/v1/users/$OTHER_USER_ID"
+```
+
+A syntactically valid but unknown user ID returns HTTP `404` with
+`User was not found`.
+
+```bash
+show_response GET \
+  --header "Authorization: Bearer $ACCESS_TOKEN" \
+  "$BASE_URL/v1/users/usr-missing"
+
+show_response PATCH \
+  --header "Authorization: Bearer $ACCESS_TOKEN" \
+  --header "Content-Type: application/json" \
+  --data '{"name":"Missing user"}' \
+  "$BASE_URL/v1/users/usr-missing"
+
+show_response DELETE \
+  --header "Authorization: Bearer $ACCESS_TOKEN" \
+  "$BASE_URL/v1/users/usr-missing"
+```
+
+#### User deletion conflict: HTTP 409
+
+Deleting the authenticated user while they still own an account returns
+`A user cannot be deleted while associated with a bank account`.
+
+```bash
+show_response DELETE \
+  --header "Authorization: Bearer $ACCESS_TOKEN" \
+  "$BASE_URL/v1/users/$USER_ID"
+```
+
+#### Account authorization and lookup errors: HTTP 403 and 404
+
+Reading, updating, or deleting another user's account returns HTTP `403` with
+`You are not allowed to access this bank account`.
+
+```bash
+show_response GET \
+  --header "Authorization: Bearer $ACCESS_TOKEN" \
+  "$BASE_URL/v1/accounts/$OTHER_ACCOUNT_NUMBER"
+
+show_response PATCH \
+  --header "Authorization: Bearer $ACCESS_TOKEN" \
+  --header "Content-Type: application/json" \
+  --data '{"name":"Forbidden update"}' \
+  "$BASE_URL/v1/accounts/$OTHER_ACCOUNT_NUMBER"
+
+show_response DELETE \
+  --header "Authorization: Bearer $ACCESS_TOKEN" \
+  "$BASE_URL/v1/accounts/$OTHER_ACCOUNT_NUMBER"
+```
+
+An unknown account number returns HTTP `404` with
+`Bank account was not found`.
+
+```bash
+show_response GET \
+  --header "Authorization: Bearer $ACCESS_TOKEN" \
+  "$BASE_URL/v1/accounts/01999999"
+
+show_response PATCH \
+  --header "Authorization: Bearer $ACCESS_TOKEN" \
+  --header "Content-Type: application/json" \
+  --data '{"name":"Missing account"}' \
+  "$BASE_URL/v1/accounts/01999999"
+
+show_response DELETE \
+  --header "Authorization: Bearer $ACCESS_TOKEN" \
+  "$BASE_URL/v1/accounts/01999999"
+```
+
+#### Transaction errors: HTTP 403, 404, and 422
+
+A withdrawal larger than the available balance returns HTTP `422` with
+`Insufficient funds to process transaction`.
+
+```bash
+show_response POST \
+  --header "Authorization: Bearer $ACCESS_TOKEN" \
+  --header "Idempotency-Key: insufficient-funds-$(date +%s)" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "amount": 9999.00,
+    "currency": "GBP",
+    "type": "withdrawal",
+    "reference": "Expected insufficient funds"
+  }' \
+  "$BASE_URL/v1/accounts/$ACCOUNT_NUMBER/transactions"
+```
+
+Creating or listing transactions against another user's account returns HTTP
+`403`. Performing the same operations against an unknown account returns HTTP
+`404`.
+
+```bash
+show_response POST \
+  --header "Authorization: Bearer $ACCESS_TOKEN" \
+  --header "Idempotency-Key: forbidden-account-$(date +%s)" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "amount": 10.00,
+    "currency": "GBP",
+    "type": "deposit"
+  }' \
+  "$BASE_URL/v1/accounts/$OTHER_ACCOUNT_NUMBER/transactions"
+
+show_response POST \
+  --header "Authorization: Bearer $ACCESS_TOKEN" \
+  --header "Idempotency-Key: missing-account-$(date +%s)" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "amount": 10.00,
+    "currency": "GBP",
+    "type": "deposit"
+  }' \
+  "$BASE_URL/v1/accounts/01999999/transactions"
+
+show_response GET \
+  --header "Authorization: Bearer $ACCESS_TOKEN" \
+  "$BASE_URL/v1/accounts/$OTHER_ACCOUNT_NUMBER/transactions"
+
+show_response GET \
+  --header "Authorization: Bearer $ACCESS_TOKEN" \
+  "$BASE_URL/v1/accounts/01999999/transactions"
+```
+
+Fetching a transaction through another user's account returns HTTP `403`.
+Unknown accounts, unknown transactions, and transactions requested through
+the wrong account return HTTP `404`. The last request uses a real transaction
+ID with a different account owned by the same user, so it specifically tests
+the account-to-transaction relationship.
+
+```bash
+show_response GET \
+  --header "Authorization: Bearer $ACCESS_TOKEN" \
+  "$BASE_URL/v1/accounts/$OTHER_ACCOUNT_NUMBER/transactions/$TRANSACTION_ID"
+
+show_response GET \
+  --header "Authorization: Bearer $ACCESS_TOKEN" \
+  "$BASE_URL/v1/accounts/01999999/transactions/$TRANSACTION_ID"
+
+show_response GET \
+  --header "Authorization: Bearer $ACCESS_TOKEN" \
+  "$BASE_URL/v1/accounts/$ACCOUNT_NUMBER/transactions/tan-missing"
+
+show_response GET \
+  --header "Authorization: Bearer $ACCESS_TOKEN" \
+  "$BASE_URL/v1/accounts/$SECOND_ACCOUNT_NUMBER/transactions/$TRANSACTION_ID"
+```
+
+### Delete the accounts and users
+
+Each account must be closed before its owner can be deleted. Successful delete
+operations return HTTP `204` with no response body. The primary account has
+transactions, but the Ledger service preserves those records while closing
+the account.
+
+```bash
+curl --fail-with-body --silent --show-error \
+  --request DELETE \
+  --header "Authorization: Bearer $ACCESS_TOKEN" \
+  --write-out "delete primary account: HTTP %{http_code}\n" \
+  --output /dev/null \
+  "$BASE_URL/v1/accounts/$ACCOUNT_NUMBER"
+
+curl --fail-with-body --silent --show-error \
+  --request DELETE \
+  --header "Authorization: Bearer $ACCESS_TOKEN" \
+  --write-out "delete second account: HTTP %{http_code}\n" \
+  --output /dev/null \
+  "$BASE_URL/v1/accounts/$SECOND_ACCOUNT_NUMBER"
+
+curl --fail-with-body --silent --show-error \
+  --request DELETE \
+  --header "Authorization: Bearer $OTHER_ACCESS_TOKEN" \
+  --write-out "delete other account: HTTP %{http_code}\n" \
+  --output /dev/null \
+  "$BASE_URL/v1/accounts/$OTHER_ACCOUNT_NUMBER"
+
+curl --fail-with-body --silent --show-error \
+  --request DELETE \
+  --header "Authorization: Bearer $ACCESS_TOKEN" \
+  --write-out "delete primary user: HTTP %{http_code}\n" \
+  --output /dev/null \
+  "$BASE_URL/v1/users/$USER_ID"
+
+curl --fail-with-body --silent --show-error \
+  --request DELETE \
+  --header "Authorization: Bearer $OTHER_ACCESS_TOKEN" \
+  --write-out "delete other user: HTTP %{http_code}\n" \
+  --output /dev/null \
+  "$BASE_URL/v1/users/$OTHER_USER_ID"
+```
+
+The same endpoint collection is available in IDE HTTP-client format at
+[`examples/requests.http`](examples/requests.http).
+
+The manual walkthrough is now complete. Stop the local stack when finished:
+
+```bash
+docker compose down
+```
+
+For a shorter automated verification, start the stack using
+[Quick Start](#quick-start) and run `./scripts/smoke-test.sh`. It verifies
+health, user creation/login, account creation, deposit, withdrawal,
+account/transaction reads, account closure, and user deletion.
+
+Expected successful statuses are `200`, `201`, or `204`; invalid input is
+`400`, invalid authentication `401`, cross-owner access `403`, missing
+resources `404`, idempotency/deletion conflicts `409`, insufficient funds or
+balance limit `422`, and unavailable dependencies `503`.
+
 ## Architecture
+
+The public system design diagram is available on the
+[Eagle Bank Miro board](https://miro.com/app/board/uXjVHGNA2To=/?share_link_id=415580388985).
 
 ```text
 Client
@@ -73,7 +754,7 @@ and coordinate through events and sagas.
 
 ## Service Ownership
 
-- API: OpenAPI façade, profiles, account metadata, ownership checks, response
+- API: OpenAPI facade, profiles, account metadata, ownership checks, response
   composition, Auth/Ledger delegation.
 - Auth: password hashing/verification, JWT issuance, DynamoDB sessions and
   introspection.
@@ -238,57 +919,6 @@ DEPLOYMENT_STAGE=preprod ACTIVATE_SERVICES=true pnpm infra:deploy
 production deployment without TLS. Stage configuration controls capacity,
 WAF rate limits, RDS protection and backups, log retention, and removal
 policy.
-
-## Development And Tests
-
-Host development requires Node.js 24+, pnpm 10.12.1, and PostgreSQL:
-
-```bash
-corepack enable
-pnpm install
-pnpm db:generate
-pnpm typecheck
-pnpm test:unit
-pnpm test:integration
-pnpm infra:test
-pnpm infra:synth
-```
-
-Unit tests are colocated with executable source. Integration tests use the
-separate `postgres-test` service and must never target the development
-database.
-
-```bash
-docker compose up -d postgres-test
-TEST_DATABASE_URL='postgresql://eagle:eagle@localhost:5433/eagle_bank_test?schema=public' \
-DATABASE_URL="$TEST_DATABASE_URL" pnpm db:deploy
-TEST_DATABASE_URL='postgresql://eagle:eagle@localhost:5433/eagle_bank_test?schema=public' \
-DATABASE_URL="$TEST_DATABASE_URL" pnpm test:integration
-```
-
-Other scripts include `api:dev`, `auth:dev`, `ledger:dev`,
-`ledger-worker:dev`, `ledger-event-publisher:dev`, `test:coverage`, `lint`,
-`format`, `docker:up`, and `docker:down`.
-
-## Example Requests
-
-Copy-pasteable requests for every public endpoint, including variable capture,
-idempotent replay, conflict reuse, and insufficient funds, are in
-[`examples/requests.http`](examples/requests.http).
-
-The automated reviewer flow is:
-
-```bash
-docker compose up --build -d
-./scripts/smoke-test.sh
-```
-
-It waits for readiness and verifies health, user creation/login, account
-creation, deposit, withdrawal, account/transaction reads, account closure, and
-user deletion. Expected successful statuses are `200`, `201`, or `204`;
-invalid input is `400`, invalid authentication `401`, cross-owner access `403`,
-missing resources `404`, idempotency/deletion conflicts `409`, insufficient
-funds or balance limit `422`, and unavailable dependencies `503`.
 
 ## Trade-offs
 
