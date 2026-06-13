@@ -1,8 +1,0 @@
-node_modules
-dist
-coverage
-cdk.out
-.env
-.git
-.DS_Store
-*.pdf

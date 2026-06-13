@@ -1,3 +1,0 @@
-{
-  "app": "node --import tsx infra/bin/eagle-bank.ts"
-}

@@ -1,5 +1,7 @@
 dist/
 coverage/
+cdk.out/
+**/cdk.out/
 .env
 .DS_Store
 
