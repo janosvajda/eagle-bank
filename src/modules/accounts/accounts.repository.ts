@@ -10,7 +10,7 @@ export class AccountsRepository {
   listByUser(userId: string) {
     return this.db.bankAccount.findMany({
       where: { userId, status: "ACTIVE" },
-      orderBy: { createdAt: "asc" }
+      orderBy: { createdAt: "asc" },
     });
   }
 
@@ -29,14 +29,14 @@ export class AccountsRepository {
   setStatus(accountNumber: string, status: AccountStatus) {
     return this.db.bankAccount.update({
       where: { accountNumber },
-      data: { status }
+      data: { status },
     });
   }
 
   close(accountNumber: string) {
     return this.db.bankAccount.update({
       where: { accountNumber },
-      data: { status: "CLOSED", deletedAt: new Date() }
+      data: { status: "CLOSED", deletedAt: new Date() },
     });
   }
 }

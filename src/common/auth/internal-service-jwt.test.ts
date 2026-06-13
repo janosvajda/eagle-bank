@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   createInternalServiceToken,
-  verifyInternalServiceToken
+  verifyInternalServiceToken,
 } from "./internal-service-jwt.js";
 
 const secret = "a-secret-long-enough-for-internal-service-jwt";
@@ -12,7 +12,7 @@ describe("internal service JWT", () => {
       issuer: "api",
       audience: "ledger-service",
       secret,
-      now: 100
+      now: 100,
     });
     expect(
       verifyInternalServiceToken({
@@ -20,8 +20,8 @@ describe("internal service JWT", () => {
         audience: "ledger-service",
         allowedIssuers: ["api"],
         secret,
-        now: 120
-      })
+        now: 120,
+      }),
     ).toMatchObject({ iss: "api", aud: "ledger-service" });
   });
 
@@ -30,7 +30,7 @@ describe("internal service JWT", () => {
       issuer: "api",
       audience: "auth-service",
       secret,
-      now: 100
+      now: 100,
     });
     const verify = (authorization: string | undefined, now = 120) =>
       verifyInternalServiceToken({
@@ -38,7 +38,7 @@ describe("internal service JWT", () => {
         audience: "ledger-service",
         allowedIssuers: ["api"],
         secret,
-        now
+        now,
       });
     expect(verify(`Bearer ${token}`)).toBeNull();
     expect(verify(`Bearer ${token}x`)).toBeNull();
@@ -49,8 +49,8 @@ describe("internal service JWT", () => {
         audience: "auth-service",
         allowedIssuers: ["api"],
         secret,
-        now: 161
-      })
+        now: 161,
+      }),
     ).toBeNull();
   });
 });

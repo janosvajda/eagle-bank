@@ -4,11 +4,11 @@ import { accountNumberSchema } from "../accounts/accounts.schemas.js";
 
 export const transactionIdSchema = z.string().regex(/^tan-[A-Za-z0-9]+$/);
 export const transactionAccountParamsSchema = z.object({
-  accountNumber: accountNumberSchema
+  accountNumber: accountNumberSchema,
 });
 export const transactionParamsSchema = z.object({
   accountNumber: accountNumberSchema,
-  transactionId: transactionIdSchema
+  transactionId: transactionIdSchema,
 });
 
 export const createTransactionSchema = z
@@ -16,7 +16,7 @@ export const createTransactionSchema = z
     amount: moneySchema,
     currency: z.literal("GBP"),
     type: z.enum(["deposit", "withdrawal"]),
-    reference: z.string().optional()
+    reference: z.string().optional(),
   })
   .strict();
 

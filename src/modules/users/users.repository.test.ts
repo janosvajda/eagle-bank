@@ -8,9 +8,9 @@ describe("UsersRepository", () => {
         create: vi.fn().mockResolvedValue("created"),
         findUnique: vi.fn().mockResolvedValue("found"),
         update: vi.fn().mockResolvedValue("updated"),
-        delete: vi.fn().mockResolvedValue("deleted")
+        delete: vi.fn().mockResolvedValue("deleted"),
       },
-      bankAccount: { count: vi.fn().mockResolvedValue(2) }
+      bankAccount: { count: vi.fn().mockResolvedValue(2) },
     };
     const repository = new UsersRepository(db as never);
     const createData = { id: "usr-1", name: "User" } as never;
@@ -22,18 +22,20 @@ describe("UsersRepository", () => {
     expect(db.user.findUnique).toHaveBeenCalledWith({ where: { id: "usr-1" } });
     await repository.findByEmail("a@example.com");
     expect(db.user.findUnique).toHaveBeenCalledWith({
-      where: { email: "a@example.com" }
+      where: { email: "a@example.com" },
     });
-    await expect(repository.update("usr-1", updateData)).resolves.toBe("updated");
+    await expect(repository.update("usr-1", updateData)).resolves.toBe(
+      "updated",
+    );
     expect(db.user.update).toHaveBeenCalledWith({
       where: { id: "usr-1" },
-      data: updateData
+      data: updateData,
     });
     await expect(repository.delete("usr-1")).resolves.toBe("deleted");
     expect(db.user.delete).toHaveBeenCalledWith({ where: { id: "usr-1" } });
     await expect(repository.countAccounts("usr-1")).resolves.toBe(2);
     expect(db.bankAccount.count).toHaveBeenCalledWith({
-      where: { userId: "usr-1", status: { not: "CLOSED" } }
+      where: { userId: "usr-1", status: { not: "CLOSED" } },
     });
   });
 });

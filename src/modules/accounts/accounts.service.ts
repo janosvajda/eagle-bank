@@ -8,8 +8,7 @@ import type {
   CreateAccountInput,
   UpdateAccountInput,
 } from "./accounts.schemas.js";
-import type { LedgerGateway } from "../ledger/ledger.service.js";
-import { MONEY_DECIMAL_PLACES } from "../../common/constants.js";
+import type { LedgerGateway } from "../ledger/ledger.contracts.js";
 
 const ACCOUNT_NUMBER_RANGE = 1000000;
 const ACCOUNT_NUMBER_ALLOCATION_ATTEMPTS = 5;
@@ -59,12 +58,7 @@ export class AccountsService {
             account.accountNumber,
             "ACTIVE",
           );
-          return mapAccount(
-            active,
-            Number(
-              ledgerAccount.availableBalance.toFixed(MONEY_DECIMAL_PLACES),
-            ),
-          );
+          return mapAccount(active, ledgerAccount.availableBalance);
         } catch (error) {
           // Persist the partial failure so reconciliation can recover it instead
           // of presenting an account whose ledger projection is missing.
@@ -138,7 +132,12 @@ export class AccountsService {
     input: UpdateAccountInput,
   ) {
     await this.getAuthorized(accountNumber, userId);
-    const account = await this.accounts.update(accountNumber, input);
+    const account = await this.accounts.update(accountNumber, {
+      ...(input.name !== undefined ? { name: input.name } : {}),
+      ...(input.accountType !== undefined
+        ? { accountType: input.accountType }
+        : {}),
+    });
     return mapAccount(
       account,
       this.ledger ? await this.ledger.getBalance(accountNumber) : undefined,

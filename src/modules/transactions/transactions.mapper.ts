@@ -9,6 +9,6 @@ export function mapTransaction(transaction: Transaction) {
     type: transaction.type,
     ...(transaction.reference ? { reference: transaction.reference } : {}),
     userId: transaction.userId,
-    createdTimestamp: transaction.createdAt.toISOString()
+    createdTimestamp: transaction.createdAt.toISOString(),
   };
 }

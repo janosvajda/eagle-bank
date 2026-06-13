@@ -10,11 +10,11 @@ export function mapUser(user: User) {
       ...(user.addressLine3 ? { line3: user.addressLine3 } : {}),
       town: user.town,
       county: user.county,
-      postcode: user.postcode
+      postcode: user.postcode,
     },
     phoneNumber: user.phoneNumber,
     email: user.email,
     createdTimestamp: user.createdAt.toISOString(),
-    updatedTimestamp: user.updatedAt.toISOString()
+    updatedTimestamp: user.updatedAt.toISOString(),
   };
 }

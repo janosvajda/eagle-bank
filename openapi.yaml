@@ -17,29 +17,29 @@ paths:
       operationId: health
       description: Process health check
       responses:
-        '200':
+        "200":
           description: Process is healthy
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HealthResponse'
+                $ref: "#/components/schemas/HealthResponse"
   /ready:
     get:
       operationId: readiness
       description: Dependency readiness check
       responses:
-        '200':
+        "200":
           description: Service is ready
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ReadinessResponse'
-        '503':
+                $ref: "#/components/schemas/ReadinessResponse"
+        "503":
           description: Service is not ready
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ReadinessResponse'
+                $ref: "#/components/schemas/ReadinessResponse"
   /v1/auth/login:
     post:
       operationId: login
@@ -49,30 +49,30 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/LoginRequest'
+              $ref: "#/components/schemas/LoginRequest"
       responses:
-        '200':
+        "200":
           description: Authentication succeeded
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LoginResponse'
-        '400':
+                $ref: "#/components/schemas/LoginResponse"
+        "400":
           description: Invalid request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BadRequestErrorResponse'
-        '401':
+                $ref: "#/components/schemas/BadRequestErrorResponse"
+        "401":
           description: Invalid credentials
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-        '503':
-          $ref: '#/components/responses/ServiceUnavailable'
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
   /v1/accounts:
     post:
       tags:
@@ -86,41 +86,41 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateBankAccountRequest'
+              $ref: "#/components/schemas/CreateBankAccountRequest"
         required: true
       responses:
-        '201':
+        "201":
           description: Bank Account has been created successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BankAccountResponse'
-        '400':
+                $ref: "#/components/schemas/BankAccountResponse"
+        "400":
           description: Invalid details supplied
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/BadRequestErrorResponse"
-        '401':
+        "401":
           description: Access token is missing or invalid
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-        '403':
+        "403":
           description: The user is not allowed to access the transaction
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-        '500':
+        "500":
           description: An unexpected error occurred
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-        '503':
-          $ref: '#/components/responses/ServiceUnavailable'
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
     get:
       tags:
         - account
@@ -129,26 +129,26 @@ paths:
       security:
         - bearerAuth: []
       responses:
-        '200':
+        "200":
           description: The list of bank accounts
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ListBankAccountsResponse'
-        '401':
+                $ref: "#/components/schemas/ListBankAccountsResponse"
+        "401":
           description: Access token is missing or invalid
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-        '500':
+        "500":
           description: An unexpected error occurred
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-        '503':
-          $ref: '#/components/responses/ServiceUnavailable'
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
   /v1/accounts/{accountNumber}:
     get:
       tags:
@@ -166,44 +166,44 @@ paths:
       security:
         - bearerAuth: []
       responses:
-        '200':
+        "200":
           description: The bank account details
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BankAccountResponse'
-        '400':
+                $ref: "#/components/schemas/BankAccountResponse"
+        "400":
           description: The request didn't supply all the necessary data
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/BadRequestErrorResponse"
-        '401':
+        "401":
           description: The user was not authenticated
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-        '403':
+        "403":
           description: The user is not allowed to access the bank account details
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-        '404':
+        "404":
           description: Bank account was not found
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-        '500':
+        "500":
           description: An unexpected error occurred
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-        '503':
-          $ref: '#/components/responses/ServiceUnavailable'
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
     patch:
       tags:
         - account
@@ -224,47 +224,47 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateBankAccountRequest'
+              $ref: "#/components/schemas/UpdateBankAccountRequest"
         required: true
       responses:
-        '200':
+        "200":
           description: The updated bank account details
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BankAccountResponse'
-        '400':
+                $ref: "#/components/schemas/BankAccountResponse"
+        "400":
           description: The request didn't supply all the necessary data
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/BadRequestErrorResponse"
-        '401':
+        "401":
           description: Access token is missing or invalid
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-        '403':
+        "403":
           description: The user is not allowed to update the bank account details
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-        '404':
+        "404":
           description: Bank account was not found
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-        '500':
+        "500":
           description: An unexpected error occurred
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-        '503':
-          $ref: '#/components/responses/ServiceUnavailable'
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
     delete:
       tags:
         - account
@@ -281,40 +281,40 @@ paths:
       security:
         - bearerAuth: []
       responses:
-        '204':
+        "204":
           description: The bank account has been deleted
-        '400':
+        "400":
           description: The request didn't supply all the necessary data
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/BadRequestErrorResponse"
-        '401':
+        "401":
           description: Access token is missing or invalid
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-        '403':
+        "403":
           description: The user is not allowed to delete the bank account details
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-        '404':
+        "404":
           description: Bank account was not found
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-        '500':
+        "500":
           description: An unexpected error occurred
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-        '503':
-          $ref: '#/components/responses/ServiceUnavailable'
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
 
   /v1/accounts/{accountNumber}/transactions:
     post:
@@ -330,67 +330,67 @@ paths:
           schema:
             type: string
             pattern: ^01\d{6}$
-        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: "#/components/parameters/IdempotencyKey"
       requestBody:
         description: Create a new transaction
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateTransactionRequest'
+              $ref: "#/components/schemas/CreateTransactionRequest"
         required: true
       security:
         - bearerAuth: []
       responses:
-        '201':
+        "201":
           description: Transaction has been created successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TransactionResponse'
-        '400':
+                $ref: "#/components/schemas/TransactionResponse"
+        "400":
           description: Invalid details supplied
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BadRequestErrorResponse'
-        '401':
+                $ref: "#/components/schemas/BadRequestErrorResponse"
+        "401":
           description: Access token is missing or invalid
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-        '403':
+        "403":
           description: The user is not allowed to delete the bank account details
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-        '404':
+        "404":
           description: Bank account was not found
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-        '409':
+        "409":
           description: Idempotency key was reused for a different transaction
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-        '422':
+        "422":
           description: Insufficient funds to process transaction
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-        '500':
+        "500":
           description: An unexpected error occurred
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-        '503':
-          $ref: '#/components/responses/ServiceUnavailable'
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
     get:
       tags:
         - transaction
@@ -407,44 +407,44 @@ paths:
       security:
         - bearerAuth: []
       responses:
-        '200':
+        "200":
           description: The list of transaction details
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ListTransactionsResponse'
-        '400':
+                $ref: "#/components/schemas/ListTransactionsResponse"
+        "400":
           description: The request didn't supply all the necessary data
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/BadRequestErrorResponse"
-        '401':
+        "401":
           description: Access token is missing or invalid
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-        '403':
+        "403":
           description: The user is not allowed to access the transactions
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-        '404':
+        "404":
           description: Bank account was not found
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-        '500':
+        "500":
           description: An unexpected error occurred
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-        '503':
-          $ref: '#/components/responses/ServiceUnavailable'
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
   /v1/accounts/{accountNumber}/transactions/{transactionId}:
     get:
       tags:
@@ -469,44 +469,44 @@ paths:
       security:
         - bearerAuth: []
       responses:
-        '200':
+        "200":
           description: The transaction details
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TransactionResponse'
-        '400':
+                $ref: "#/components/schemas/TransactionResponse"
+        "400":
           description: The request didn't supply all the necessary data
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/BadRequestErrorResponse"
-        '401':
+        "401":
           description: Access token is missing or invalid
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-        '403':
+        "403":
           description: The user is not allowed to access the transaction
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-        '404':
+        "404":
           description: Bank account was not found
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-        '500':
+        "500":
           description: An unexpected error occurred
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-        '503':
-          $ref: '#/components/responses/ServiceUnavailable'
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
   /v1/users:
     post:
       tags:
@@ -518,29 +518,29 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateUserRequest'
+              $ref: "#/components/schemas/CreateUserRequest"
         required: true
       responses:
-        '201':
+        "201":
           description: User has been created successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserResponse'
-        '400':
+                $ref: "#/components/schemas/UserResponse"
+        "400":
           description: Invalid details supplied
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BadRequestErrorResponse'
-        '500':
+                $ref: "#/components/schemas/BadRequestErrorResponse"
+        "500":
           description: An unexpected error occurred
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-        '503':
-          $ref: '#/components/responses/ServiceUnavailable'
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
   /v1/users/{userId}:
     get:
       tags:
@@ -558,44 +558,44 @@ paths:
       security:
         - bearerAuth: []
       responses:
-        '200':
+        "200":
           description: The user details
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserResponse'
-        '400':
+                $ref: "#/components/schemas/UserResponse"
+        "400":
           description: The request didn't supply all the necessary data
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/BadRequestErrorResponse"
-        '401':
+        "401":
           description: Access token is missing or invalid
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-        '403':
+        "403":
           description: The user is not allowed to access the transaction
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-        '404':
+        "404":
           description: User was not found
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-        '500':
+        "500":
           description: An unexpected error occurred
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-        '503':
-          $ref: '#/components/responses/ServiceUnavailable'
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
     patch:
       tags:
         - user
@@ -616,47 +616,47 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateUserRequest'
+              $ref: "#/components/schemas/UpdateUserRequest"
         required: true
       responses:
-        '200':
+        "200":
           description: The updated user details
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserResponse'
-        '400':
+                $ref: "#/components/schemas/UserResponse"
+        "400":
           description: The request didn't supply all the necessary data
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/BadRequestErrorResponse"
-        '401':
+        "401":
           description: Access token is missing or invalid
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-        '403':
+        "403":
           description: The user is not allowed to access the transaction
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-        '404':
+        "404":
           description: User was not found
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-        '500':
+        "500":
           description: An unexpected error occurred
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-        '503':
-          $ref: '#/components/responses/ServiceUnavailable'
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
     delete:
       tags:
         - user
@@ -673,46 +673,46 @@ paths:
       security:
         - bearerAuth: []
       responses:
-        '204':
+        "204":
           description: The user has been deleted
-        '400':
+        "400":
           description: The request didn't supply all the necessary data
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/BadRequestErrorResponse"
-        '404':
+        "404":
           description: User was not found
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-        '401':
+        "401":
           description: Access token is missing or invalid
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-        '403':
+        "403":
           description: The user is not allowed to access the transaction
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-        '409':
+        "409":
           description: A user cannot be deleted when they are associated with a bank account
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-        '500':
+        "500":
           description: An unexpected error occurred
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-        '503':
-          $ref: '#/components/responses/ServiceUnavailable'
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
 components:
   parameters:
     IdempotencyKey:
@@ -730,13 +730,13 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ErrorResponse'
+            $ref: "#/components/schemas/ErrorResponse"
     ServiceUnavailable:
       description: A required dependency is unavailable
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ErrorResponse'
+            $ref: "#/components/schemas/ErrorResponse"
   schemas:
     HealthResponse:
       type: object
@@ -801,7 +801,7 @@ components:
             - "My Account"
         accountType:
           type: string
-          enum: 
+          enum:
             - "personal"
     UpdateBankAccountRequest:
       type: object
@@ -815,7 +815,7 @@ components:
             - "My Account"
         accountType:
           type: string
-          enum: 
+          enum:
             - "personal"
     ListBankAccountsResponse:
       type: object
@@ -825,7 +825,7 @@ components:
         accounts:
           type: array
           items:
-             $ref: "#/components/schemas/BankAccountResponse"
+            $ref: "#/components/schemas/BankAccountResponse"
     BankAccountResponse:
       type: object
       additionalProperties: false
@@ -847,13 +847,13 @@ components:
             - "01765432"
         sortCode:
           type: string
-          enum: 
+          enum:
             - "10-10-10"
         name:
           type: string
         accountType:
           type: string
-          enum: 
+          enum:
             - "personal"
         balance:
           type: number
@@ -870,10 +870,10 @@ components:
             - "GBP"
         createdTimestamp:
           type: string
-          format: 'date-time'
+          format: "date-time"
         updatedTimestamp:
           type: string
-          format: 'date-time'
+          format: "date-time"
     CreateTransactionRequest:
       type: object
       additionalProperties: false
@@ -897,7 +897,7 @@ components:
             - "GBP"
         type:
           type: string
-          enum: 
+          enum:
             - "deposit"
             - "withdrawal"
         reference:
@@ -910,7 +910,7 @@ components:
         transactions:
           type: array
           items:
-             $ref: "#/components/schemas/TransactionResponse"
+            $ref: "#/components/schemas/TransactionResponse"
     TransactionResponse:
       type: object
       additionalProperties: false
@@ -921,7 +921,7 @@ components:
         - type
         - createdTimestamp
       properties:
-        id: 
+        id:
           type: string
           pattern: ^tan-[A-Za-z0-9]+$
           examples:
@@ -937,7 +937,7 @@ components:
             - "GBP"
         type:
           type: string
-          enum: 
+          enum:
             - "deposit"
             - "withdrawal"
         reference:
@@ -945,11 +945,11 @@ components:
         userId:
           type: string
           pattern: ^usr-[A-Za-z0-9]+$
-          examples: 
+          examples:
             - usr-abc123
         createdTimestamp:
           type: string
-          format: 'date-time'
+          format: "date-time"
     CreateUserRequest:
       type: object
       additionalProperties: false
@@ -1075,10 +1075,10 @@ components:
           format: email
         createdTimestamp:
           type: string
-          format: 'date-time'
+          format: "date-time"
         updatedTimestamp:
           type: string
-          format: 'date-time'
+          format: "date-time"
     ErrorResponse:
       type: object
       required:

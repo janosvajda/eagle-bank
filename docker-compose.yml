@@ -43,7 +43,11 @@ services:
     ports:
       - "4566:4566"
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:4566/_localstack/health >/dev/null"]
+      test:
+        [
+          "CMD-SHELL",
+          "curl -fsS http://localhost:4566/_localstack/health >/dev/null",
+        ]
       interval: 3s
       timeout: 3s
       retries: 30

@@ -25,30 +25,30 @@ describe("transactions", () => {
       method: "POST",
       url: "/v1/accounts/01234567/transactions",
       headers,
-      payload: { amount: 100.5, currency: "GBP", type: "deposit" }
+      payload: { amount: 100.5, currency: "GBP", type: "deposit" },
     });
     expect(deposit.statusCode).toBe(201);
     expect(
       (
         await testPrisma.ledgerAccount.findUniqueOrThrow({
-          where: { accountNumber: "01234567" }
+          where: { accountNumber: "01234567" },
         })
-      ).availableBalance.toNumber()
+      ).availableBalance.toNumber(),
     ).toBe(100.5);
 
     const withdrawal = await app.inject({
       method: "POST",
       url: "/v1/accounts/01234567/transactions",
       headers,
-      payload: { amount: 25.25, currency: "GBP", type: "withdrawal" }
+      payload: { amount: 25.25, currency: "GBP", type: "withdrawal" },
     });
     expect(withdrawal.statusCode).toBe(201);
     expect(
       (
         await testPrisma.ledgerAccount.findUniqueOrThrow({
-          where: { accountNumber: "01234567" }
+          where: { accountNumber: "01234567" },
         })
-      ).availableBalance.toNumber()
+      ).availableBalance.toNumber(),
     ).toBe(75.25);
   });
 
@@ -59,20 +59,20 @@ describe("transactions", () => {
       method: "POST",
       url: "/v1/accounts/01234567/transactions",
       headers: authorization(tokenFor(app, user.id)),
-      payload: { amount: 1, currency: "GBP", type: "withdrawal" }
+      payload: { amount: 1, currency: "GBP", type: "withdrawal" },
     });
     expect(response.statusCode).toBe(422);
     expect(
       await testPrisma.ledgerTransaction.count({
-        where: { accountId: account.id }
-      })
+        where: { accountId: account.id },
+      }),
     ).toBe(0);
     expect(
       (
         await testPrisma.ledgerAccount.findUniqueOrThrow({
-          where: { accountId: account.id }
+          where: { accountId: account.id },
         })
-      ).availableBalance.toNumber()
+      ).availableBalance.toNumber(),
     ).toBe(0);
   });
 
@@ -80,7 +80,7 @@ describe("transactions", () => {
     const own = await createUser();
     const other = await createUser({
       email: "other@example.com",
-      phoneNumber: "+447700900002"
+      phoneNumber: "+447700900002",
     });
     await createAccount(other.id);
     const headers = authorization(tokenFor(app, own.id));
@@ -91,9 +91,9 @@ describe("transactions", () => {
           method: "POST",
           url: "/v1/accounts/01234567/transactions",
           headers,
-          payload: { currency: "GBP", type: "deposit" }
+          payload: { currency: "GBP", type: "deposit" },
         })
-      ).statusCode
+      ).statusCode,
     ).toBe(400);
     expect(
       (
@@ -101,9 +101,9 @@ describe("transactions", () => {
           method: "POST",
           url: "/v1/accounts/01234567/transactions",
           headers,
-          payload: { amount: 1, currency: "GBP", type: "deposit" }
+          payload: { amount: 1, currency: "GBP", type: "deposit" },
         })
-      ).statusCode
+      ).statusCode,
     ).toBe(403);
     expect(
       (
@@ -111,9 +111,9 @@ describe("transactions", () => {
           method: "POST",
           url: "/v1/accounts/01999999/transactions",
           headers,
-          payload: { amount: 1, currency: "GBP", type: "deposit" }
+          payload: { amount: 1, currency: "GBP", type: "deposit" },
         })
-      ).statusCode
+      ).statusCode,
     ).toBe(404);
   });
 
@@ -121,7 +121,7 @@ describe("transactions", () => {
     const own = await createUser();
     const other = await createUser({
       email: "other@example.com",
-      phoneNumber: "+447700900002"
+      phoneNumber: "+447700900002",
     });
     await createAccount(own.id, "01111111");
     await createAccount(other.id, "01222222");
@@ -130,14 +130,14 @@ describe("transactions", () => {
       method: "POST",
       url: "/v1/accounts/01111111/transactions",
       headers: ownHeaders,
-      payload: { amount: 10, currency: "GBP", type: "deposit" }
+      payload: { amount: 10, currency: "GBP", type: "deposit" },
     });
     const transactionId = create.json().id as string;
 
     const list = await app.inject({
       method: "GET",
       url: "/v1/accounts/01111111/transactions",
-      headers: ownHeaders
+      headers: ownHeaders,
     });
     expect(list.statusCode).toBe(200);
     expect(list.json().transactions).toHaveLength(1);
@@ -146,18 +146,18 @@ describe("transactions", () => {
         await app.inject({
           method: "GET",
           url: "/v1/accounts/01222222/transactions",
-          headers: ownHeaders
+          headers: ownHeaders,
         })
-      ).statusCode
+      ).statusCode,
     ).toBe(403);
     expect(
       (
         await app.inject({
           method: "GET",
           url: "/v1/accounts/01999999/transactions",
-          headers: ownHeaders
+          headers: ownHeaders,
         })
-      ).statusCode
+      ).statusCode,
     ).toBe(404);
 
     expect(
@@ -165,36 +165,36 @@ describe("transactions", () => {
         await app.inject({
           method: "GET",
           url: `/v1/accounts/01111111/transactions/${transactionId}`,
-          headers: ownHeaders
+          headers: ownHeaders,
         })
-      ).statusCode
+      ).statusCode,
     ).toBe(200);
     expect(
       (
         await app.inject({
           method: "GET",
           url: `/v1/accounts/01222222/transactions/${transactionId}`,
-          headers: ownHeaders
+          headers: ownHeaders,
         })
-      ).statusCode
+      ).statusCode,
     ).toBe(403);
     expect(
       (
         await app.inject({
           method: "GET",
           url: `/v1/accounts/01999999/transactions/${transactionId}`,
-          headers: ownHeaders
+          headers: ownHeaders,
         })
-      ).statusCode
+      ).statusCode,
     ).toBe(404);
     expect(
       (
         await app.inject({
           method: "GET",
           url: "/v1/accounts/01111111/transactions/tan-missing",
-          headers: ownHeaders
+          headers: ownHeaders,
         })
-      ).statusCode
+      ).statusCode,
     ).toBe(404);
 
     const otherHeaders = authorization(tokenFor(app, other.id));
@@ -202,16 +202,16 @@ describe("transactions", () => {
       method: "POST",
       url: "/v1/accounts/01222222/transactions",
       headers: otherHeaders,
-      payload: { amount: 2, currency: "GBP", type: "deposit" }
+      payload: { amount: 2, currency: "GBP", type: "deposit" },
     });
     expect(
       (
         await app.inject({
           method: "GET",
           url: `/v1/accounts/01111111/transactions/${otherTransaction.json().id}`,
-          headers: ownHeaders
+          headers: ownHeaders,
         })
-      ).statusCode
+      ).statusCode,
     ).toBe(404);
   });
 });

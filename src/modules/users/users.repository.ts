@@ -25,7 +25,7 @@ export class UsersRepository {
 
   countAccounts(id: string) {
     return this.db.bankAccount.count({
-      where: { userId: id, status: { not: "CLOSED" } }
+      where: { userId: id, status: { not: "CLOSED" } },
     });
   }
 }

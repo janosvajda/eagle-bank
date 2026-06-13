@@ -12,14 +12,14 @@ describe("authRoutes", () => {
     const response = await app.inject({
       method: "POST",
       url: "/v1/auth/login",
-      payload: { email: "user@example.com", password: "Password123!" }
+      payload: { email: "user@example.com", password: "Password123!" },
     });
 
     expect(response.statusCode).toBe(200);
     expect(response.json()).toEqual({ token: "jwt" });
     expect(login).toHaveBeenCalledWith({
       email: "user@example.com",
-      password: "Password123!"
+      password: "Password123!",
     });
     await app.close();
   });

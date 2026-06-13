@@ -23,7 +23,7 @@ describe("accounts", () => {
       method: "POST",
       url: "/v1/accounts",
       headers,
-      payload: { name: "My Account", accountType: "personal" }
+      payload: { name: "My Account", accountType: "personal" },
     });
     expect(response.statusCode).toBe(201);
     expect(response.json().accountNumber).toMatch(/^01\d{6}$/);
@@ -33,9 +33,9 @@ describe("accounts", () => {
           method: "POST",
           url: "/v1/accounts",
           headers,
-          payload: {}
+          payload: {},
         })
-      ).statusCode
+      ).statusCode,
     ).toBe(400);
   });
 
@@ -43,7 +43,7 @@ describe("accounts", () => {
     const own = await createUser();
     const other = await createUser({
       email: "other@example.com",
-      phoneNumber: "+447700900002"
+      phoneNumber: "+447700900002",
     });
     await createAccount(own.id, "01111111");
     await createAccount(other.id, "01222222");
@@ -51,7 +51,7 @@ describe("accounts", () => {
     const response = await app.inject({
       method: "GET",
       url: "/v1/accounts",
-      headers: authorization(tokenFor(app, own.id))
+      headers: authorization(tokenFor(app, own.id)),
     });
     expect(response.statusCode).toBe(200);
     expect(response.json().accounts).toHaveLength(1);
@@ -62,7 +62,7 @@ describe("accounts", () => {
     const own = await createUser();
     const other = await createUser({
       email: "other@example.com",
-      phoneNumber: "+447700900002"
+      phoneNumber: "+447700900002",
     });
     await createAccount(own.id, "01111111");
     await createAccount(other.id, "01222222");
@@ -73,34 +73,34 @@ describe("accounts", () => {
         await app.inject({
           method: "GET",
           url: "/v1/accounts/01111111",
-          headers
+          headers,
         })
-      ).statusCode
+      ).statusCode,
     ).toBe(200);
     expect(
       (
         await app.inject({
           method: "GET",
           url: "/v1/accounts/01222222",
-          headers
+          headers,
         })
-      ).statusCode
+      ).statusCode,
     ).toBe(403);
     expect(
       (
         await app.inject({
           method: "GET",
           url: "/v1/accounts/01999999",
-          headers
+          headers,
         })
-      ).statusCode
+      ).statusCode,
     ).toBe(404);
 
     const updated = await app.inject({
       method: "PATCH",
       url: "/v1/accounts/01111111",
       headers,
-      payload: { name: "Updated" }
+      payload: { name: "Updated" },
     });
     expect(updated.statusCode).toBe(200);
     expect(updated.json().name).toBe("Updated");
@@ -110,9 +110,9 @@ describe("accounts", () => {
           method: "PATCH",
           url: "/v1/accounts/01222222",
           headers,
-          payload: { name: "No" }
+          payload: { name: "No" },
         })
-      ).statusCode
+      ).statusCode,
     ).toBe(403);
     expect(
       (
@@ -120,9 +120,9 @@ describe("accounts", () => {
           method: "PATCH",
           url: "/v1/accounts/01999999",
           headers,
-          payload: { name: "No" }
+          payload: { name: "No" },
         })
-      ).statusCode
+      ).statusCode,
     ).toBe(404);
   });
 
@@ -130,7 +130,7 @@ describe("accounts", () => {
     const own = await createUser();
     const other = await createUser({
       email: "other@example.com",
-      phoneNumber: "+447700900002"
+      phoneNumber: "+447700900002",
     });
     await createAccount(own.id, "01111111");
     await createAccount(other.id, "01222222");
@@ -141,27 +141,27 @@ describe("accounts", () => {
         await app.inject({
           method: "DELETE",
           url: "/v1/accounts/01222222",
-          headers
+          headers,
         })
-      ).statusCode
+      ).statusCode,
     ).toBe(403);
     expect(
       (
         await app.inject({
           method: "DELETE",
           url: "/v1/accounts/01999999",
-          headers
+          headers,
         })
-      ).statusCode
+      ).statusCode,
     ).toBe(404);
     expect(
       (
         await app.inject({
           method: "DELETE",
           url: "/v1/accounts/01111111",
-          headers
+          headers,
         })
-      ).statusCode
+      ).statusCode,
     ).toBe(204);
   });
 });

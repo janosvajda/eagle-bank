@@ -5,23 +5,24 @@ import { ErrorCode } from "../../common/errors/error-codes.js";
 import { mapUser } from "./users.mapper.js";
 import type { UsersRepository } from "./users.repository.js";
 import type { CreateUserInput, UpdateUserInput } from "./users.schemas.js";
-
-export interface PasswordHasher {
-  hash(password: string): Promise<string>;
-}
+import type { PasswordHasher } from "./users.ports.js";
 
 export class UsersService {
   constructor(
     private readonly users: UsersRepository,
     private readonly passwordHasher: PasswordHasher = {
-      hash: (password) => argon2.hash(password)
-    }
+      hash: (password) => argon2.hash(password),
+    },
   ) {}
 
   async create(input: CreateUserInput) {
     const email = input.email.toLowerCase();
     if (await this.users.findByEmail(email)) {
-      throw new AppError(409, ErrorCode.CONFLICT, "A user with this email already exists");
+      throw new AppError(
+        409,
+        ErrorCode.CONFLICT,
+        "A user with this email already exists",
+      );
     }
 
     const passwordHash = await this.passwordHasher.hash(input.password);
@@ -32,20 +33,25 @@ export class UsersService {
       phoneNumber: input.phoneNumber,
       passwordHash,
       addressLine1: input.address.line1,
-      addressLine2: input.address.line2,
-      addressLine3: input.address.line3,
+      addressLine2: input.address.line2 ?? null,
+      addressLine3: input.address.line3 ?? null,
       town: input.address.town,
       county: input.address.county,
-      postcode: input.address.postcode
+      postcode: input.address.postcode,
     });
     return mapUser(user);
   }
 
   async getAuthorized(targetId: string, authenticatedId: string) {
     const user = await this.users.findById(targetId);
-    if (!user) throw new AppError(404, ErrorCode.NOT_FOUND, "User was not found");
+    if (!user)
+      throw new AppError(404, ErrorCode.NOT_FOUND, "User was not found");
     if (user.id !== authenticatedId) {
-      throw new AppError(403, ErrorCode.FORBIDDEN, "You are not allowed to access this user");
+      throw new AppError(
+        403,
+        ErrorCode.FORBIDDEN,
+        "You are not allowed to access this user",
+      );
     }
     return user;
   }
@@ -54,13 +60,21 @@ export class UsersService {
     return mapUser(await this.getAuthorized(targetId, authenticatedId));
   }
 
-  async update(targetId: string, authenticatedId: string, input: UpdateUserInput) {
+  async update(
+    targetId: string,
+    authenticatedId: string,
+    input: UpdateUserInput,
+  ) {
     await this.getAuthorized(targetId, authenticatedId);
     const address = input.address;
     const user = await this.users.update(targetId, {
       ...(input.name !== undefined ? { name: input.name } : {}),
-      ...(input.email !== undefined ? { email: input.email.toLowerCase() } : {}),
-      ...(input.phoneNumber !== undefined ? { phoneNumber: input.phoneNumber } : {}),
+      ...(input.email !== undefined
+        ? { email: input.email.toLowerCase() }
+        : {}),
+      ...(input.phoneNumber !== undefined
+        ? { phoneNumber: input.phoneNumber }
+        : {}),
       ...(address
         ? {
             addressLine1: address.line1,
@@ -68,9 +82,9 @@ export class UsersService {
             addressLine3: address.line3 ?? null,
             town: address.town,
             county: address.county,
-            postcode: address.postcode
+            postcode: address.postcode,
           }
-        : {})
+        : {}),
     });
     return mapUser(user);
   }
@@ -81,7 +95,7 @@ export class UsersService {
       throw new AppError(
         409,
         ErrorCode.CONFLICT,
-        "A user cannot be deleted while associated with a bank account"
+        "A user cannot be deleted while associated with a bank account",
       );
     }
     await this.users.delete(targetId);

@@ -4,7 +4,7 @@ import type { UsersService } from "./users.service.js";
 import {
   createUserSchema,
   updateUserSchema,
-  userParamsSchema
+  userParamsSchema,
 } from "./users.schemas.js";
 
 export function usersRoutes(service: UsersService): FastifyPluginAsync {
@@ -14,10 +14,14 @@ export function usersRoutes(service: UsersService): FastifyPluginAsync {
       return reply.status(201).send(result);
     });
 
-    app.get("/v1/users/:userId", { preHandler: authenticate }, async (request) => {
-      const { userId } = userParamsSchema.parse(request.params);
-      return service.get(userId, request.user.sub);
-    });
+    app.get(
+      "/v1/users/:userId",
+      { preHandler: authenticate },
+      async (request) => {
+        const { userId } = userParamsSchema.parse(request.params);
+        return service.get(userId, request.user.sub);
+      },
+    );
 
     app.patch(
       "/v1/users/:userId",
@@ -27,9 +31,9 @@ export function usersRoutes(service: UsersService): FastifyPluginAsync {
         return service.update(
           userId,
           request.user.sub,
-          updateUserSchema.parse(request.body)
+          updateUserSchema.parse(request.body),
         );
-      }
+      },
     );
 
     app.delete(
@@ -39,7 +43,7 @@ export function usersRoutes(service: UsersService): FastifyPluginAsync {
         const { userId } = userParamsSchema.parse(request.params);
         await service.delete(userId, request.user.sub);
         return reply.status(204).send();
-      }
+      },
     );
   };
 }

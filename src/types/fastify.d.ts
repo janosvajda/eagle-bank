@@ -1,6 +1,6 @@
 import "@fastify/jwt";
 import "fastify";
-import type { AuthSessionStore } from "../modules/auth/auth-session.store.js";
+import type { AuthSessionStore } from "../modules/auth/auth-session.contracts.js";
 
 declare module "@fastify/jwt" {
   interface FastifyJWT {

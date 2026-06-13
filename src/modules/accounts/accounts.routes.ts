@@ -4,7 +4,7 @@ import type { AccountsService } from "./accounts.service.js";
 import {
   accountParamsSchema,
   createAccountSchema,
-  updateAccountSchema
+  updateAccountSchema,
 } from "./accounts.schemas.js";
 
 export function accountsRoutes(service: AccountsService): FastifyPluginAsync {
@@ -14,7 +14,7 @@ export function accountsRoutes(service: AccountsService): FastifyPluginAsync {
     app.post("/v1/accounts", async (request, reply) => {
       const result = await service.create(
         request.user.sub,
-        createAccountSchema.parse(request.body)
+        createAccountSchema.parse(request.body),
       );
       return reply.status(201).send(result);
     });
@@ -31,7 +31,7 @@ export function accountsRoutes(service: AccountsService): FastifyPluginAsync {
       return service.update(
         accountNumber,
         request.user.sub,
-        updateAccountSchema.parse(request.body)
+        updateAccountSchema.parse(request.body),
       );
     });
 

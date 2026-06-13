@@ -4,7 +4,6 @@ import {
   type LedgerAccount,
   type LedgerTransaction,
   type PrismaClient,
-  type TransactionType,
 } from "@prisma/client";
 import { AppError } from "../../common/errors/AppError.js";
 import { ErrorCode } from "../../common/errors/error-codes.js";
@@ -14,55 +13,19 @@ import {
   MONEY_DECIMAL_PLACES,
   SECONDS_PER_HOUR,
 } from "../../common/constants.js";
+import type {
+  LedgerAccountCommand,
+  LedgerAccountResponse,
+  LedgerGateway,
+  LedgerTransactionResponse,
+  PostLedgerTransactionCommand,
+} from "./ledger.contracts.js";
+import { ledgerTransactionResponseSchema } from "./ledger.contracts.js";
 
 const MAX_ACCOUNT_BALANCE = "10000.00";
 const IDEMPOTENCY_RETENTION_HOURS = 24;
 const IDEMPOTENCY_RETENTION_MS =
   IDEMPOTENCY_RETENTION_HOURS * SECONDS_PER_HOUR * MILLISECONDS_PER_SECOND;
-
-export interface LedgerAccountCommand {
-  accountId: string;
-  accountNumber: string;
-  userId: string;
-  currency: "GBP";
-}
-
-export interface PostLedgerTransactionCommand {
-  accountNumber: string;
-  userId: string;
-  type: TransactionType;
-  amount: number;
-  currency: "GBP";
-  reference?: string;
-  idempotencyKey?: string;
-  requestId?: string;
-  correlationId?: string;
-}
-
-export interface LedgerTransactionResponse {
-  id: string;
-  amount: number;
-  currency: string;
-  type: TransactionType;
-  reference?: string;
-  userId: string;
-  createdTimestamp: string;
-}
-
-export interface LedgerGateway {
-  createAccount(command: LedgerAccountCommand): Promise<LedgerAccount>;
-  getBalance(accountNumber: string): Promise<number>;
-  getBalances(accountNumbers: string[]): Promise<Record<string, number>>;
-  closeAccount(accountNumber: string): Promise<void>;
-  postTransaction(
-    command: PostLedgerTransactionCommand,
-  ): Promise<LedgerTransactionResponse>;
-  listTransactions(accountNumber: string): Promise<LedgerTransactionResponse[]>;
-  getTransaction(
-    accountNumber: string,
-    transactionId: string,
-  ): Promise<LedgerTransactionResponse>;
-}
 
 function mapTransaction(
   transaction: LedgerTransaction,
@@ -70,11 +33,23 @@ function mapTransaction(
   return {
     id: transaction.transactionId,
     amount: Number(transaction.amount.toFixed(MONEY_DECIMAL_PLACES)),
-    currency: transaction.currency,
+    currency: "GBP",
     type: transaction.type,
     ...(transaction.reference ? { reference: transaction.reference } : {}),
     userId: transaction.userId,
     createdTimestamp: transaction.createdAt.toISOString(),
+  };
+}
+
+function mapAccount(account: LedgerAccount): LedgerAccountResponse {
+  return {
+    accountId: account.accountId,
+    accountNumber: account.accountNumber,
+    userId: account.userId,
+    currency: "GBP",
+    availableBalance: Number(
+      account.availableBalance.toFixed(MONEY_DECIMAL_PLACES),
+    ),
   };
 }
 
@@ -101,7 +76,9 @@ export class LedgerService implements LedgerGateway {
     private readonly maxBalance = new Prisma.Decimal(MAX_ACCOUNT_BALANCE),
   ) {}
 
-  async createAccount(command: LedgerAccountCommand): Promise<LedgerAccount> {
+  async createAccount(
+    command: LedgerAccountCommand,
+  ): Promise<LedgerAccountResponse> {
     const existing = await this.db.ledgerAccount.findUnique({
       where: { accountNumber: command.accountNumber },
     });
@@ -111,7 +88,7 @@ export class LedgerService implements LedgerGateway {
         existing.userId === command.userId &&
         existing.currency === command.currency
       ) {
-        return existing;
+        return mapAccount(existing);
       }
       throw new AppError(
         409,
@@ -120,7 +97,7 @@ export class LedgerService implements LedgerGateway {
       );
     }
 
-    return this.db.ledgerAccount.create({ data: command });
+    return mapAccount(await this.db.ledgerAccount.create({ data: command }));
   }
 
   async getBalance(accountNumber: string): Promise<number> {
@@ -194,7 +171,9 @@ export class LedgerService implements LedgerGateway {
         if (previous.responsePayload) {
           // A completed request returns its original response without applying
           // another balance mutation.
-          return previous.responsePayload as unknown as LedgerTransactionResponse;
+          return ledgerTransactionResponseSchema.parse(
+            previous.responsePayload,
+          );
         }
       }
     }
@@ -265,8 +244,12 @@ export class LedgerService implements LedgerGateway {
             type: command.type,
             amount,
             currency: command.currency,
-            reference: command.reference,
-            idempotencyKey: command.idempotencyKey,
+            ...(command.reference !== undefined
+              ? { reference: command.reference }
+              : {}),
+            ...(command.idempotencyKey !== undefined
+              ? { idempotencyKey: command.idempotencyKey }
+              : {}),
           },
         });
         await tx.ledgerEntry.create({
@@ -327,7 +310,7 @@ export class LedgerService implements LedgerGateway {
             },
             data: {
               status: "COMPLETED",
-              responsePayload: response as unknown as Prisma.InputJsonValue,
+              responsePayload: { ...response },
             },
           });
         }

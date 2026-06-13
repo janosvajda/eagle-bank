@@ -8,7 +8,7 @@ async function buildContractApp() {
   const app = fastify({ logger: false });
   registerErrorHandler(app);
   await registerOpenApiValidation(app, {
-    definition: resolve(process.cwd(), "openapi.yaml")
+    definition: resolve(process.cwd(), "openapi.yaml"),
   });
   return app;
 }
@@ -21,13 +21,13 @@ describe("registerOpenApiValidation", () => {
     const response = await app.inject({
       method: "POST",
       url: "/v1/users",
-      payload: { email: "not-an-email" }
+      payload: { email: "not-an-email" },
     });
 
     expect(response.statusCode).toBe(400);
     expect(response.json()).toMatchObject({
       message: "Invalid details supplied",
-      details: expect.any(Array)
+      details: expect.any(Array),
     });
     await app.close();
   });
@@ -50,19 +50,21 @@ describe("registerOpenApiValidation", () => {
     const response = await app.inject({ method: "GET", url: "/health" });
 
     expect(response.statusCode).toBe(500);
-    expect(response.json()).toEqual({ message: "An unexpected error occurred" });
+    expect(response.json()).toEqual({
+      message: "An unexpected error occurred",
+    });
     await app.close();
   });
 
   it("accepts an empty 204 response", async () => {
     const app = await buildContractApp();
     app.delete("/v1/accounts/:accountNumber", async (_request, reply) =>
-      reply.status(204).send()
+      reply.status(204).send(),
     );
 
     const response = await app.inject({
       method: "DELETE",
-      url: "/v1/accounts/01000001"
+      url: "/v1/accounts/01000001",
     });
 
     expect(response.statusCode).toBe(204);

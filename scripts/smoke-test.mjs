@@ -6,21 +6,21 @@ async function request(method, path, { token, body, idempotencyKey } = {}) {
     headers: {
       ...(body ? { "content-type": "application/json" } : {}),
       ...(token ? { authorization: `Bearer ${token}` } : {}),
-      ...(idempotencyKey ? { "idempotency-key": idempotencyKey } : {})
+      ...(idempotencyKey ? { "idempotency-key": idempotencyKey } : {}),
     },
-    body: body ? JSON.stringify(body) : undefined
+    body: body ? JSON.stringify(body) : undefined,
   });
   const text = await response.text();
   return {
     status: response.status,
-    body: text ? JSON.parse(text) : undefined
+    body: text ? JSON.parse(text) : undefined,
   };
 }
 
 function expectStatus(result, expected, step) {
   if (result.status !== expected) {
     throw new Error(
-      `${step}: expected ${expected}, got ${result.status}: ${JSON.stringify(result.body)}`
+      `${step}: expected ${expected}, got ${result.status}: ${JSON.stringify(result.body)}`,
     );
   }
   console.log(`ok ${step}`);
@@ -52,24 +52,24 @@ const user = await request("POST", "/v1/users", {
       line1: "1 Test Road",
       town: "London",
       county: "Greater London",
-      postcode: "SW1A 1AA"
+      postcode: "SW1A 1AA",
     },
     phoneNumber: `+4477${String(Date.now()).slice(-8)}`,
     email,
-    password
-  }
+    password,
+  },
 });
 expectStatus(user, 201, "create user");
 
 const login = await request("POST", "/v1/auth/login", {
-  body: { email, password }
+  body: { email, password },
 });
 expectStatus(login, 200, "login");
 const token = login.body.accessToken;
 
 const account = await request("POST", "/v1/accounts", {
   token,
-  body: { name: "Smoke Account", accountType: "personal" }
+  body: { name: "Smoke Account", accountType: "personal" },
 });
 expectStatus(account, 201, "create account");
 const accountNumber = account.body.accountNumber;
@@ -84,9 +84,9 @@ const deposit = await request(
       amount: 100,
       currency: "GBP",
       type: "deposit",
-      reference: "Smoke deposit"
-    }
-  }
+      reference: "Smoke deposit",
+    },
+  },
 );
 expectStatus(deposit, 201, "deposit");
 
@@ -98,39 +98,39 @@ expectStatus(
       amount: 25,
       currency: "GBP",
       type: "withdrawal",
-      reference: "Smoke withdrawal"
-    }
+      reference: "Smoke withdrawal",
+    },
   }),
   201,
-  "withdraw"
+  "withdraw",
 );
 expectStatus(
   await request("GET", `/v1/accounts/${accountNumber}`, { token }),
   200,
-  "fetch account"
+  "fetch account",
 );
 expectStatus(
   await request("GET", `/v1/accounts/${accountNumber}/transactions`, { token }),
   200,
-  "list transactions"
+  "list transactions",
 );
 expectStatus(
   await request(
     "GET",
     `/v1/accounts/${accountNumber}/transactions/${deposit.body.id}`,
-    { token }
+    { token },
   ),
   200,
-  "fetch transaction"
+  "fetch transaction",
 );
 expectStatus(
   await request("DELETE", `/v1/accounts/${accountNumber}`, { token }),
   204,
-  "delete account"
+  "delete account",
 );
 expectStatus(
   await request("DELETE", `/v1/users/${user.body.id}`, { token }),
   204,
-  "delete user"
+  "delete user",
 );
 console.log("Eagle Bank smoke test passed");

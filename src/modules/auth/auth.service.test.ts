@@ -3,7 +3,7 @@ import type { FastifyInstance } from "fastify";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import type { UsersRepository } from "../users/users.repository.js";
 import { AuthService } from "./auth.service.js";
-import type { AuthSessionStore } from "./auth-session.store.js";
+import type { AuthSessionStore } from "./auth-session.contracts.js";
 
 describe("AuthService", () => {
   let passwordHash: string;
@@ -19,8 +19,8 @@ describe("AuthService", () => {
     const sessions = {
       create: vi.fn().mockResolvedValue({
         sessionId: "session-id",
-        tokenId: "token-id"
-      })
+        tokenId: "token-id",
+      }),
     };
     return {
       users,
@@ -31,30 +31,30 @@ describe("AuthService", () => {
         app as unknown as FastifyInstance,
         "1h",
         sessions as unknown as AuthSessionStore,
-        3600
-      )
+        3600,
+      ),
     };
   }
 
   it("signs a JWT for valid credentials", async () => {
     const { auth, sign } = service({ id: "usr-owner", passwordHash });
     await expect(
-      auth.login({ email: "owner@example.com", password: "Password123!" })
+      auth.login({ email: "owner@example.com", password: "Password123!" }),
     ).resolves.toEqual({
       accessToken: "signed-token",
       tokenType: "Bearer",
-      expiresIn: 3600
+      expiresIn: 3600,
     });
     expect(sign).toHaveBeenCalledWith(
       { sub: "usr-owner", sid: "session-id", jti: "token-id" },
-      { expiresIn: "1h" }
+      { expiresIn: "1h" },
     );
   });
 
   it("rejects a wrong password", async () => {
     const { auth, sign } = service({ id: "usr-owner", passwordHash });
     await expect(
-      auth.login({ email: "owner@example.com", password: "wrong" })
+      auth.login({ email: "owner@example.com", password: "wrong" }),
     ).rejects.toMatchObject({ statusCode: 401 });
     expect(sign).not.toHaveBeenCalled();
   });
@@ -62,7 +62,7 @@ describe("AuthService", () => {
   it("rejects a missing user", async () => {
     const { auth } = service(null);
     await expect(
-      auth.login({ email: "missing@example.com", password: "Password123!" })
+      auth.login({ email: "missing@example.com", password: "Password123!" }),
     ).rejects.toMatchObject({ statusCode: 401 });
   });
 });

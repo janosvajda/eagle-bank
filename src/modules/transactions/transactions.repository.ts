@@ -6,13 +6,13 @@ export class TransactionsRepository {
   listByAccount(accountId: string) {
     return this.db.transaction.findMany({
       where: { accountId },
-      orderBy: { createdAt: "asc" }
+      orderBy: { createdAt: "asc" },
     });
   }
 
   findByIdAndAccount(transactionId: string, accountId: string) {
     return this.db.transaction.findFirst({
-      where: { id: transactionId, accountId }
+      where: { id: transactionId, accountId },
     });
   }
 }
