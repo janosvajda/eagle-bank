@@ -21,13 +21,13 @@ describe("authentication", () => {
     const response = await app.inject({
       method: "POST",
       url: "/v1/auth/login",
-      payload: { email: "test@example.com", password: "Password123!" }
+      payload: { email: "test@example.com", password: "Password123!" },
     });
     expect(response.statusCode).toBe(200);
     expect(response.json()).toMatchObject({
       accessToken: expect.any(String),
       tokenType: "Bearer",
-      expiresIn: 3600
+      expiresIn: 3600,
     });
   });
 
@@ -36,19 +36,19 @@ describe("authentication", () => {
     const response = await app.inject({
       method: "POST",
       url: "/v1/auth/login",
-      payload: { email: "test@example.com", password: "WrongPassword123!" }
+      payload: { email: "test@example.com", password: "WrongPassword123!" },
     });
     expect(response.statusCode).toBe(401);
   });
 
   it.each([
     ["without a token", undefined],
-    ["with an invalid token", "Bearer invalid"]
+    ["with an invalid token", "Bearer invalid"],
   ])("rejects a protected endpoint %s", async (_label, authorization) => {
     const response = await app.inject({
       method: "GET",
       url: "/v1/accounts",
-      headers: authorization ? { authorization } : {}
+      headers: authorization ? { authorization } : {},
     });
     expect(response.statusCode).toBe(401);
   });

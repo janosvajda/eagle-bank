@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync } from "fastify";
 import { loginSchema } from "./auth.schemas.js";
 import type { LoginInput } from "./auth.schemas.js";
-import type { LoginResult } from "./auth.client.js";
+import type { LoginResult } from "./auth.contracts.js";
 
 export interface LoginService {
   login(input: LoginInput): Promise<LoginResult>;

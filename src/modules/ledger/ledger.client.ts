@@ -1,15 +1,29 @@
-import type {
-  LedgerAccountCommand,
-  LedgerGateway,
-  LedgerTransactionResponse,
-  PostLedgerTransactionCommand,
-} from "./ledger.service.js";
-import type { LedgerAccount } from "@prisma/client";
+import { createInternalServiceToken } from "../../common/auth/internal-service-jwt.js";
 import { AppError } from "../../common/errors/AppError.js";
 import { ErrorCode } from "../../common/errors/error-codes.js";
-import { createInternalServiceToken } from "../../common/auth/internal-service-jwt.js";
+import {
+  ledgerAccountResponseSchema,
+  ledgerBalanceResponseSchema,
+  ledgerBalancesResponseSchema,
+  ledgerTransactionListResponseSchema,
+  ledgerTransactionResponseSchema,
+  type LedgerAccountCommand,
+  type LedgerAccountResponse,
+  type LedgerGateway,
+  type LedgerTransactionResponse,
+  type PostLedgerTransactionCommand,
+} from "./ledger.contracts.js";
 
 const LEDGER_REQUEST_TIMEOUT_MS = 2000;
+
+function responseMessage(payload: unknown, fallback: string): string {
+  return typeof payload === "object" &&
+    payload !== null &&
+    "message" in payload &&
+    typeof payload.message === "string"
+    ? payload.message
+    : fallback;
+}
 
 export class LedgerHttpClient implements LedgerGateway {
   constructor(
@@ -17,27 +31,30 @@ export class LedgerHttpClient implements LedgerGateway {
     private readonly internalSecret: string,
   ) {}
 
-  async createAccount(command: LedgerAccountCommand): Promise<LedgerAccount> {
-    return this.request("/internal/ledger/accounts", {
-      method: "POST",
-      body: JSON.stringify(command),
-    });
+  async createAccount(
+    command: LedgerAccountCommand,
+  ): Promise<LedgerAccountResponse> {
+    return ledgerAccountResponseSchema.parse(
+      await this.request("/internal/ledger/accounts", {
+        method: "POST",
+        body: JSON.stringify(command),
+      }),
+    );
   }
 
-  getBalance(accountNumber: string): Promise<number> {
-    return this.request<{ balance: number }>(
-      `/internal/ledger/accounts/${accountNumber}/balance`,
-    ).then((result) => result.balance);
+  async getBalance(accountNumber: string): Promise<number> {
+    return ledgerBalanceResponseSchema.parse(
+      await this.request(`/internal/ledger/accounts/${accountNumber}/balance`),
+    ).balance;
   }
 
-  getBalances(accountNumbers: string[]): Promise<Record<string, number>> {
-    return this.request<{ balances: Record<string, number> }>(
-      "/internal/ledger/accounts/balances",
-      {
+  async getBalances(accountNumbers: string[]): Promise<Record<string, number>> {
+    return ledgerBalancesResponseSchema.parse(
+      await this.request("/internal/ledger/accounts/balances", {
         method: "POST",
         body: JSON.stringify({ accountNumbers }),
-      },
-    ).then((result) => result.balances);
+      }),
+    ).balances;
   }
 
   async closeAccount(accountNumber: string): Promise<void> {
@@ -46,36 +63,45 @@ export class LedgerHttpClient implements LedgerGateway {
     });
   }
 
-  postTransaction(
+  async postTransaction(
     command: PostLedgerTransactionCommand,
   ): Promise<LedgerTransactionResponse> {
-    return this.request(
-      `/internal/ledger/accounts/${command.accountNumber}/transactions`,
-      {
-        method: "POST",
-        body: JSON.stringify(command),
-      },
+    return ledgerTransactionResponseSchema.parse(
+      await this.request(
+        `/internal/ledger/accounts/${command.accountNumber}/transactions`,
+        {
+          method: "POST",
+          body: JSON.stringify(command),
+        },
+      ),
     );
   }
 
-  listTransactions(
+  async listTransactions(
     accountNumber: string,
   ): Promise<LedgerTransactionResponse[]> {
-    return this.request<{ transactions: LedgerTransactionResponse[] }>(
-      `/internal/ledger/accounts/${accountNumber}/transactions`,
-    ).then((result) => result.transactions);
+    return ledgerTransactionListResponseSchema.parse(
+      await this.request(
+        `/internal/ledger/accounts/${accountNumber}/transactions`,
+      ),
+    ).transactions;
   }
 
-  getTransaction(
+  async getTransaction(
     accountNumber: string,
     transactionId: string,
   ): Promise<LedgerTransactionResponse> {
-    return this.request(
-      `/internal/ledger/accounts/${accountNumber}/transactions/${transactionId}`,
+    return ledgerTransactionResponseSchema.parse(
+      await this.request(
+        `/internal/ledger/accounts/${accountNumber}/transactions/${transactionId}`,
+      ),
     );
   }
 
-  private async request<T>(path: string, init: RequestInit = {}): Promise<T> {
+  private async request(
+    path: string,
+    init: RequestInit = {},
+  ): Promise<unknown> {
     let response: Response;
     try {
       // Every private call is audience-bound to Ledger; no static internal
@@ -100,15 +126,16 @@ export class LedgerHttpClient implements LedgerGateway {
         "Ledger service is unavailable",
       );
     }
-    const payload = response.status === 204 ? undefined : await response.json();
+
+    const payload: unknown =
+      response.status === 204 ? undefined : await response.json();
     if (!response.ok) {
-      const body = payload as { message?: string };
       throw new AppError(
         response.status,
         response.status === 404 ? ErrorCode.NOT_FOUND : ErrorCode.CONFLICT,
-        body.message ?? "Ledger request failed",
+        responseMessage(payload, "Ledger request failed"),
       );
     }
-    return payload as T;
+    return payload;
   }
 }

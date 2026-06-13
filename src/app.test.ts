@@ -7,7 +7,7 @@ const config = {
   PORT: 3000,
   DATABASE_URL: "postgresql://localhost/test",
   JWT_SECRET: "test-secret-that-is-at-least-32-characters",
-  JWT_EXPIRES_IN: "1h"
+  JWT_EXPIRES_IN: "1h",
 };
 
 describe("buildApp", () => {
@@ -17,19 +17,21 @@ describe("buildApp", () => {
       const app = await buildApp({
         prisma: {} as PrismaClient,
         config,
-        ...(logger === undefined ? {} : { logger })
+        ...(logger === undefined ? {} : { logger }),
       });
 
-      expect(app.hasRoute({ method: "POST", url: "/v1/auth/login" })).toBe(true);
+      expect(app.hasRoute({ method: "POST", url: "/v1/auth/login" })).toBe(
+        true,
+      );
       expect(app.hasRoute({ method: "POST", url: "/v1/users" })).toBe(true);
       expect(app.hasRoute({ method: "GET", url: "/v1/accounts" })).toBe(true);
       expect(
         app.hasRoute({
           method: "GET",
-          url: "/v1/accounts/:accountNumber/transactions/:transactionId"
-        })
+          url: "/v1/accounts/:accountNumber/transactions/:transactionId",
+        }),
       ).toBe(true);
       await app.close();
-    }
+    },
   );
 });

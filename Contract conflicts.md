@@ -33,4 +33,3 @@ the supplied OpenAPI specification, together with the agreed resolutions.
   numbers, user IDs, and phone numbers.
 - Resolution: express these constraints with the OpenAPI `pattern` keyword.
   Standard formats such as `email` and `date-time` remain unchanged.
-

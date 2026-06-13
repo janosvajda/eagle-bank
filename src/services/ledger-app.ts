@@ -6,7 +6,28 @@ import { ErrorCode } from "../common/errors/error-codes.js";
 import { LedgerService } from "../modules/ledger/ledger.service.js";
 import { healthRoutes } from "../modules/health/health.routes.js";
 import { verifyInternalServiceToken } from "../common/auth/internal-service-jwt.js";
-import { MONEY_DECIMAL_PLACES } from "../common/constants.js";
+import type {
+  LedgerAccountCommand,
+  LedgerAccountResponse,
+  LedgerTransactionResponse,
+  PostLedgerTransactionCommand,
+} from "../modules/ledger/ledger.contracts.js";
+import {
+  ledgerAccountCommandSchema,
+  postLedgerTransactionCommandSchema,
+} from "../modules/ledger/ledger.contracts.js";
+
+interface AccountNumberParams {
+  accountNumber: string;
+}
+
+interface TransactionParams extends AccountNumberParams {
+  transactionId: string;
+}
+
+interface AccountNumbersRequest {
+  accountNumbers: string[];
+}
 
 export async function buildLedgerApp(options: {
   prisma: PrismaClient;
@@ -33,61 +54,64 @@ export async function buildLedgerApp(options: {
     }
   });
 
-  app.post("/internal/ledger/accounts", async (request, reply) => {
-    const account = await ledger.createAccount(request.body as never);
-    return reply.status(201).send({
-      ...account,
-      availableBalance: Number(
-        account.availableBalance.toFixed(MONEY_DECIMAL_PLACES),
-      ),
-    });
-  });
-  app.get(
+  app.post<{ Body: LedgerAccountCommand; Reply: LedgerAccountResponse }>(
+    "/internal/ledger/accounts",
+    async (request, reply) =>
+      reply
+        .status(201)
+        .send(
+          await ledger.createAccount(
+            ledgerAccountCommandSchema.parse(request.body),
+          ),
+        ),
+  );
+  app.get<{ Params: AccountNumberParams }>(
     "/internal/ledger/accounts/:accountNumber/balance",
     async (request) => ({
-      balance: await ledger.getBalance(
-        (request.params as { accountNumber: string }).accountNumber,
-      ),
+      balance: await ledger.getBalance(request.params.accountNumber),
     }),
   );
-  app.post("/internal/ledger/accounts/balances", async (request) => ({
-    balances: await ledger.getBalances(
-      (request.body as { accountNumbers: string[] }).accountNumbers,
-    ),
-  }));
-  app.post(
+  app.post<{ Body: AccountNumbersRequest }>(
+    "/internal/ledger/accounts/balances",
+    async (request) => ({
+      balances: await ledger.getBalances(request.body.accountNumbers),
+    }),
+  );
+  app.post<{ Params: AccountNumberParams }>(
     "/internal/ledger/accounts/:accountNumber/close",
     async (request, reply) => {
-      await ledger.closeAccount(
-        (request.params as { accountNumber: string }).accountNumber,
-      );
+      await ledger.closeAccount(request.params.accountNumber);
       return reply.status(204).send();
     },
   );
-  app.post(
+  app.post<{
+    Params: AccountNumberParams;
+    Body: PostLedgerTransactionCommand;
+    Reply: LedgerTransactionResponse;
+  }>(
     "/internal/ledger/accounts/:accountNumber/transactions",
     async (request, reply) =>
       reply
         .status(201)
-        .send(await ledger.postTransaction(request.body as never)),
+        .send(
+          await ledger.postTransaction(
+            postLedgerTransactionCommandSchema.parse(request.body),
+          ),
+        ),
   );
-  app.get(
+  app.get<{ Params: AccountNumberParams }>(
     "/internal/ledger/accounts/:accountNumber/transactions",
     async (request) => ({
-      transactions: await ledger.listTransactions(
-        (request.params as { accountNumber: string }).accountNumber,
-      ),
+      transactions: await ledger.listTransactions(request.params.accountNumber),
     }),
   );
-  app.get(
+  app.get<{ Params: TransactionParams }>(
     "/internal/ledger/accounts/:accountNumber/transactions/:transactionId",
-    async (request) => {
-      const params = request.params as {
-        accountNumber: string;
-        transactionId: string;
-      };
-      return ledger.getTransaction(params.accountNumber, params.transactionId);
-    },
+    async (request) =>
+      ledger.getTransaction(
+        request.params.accountNumber,
+        request.params.transactionId,
+      ),
   );
   await app.register(healthRoutes(options.prisma));
   return app;

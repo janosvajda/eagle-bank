@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { AppError } from "../../common/errors/AppError.js";
 import type { AccountsRepository } from "./accounts.repository.js";
 import { AccountsService } from "./accounts.service.js";
+import type { LedgerGateway } from "../ledger/ledger.contracts.js";
 
 const ownerId = "usr-owner";
 const account: BankAccount & { userId: string } = {
@@ -18,7 +19,7 @@ const account: BankAccount & { userId: string } = {
   deletedAt: null,
   reconciliationCorrelationId: null,
   createdAt: new Date("2026-01-01T00:00:00.000Z"),
-  updatedAt: new Date("2026-01-01T00:00:00.000Z")
+  updatedAt: new Date("2026-01-01T00:00:00.000Z"),
 };
 
 function setup(found: BankAccount | null = account) {
@@ -27,11 +28,43 @@ function setup(found: BankAccount | null = account) {
     listByUser: vi.fn().mockResolvedValue([account]),
     findByNumber: vi.fn().mockResolvedValue(found),
     update: vi.fn().mockResolvedValue(account),
-    delete: vi.fn().mockResolvedValue(account)
+    delete: vi.fn().mockResolvedValue(account),
   };
   return {
     repository,
-    service: new AccountsService(repository as unknown as AccountsRepository)
+    service: new AccountsService(repository as unknown as AccountsRepository),
+  };
+}
+
+function setupWithLedger() {
+  const repository = {
+    create: vi.fn().mockResolvedValue(account),
+    listByUser: vi.fn().mockResolvedValue([account]),
+    findByNumber: vi.fn().mockResolvedValue(account),
+    update: vi.fn().mockResolvedValue(account),
+    delete: vi.fn().mockResolvedValue(account),
+    setStatus: vi.fn().mockResolvedValue(account),
+    close: vi.fn().mockResolvedValue(account),
+  };
+  const ledger = {
+    createAccount: vi.fn().mockResolvedValue({
+      accountId: account.id,
+      accountNumber: account.accountNumber,
+      userId: ownerId,
+      currency: "GBP",
+      availableBalance: 25,
+    }),
+    getBalance: vi.fn().mockResolvedValue(25),
+    getBalances: vi.fn().mockResolvedValue({ [account.accountNumber]: 25 }),
+    closeAccount: vi.fn().mockResolvedValue(undefined),
+  };
+  return {
+    repository,
+    ledger,
+    service: new AccountsService(
+      repository as unknown as AccountsRepository,
+      ledger as unknown as LedgerGateway,
+    ),
   };
 }
 
@@ -41,28 +74,30 @@ describe("AccountsService", () => {
     await expect(
       service.create(ownerId, {
         name: "Personal",
-        accountType: "personal"
-      })
+        accountType: "personal",
+      }),
     ).resolves.toMatchObject({ accountNumber: account.accountNumber });
     expect(repository.create).toHaveBeenCalledWith(
       expect.objectContaining({
         accountNumber: expect.stringMatching(/^01\d{6}$/),
-        userId: ownerId
-      })
+        userId: ownerId,
+      }),
     );
   });
 
   it("retries account-number collisions", async () => {
     const collision = new Prisma.PrismaClientKnownRequestError("duplicate", {
       code: "P2002",
-      clientVersion: "6.19.3"
+      clientVersion: "6.19.3",
     });
     const { service, repository } = setup();
-    repository.create.mockRejectedValueOnce(collision).mockResolvedValue(account);
+    repository.create
+      .mockRejectedValueOnce(collision)
+      .mockResolvedValue(account);
 
     await service.create(ownerId, {
       name: "Personal",
-      accountType: "personal"
+      accountType: "personal",
     });
     expect(repository.create).toHaveBeenCalledTimes(2);
   });
@@ -70,7 +105,7 @@ describe("AccountsService", () => {
   it("fails after five account-number collisions", async () => {
     const collision = new Prisma.PrismaClientKnownRequestError("duplicate", {
       code: "P2002",
-      clientVersion: "6.19.3"
+      clientVersion: "6.19.3",
     });
     const { service, repository } = setup();
     repository.create.mockRejectedValue(collision);
@@ -78,8 +113,8 @@ describe("AccountsService", () => {
     await expect(
       service.create(ownerId, {
         name: "Personal",
-        accountType: "personal"
-      })
+        accountType: "personal",
+      }),
     ).rejects.toMatchObject({ statusCode: 500 });
     expect(repository.create).toHaveBeenCalledTimes(5);
   });
@@ -91,8 +126,8 @@ describe("AccountsService", () => {
     await expect(
       service.create(ownerId, {
         name: "Personal",
-        accountType: "personal"
-      })
+        accountType: "personal",
+      }),
     ).rejects.toBe(error);
     expect(repository.create).toHaveBeenCalledOnce();
   });
@@ -101,7 +136,7 @@ describe("AccountsService", () => {
     const { service } = setup(null);
 
     await expect(
-      service.getAuthorized("01999999", "usr-owner")
+      service.getAuthorized("01999999", "usr-owner"),
     ).rejects.toMatchObject({ statusCode: 404 } satisfies Partial<AppError>);
   });
 
@@ -109,7 +144,7 @@ describe("AccountsService", () => {
     const { service } = setup();
 
     await expect(
-      service.getAuthorized(account.accountNumber, "usr-other")
+      service.getAuthorized(account.accountNumber, "usr-other"),
     ).rejects.toMatchObject({ statusCode: 403 } satisfies Partial<AppError>);
   });
 
@@ -117,23 +152,25 @@ describe("AccountsService", () => {
     const { service } = setup();
 
     await expect(
-      service.getAuthorized(account.accountNumber, ownerId)
+      service.getAuthorized(account.accountNumber, ownerId),
     ).resolves.toBe(account);
   });
 
   it("lists, gets, and updates mapped owned accounts", async () => {
     const { service, repository } = setup();
     await expect(service.list(ownerId)).resolves.toEqual({
-      accounts: [expect.objectContaining({ accountNumber: account.accountNumber })]
+      accounts: [
+        expect.objectContaining({ accountNumber: account.accountNumber }),
+      ],
     });
     await expect(
-      service.get(account.accountNumber, ownerId)
+      service.get(account.accountNumber, ownerId),
     ).resolves.toMatchObject({ accountNumber: account.accountNumber });
     await expect(
-      service.update(account.accountNumber, ownerId, { name: "Updated" })
+      service.update(account.accountNumber, ownerId, { name: "Updated" }),
     ).resolves.toMatchObject({ accountNumber: account.accountNumber });
     expect(repository.update).toHaveBeenCalledWith(account.accountNumber, {
-      name: "Updated"
+      name: "Updated",
     });
   });
 
@@ -146,13 +183,13 @@ describe("AccountsService", () => {
   it("maps foreign-key deletion failures to conflict", async () => {
     const prismaError = new Prisma.PrismaClientKnownRequestError("constraint", {
       code: "P2003",
-      clientVersion: "6.19.3"
+      clientVersion: "6.19.3",
     });
     const { service, repository } = setup();
     repository.delete.mockRejectedValue(prismaError);
 
     await expect(
-      service.delete(account.accountNumber, ownerId)
+      service.delete(account.accountNumber, ownerId),
     ).rejects.toMatchObject({ statusCode: 409 } satisfies Partial<AppError>);
   });
 
@@ -160,8 +197,69 @@ describe("AccountsService", () => {
     const error = new Error("offline");
     const { service, repository } = setup();
     repository.delete.mockRejectedValue(error);
+    await expect(service.delete(account.accountNumber, ownerId)).rejects.toBe(
+      error,
+    );
+  });
+
+  it("coordinates account lifecycle and balance reads with Ledger", async () => {
+    const { service, repository, ledger } = setupWithLedger();
+
     await expect(
-      service.delete(account.accountNumber, ownerId)
-    ).rejects.toBe(error);
+      service.create(ownerId, {
+        name: "Personal",
+        accountType: "personal",
+      }),
+    ).resolves.toMatchObject({ balance: 25 });
+    expect(repository.setStatus).toHaveBeenCalledWith(
+      account.accountNumber,
+      "ACTIVE",
+    );
+
+    await expect(service.list(ownerId)).resolves.toEqual({
+      accounts: [expect.objectContaining({ balance: 25 })],
+    });
+    await expect(
+      service.get(account.accountNumber, ownerId),
+    ).resolves.toMatchObject({
+      balance: 25,
+    });
+    await expect(
+      service.update(account.accountNumber, ownerId, {
+        name: "Updated",
+        accountType: "personal",
+      }),
+    ).resolves.toMatchObject({ balance: 25 });
+
+    await service.delete(account.accountNumber, ownerId);
+    expect(ledger.closeAccount).toHaveBeenCalledWith(account.accountNumber);
+    expect(repository.close).toHaveBeenCalledWith(account.accountNumber);
+  });
+
+  it("records failed Ledger account creation and closure", async () => {
+    const creation = setupWithLedger();
+    const createError = new Error("create failed");
+    creation.ledger.createAccount.mockRejectedValue(createError);
+    await expect(
+      creation.service.create(ownerId, {
+        name: "Personal",
+        accountType: "personal",
+      }),
+    ).rejects.toBe(createError);
+    expect(creation.repository.setStatus).toHaveBeenCalledWith(
+      account.accountNumber,
+      "LEDGER_CREATION_FAILED",
+    );
+
+    const closure = setupWithLedger();
+    const closeError = new Error("close failed");
+    closure.ledger.closeAccount.mockRejectedValue(closeError);
+    await expect(
+      closure.service.delete(account.accountNumber, ownerId),
+    ).rejects.toBe(closeError);
+    expect(closure.repository.setStatus).toHaveBeenLastCalledWith(
+      account.accountNumber,
+      "LEDGER_CLOSURE_FAILED",
+    );
   });
 });

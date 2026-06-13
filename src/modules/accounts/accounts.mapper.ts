@@ -10,6 +10,6 @@ export function mapAccount(account: BankAccount, balance?: number) {
     balance: balance ?? fromDecimal(account.balance),
     currency: account.currency,
     createdTimestamp: account.createdAt.toISOString(),
-    updatedTimestamp: account.updatedAt.toISOString()
+    updatedTimestamp: account.updatedAt.toISOString(),
   };
 }

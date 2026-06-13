@@ -11,7 +11,7 @@ function transaction(reference: string | null): Transaction {
     reference,
     userId: "usr-owner",
     accountId: "00000000-0000-4000-8000-000000000001",
-    createdAt: new Date("2026-01-01T00:00:00.000Z")
+    createdAt: new Date("2026-01-01T00:00:00.000Z"),
   };
 }
 
@@ -24,7 +24,7 @@ describe("mapTransaction", () => {
       type: "deposit",
       reference: "Salary",
       userId: "usr-owner",
-      createdTimestamp: "2026-01-01T00:00:00.000Z"
+      createdTimestamp: "2026-01-01T00:00:00.000Z",
     });
   });
 

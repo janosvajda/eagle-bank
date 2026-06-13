@@ -3,7 +3,11 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createTestApp } from "../helpers/app.js";
 import { authorization, tokenFor } from "../helpers/auth.js";
 import { resetDatabase, testPrisma } from "../helpers/database.js";
-import { createAccount, createUser, userPayload } from "../helpers/factories.js";
+import {
+  createAccount,
+  createUser,
+  userPayload,
+} from "../helpers/factories.js";
 
 describe("users", () => {
   let app: FastifyInstance;
@@ -20,14 +24,13 @@ describe("users", () => {
     const created = await app.inject({
       method: "POST",
       url: "/v1/users",
-      payload: userPayload
+      payload: userPayload,
     });
     expect(created.statusCode).toBe(201);
     expect(created.json()).not.toHaveProperty("password");
     expect(
-      (
-        await app.inject({ method: "POST", url: "/v1/users", payload: {} })
-      ).statusCode
+      (await app.inject({ method: "POST", url: "/v1/users", payload: {} }))
+        .statusCode,
     ).toBe(400);
   });
 
@@ -35,7 +38,7 @@ describe("users", () => {
     const own = await createUser();
     const other = await createUser({
       email: "other@example.com",
-      phoneNumber: "+447700900002"
+      phoneNumber: "+447700900002",
     });
     const headers = authorization(tokenFor(app, own.id));
 
@@ -44,34 +47,34 @@ describe("users", () => {
         await app.inject({
           method: "GET",
           url: `/v1/users/${own.id}`,
-          headers
+          headers,
         })
-      ).statusCode
+      ).statusCode,
     ).toBe(200);
     expect(
       (
         await app.inject({
           method: "GET",
           url: `/v1/users/${other.id}`,
-          headers
+          headers,
         })
-      ).statusCode
+      ).statusCode,
     ).toBe(403);
     expect(
       (
         await app.inject({
           method: "GET",
           url: "/v1/users/usr-missing",
-          headers
+          headers,
         })
-      ).statusCode
+      ).statusCode,
     ).toBe(404);
 
     const updated = await app.inject({
       method: "PATCH",
       url: `/v1/users/${own.id}`,
       headers,
-      payload: { name: "Updated User" }
+      payload: { name: "Updated User" },
     });
     expect(updated.statusCode).toBe(200);
     expect(updated.json().name).toBe("Updated User");
@@ -81,9 +84,9 @@ describe("users", () => {
           method: "PATCH",
           url: `/v1/users/${other.id}`,
           headers,
-          payload: { name: "No" }
+          payload: { name: "No" },
         })
-      ).statusCode
+      ).statusCode,
     ).toBe(403);
     expect(
       (
@@ -91,9 +94,9 @@ describe("users", () => {
           method: "PATCH",
           url: "/v1/users/usr-missing",
           headers,
-          payload: { name: "No" }
+          payload: { name: "No" },
         })
-      ).statusCode
+      ).statusCode,
     ).toBe(404);
   });
 
@@ -101,7 +104,7 @@ describe("users", () => {
     const own = await createUser();
     const other = await createUser({
       email: "other@example.com",
-      phoneNumber: "+447700900002"
+      phoneNumber: "+447700900002",
     });
     const headers = authorization(tokenFor(app, own.id));
 
@@ -110,18 +113,18 @@ describe("users", () => {
         await app.inject({
           method: "DELETE",
           url: `/v1/users/${other.id}`,
-          headers
+          headers,
         })
-      ).statusCode
+      ).statusCode,
     ).toBe(403);
     expect(
       (
         await app.inject({
           method: "DELETE",
           url: "/v1/users/usr-missing",
-          headers
+          headers,
         })
-      ).statusCode
+      ).statusCode,
     ).toBe(404);
 
     await createAccount(own.id);
@@ -130,25 +133,25 @@ describe("users", () => {
         await app.inject({
           method: "DELETE",
           url: `/v1/users/${own.id}`,
-          headers
+          headers,
         })
-      ).statusCode
+      ).statusCode,
     ).toBe(409);
 
     await testPrisma.ledgerAccount.updateMany({
-      data: { status: "CLOSED" }
+      data: { status: "CLOSED" },
     });
     await testPrisma.bankAccount.updateMany({
-      data: { status: "CLOSED", deletedAt: new Date() }
+      data: { status: "CLOSED", deletedAt: new Date() },
     });
     expect(
       (
         await app.inject({
           method: "DELETE",
           url: `/v1/users/${own.id}`,
-          headers
+          headers,
         })
-      ).statusCode
+      ).statusCode,
     ).toBe(204);
   });
 });

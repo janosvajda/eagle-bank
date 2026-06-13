@@ -9,7 +9,7 @@ export async function createTestApp() {
       PORT: 3000,
       DATABASE_URL: process.env.DATABASE_URL ?? "",
       JWT_SECRET: "test-secret-that-is-at-least-32-characters",
-      JWT_EXPIRES_IN: "1h"
-    }
+      JWT_EXPIRES_IN: "1h",
+    },
   });
 }

@@ -36,33 +36,33 @@ describe("registerErrorHandler", () => {
         expect.objectContaining({
           field: "email",
           message: expect.any(String),
-          type: "invalid_format"
-        })
-      ]
+          type: "invalid_format",
+        }),
+      ],
     });
   });
 
   it.each([
     [
       new AppError(400, ErrorCode.BAD_REQUEST, "Invalid", [
-        { field: "name", message: "Required", type: "missing" }
+        { field: "name", message: "Required", type: "missing" },
       ]),
       400,
       {
         message: "Invalid",
-        details: [{ field: "name", message: "Required", type: "missing" }]
-      }
+        details: [{ field: "name", message: "Required", type: "missing" }],
+      },
     ],
     [
       new AppError(400, ErrorCode.BAD_REQUEST, "Invalid"),
       400,
-      { message: "Invalid", details: [] }
+      { message: "Invalid", details: [] },
     ],
     [
       new AppError(403, ErrorCode.FORBIDDEN, "Forbidden"),
       403,
-      { message: "Forbidden" }
-    ]
+      { message: "Forbidden" },
+    ],
   ])("maps AppError", async (error, status, body) => {
     const response = await requestFor(error);
     expect(response.statusCode).toBe(status);
@@ -72,7 +72,7 @@ describe("registerErrorHandler", () => {
   it("maps Prisma unique violations to conflict", async () => {
     const error = new Prisma.PrismaClientKnownRequestError("duplicate", {
       code: "P2002",
-      clientVersion: "6.19.3"
+      clientVersion: "6.19.3",
     });
     const response = await requestFor(error);
     expect(response.statusCode).toBe(409);
@@ -90,10 +90,12 @@ describe("registerErrorHandler", () => {
     const response = await app.inject({ method: "GET", url: "/" });
 
     expect(response.statusCode).toBe(500);
-    expect(response.json()).toEqual({ message: "An unexpected error occurred" });
+    expect(response.json()).toEqual({
+      message: "An unexpected error occurred",
+    });
     expect(log).toHaveBeenCalledWith(
       { err: expect.any(Error) },
-      "Unhandled request error"
+      "Unhandled request error",
     );
     await app.close();
   });

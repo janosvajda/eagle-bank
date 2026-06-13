@@ -3,12 +3,12 @@ import { describe, expect, it } from "vitest";
 import { fromDecimal, moneySchema, toDecimal } from "./money.js";
 import {
   accountNumberSchema,
-  updateAccountSchema
+  updateAccountSchema,
 } from "../../modules/accounts/accounts.schemas.js";
 import { createTransactionSchema } from "../../modules/transactions/transactions.schemas.js";
 import {
   createUserSchema,
-  updateUserSchema
+  updateUserSchema,
 } from "../../modules/users/users.schemas.js";
 
 describe("money handling", () => {
@@ -34,17 +34,17 @@ describe("request schemas", () => {
       line1: "1 Test Road",
       town: "London",
       county: "Greater London",
-      postcode: "SW1A 1AA"
+      postcode: "SW1A 1AA",
     },
     phoneNumber: "+447700900001",
     email: "test@example.com",
-    password: "Password123!"
+    password: "Password123!",
   };
 
   it("accepts a contract-compliant user and rejects unknown fields", () => {
     expect(createUserSchema.parse(validUser)).toEqual(validUser);
     expect(() =>
-      createUserSchema.parse({ ...validUser, administrator: true })
+      createUserSchema.parse({ ...validUser, administrator: true }),
     ).toThrow();
   });
 
@@ -63,23 +63,23 @@ describe("request schemas", () => {
       createTransactionSchema.parse({
         amount: 12.34,
         currency: "GBP",
-        type: "deposit"
-      })
+        type: "deposit",
+      }),
     ).toMatchObject({ amount: 12.34, currency: "GBP", type: "deposit" });
 
     expect(() =>
       createTransactionSchema.parse({
         amount: 12.345,
         currency: "GBP",
-        type: "deposit"
-      })
+        type: "deposit",
+      }),
     ).toThrow();
     expect(() =>
       createTransactionSchema.parse({
         amount: 12,
         currency: "USD",
-        type: "deposit"
-      })
+        type: "deposit",
+      }),
     ).toThrow();
   });
 });

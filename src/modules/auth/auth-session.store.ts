@@ -9,27 +9,11 @@ import {
   PutCommand,
 } from "@aws-sdk/lib-dynamodb";
 import { MILLISECONDS_PER_SECOND } from "../../common/constants.js";
-
-export interface AuthSession {
-  userId: string;
-  sessionId: string;
-  tokenId: string;
-  issuedAt: string;
-  expiresAt: string;
-  expiresAtEpoch: number;
-  revokedAt: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface AuthSessionStore {
-  create(userId: string, ttlSeconds: number): Promise<AuthSession>;
-  get(
-    userId: string,
-    sessionId: string,
-    tokenId?: string,
-  ): Promise<AuthSession | null>;
-}
+import type {
+  AuthSession,
+  AuthSessionStore,
+} from "./auth-session.contracts.js";
+import { authSessionSchema } from "./auth-session.contracts.js";
 
 export class InMemoryAuthSessionStore implements AuthSessionStore {
   private readonly sessions = new Map<string, AuthSession>();
@@ -120,7 +104,7 @@ export class DynamoDbAuthSessionStore implements AuthSessionStore {
         ConsistentRead: true,
       }),
     );
-    return (result.Item as AuthSession | undefined) ?? null;
+    return result.Item ? authSessionSchema.parse(result.Item) : null;
   }
 }
 

@@ -13,7 +13,7 @@ describe("healthRoutes", () => {
 
   it.each([
     ["ready", vi.fn().mockResolvedValue([{ "?column?": 1 }]), 200],
-    ["not_ready", vi.fn().mockRejectedValue(new Error("down")), 503]
+    ["not_ready", vi.fn().mockRejectedValue(new Error("down")), 503],
   ])("reports %s dependency state", async (status, queryRaw, code) => {
     const app = fastify();
     await app.register(healthRoutes({ $queryRaw: queryRaw } as never));

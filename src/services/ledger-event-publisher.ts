@@ -24,9 +24,13 @@ const publisher = new LedgerEventPublisher(
   prisma,
   createSqsClient({
     region: config.AWS_REGION,
-    endpoint: process.env.SQS_ENDPOINT || undefined,
-    accessKeyId: config.AWS_ACCESS_KEY_ID,
-    secretAccessKey: config.AWS_SECRET_ACCESS_KEY,
+    ...(process.env.SQS_ENDPOINT ? { endpoint: process.env.SQS_ENDPOINT } : {}),
+    ...(config.AWS_ACCESS_KEY_ID
+      ? { accessKeyId: config.AWS_ACCESS_KEY_ID }
+      : {}),
+    ...(config.AWS_SECRET_ACCESS_KEY
+      ? { secretAccessKey: config.AWS_SECRET_ACCESS_KEY }
+      : {}),
   }),
   {
     queueUrl,

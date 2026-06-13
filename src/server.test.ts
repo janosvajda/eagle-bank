@@ -5,7 +5,7 @@ const config = {
   PORT: 3000,
   DATABASE_URL: "postgresql://localhost/test",
   JWT_SECRET: "test-secret-that-is-at-least-32-characters",
-  JWT_EXPIRES_IN: "1h"
+  JWT_EXPIRES_IN: "1h",
 };
 
 afterEach(() => {
@@ -22,7 +22,10 @@ describe("server entry point", () => {
     const listen = vi.fn().mockResolvedValue(undefined);
     const disconnect = vi.fn().mockResolvedValue(undefined);
     const handlers = new Map<string, () => void>();
-    vi.spyOn(process, "on").mockImplementation(((event: string, handler: () => void) => {
+    vi.spyOn(process, "on").mockImplementation(((
+      event: string,
+      handler: () => void,
+    ) => {
       handlers.set(event, handler);
       return process;
     }) as never);
@@ -30,12 +33,12 @@ describe("server entry point", () => {
       buildApp: vi.fn().mockResolvedValue({
         close,
         listen,
-        log: { error: vi.fn() }
-      })
+        log: { error: vi.fn() },
+      }),
     }));
     vi.doMock("./config/env.js", () => ({ loadConfig: () => config }));
     vi.doMock("./db/prisma.js", () => ({
-      prisma: { $disconnect: disconnect }
+      prisma: { $disconnect: disconnect },
     }));
 
     await import("./server.js");
@@ -62,12 +65,12 @@ describe("server entry point", () => {
       buildApp: vi.fn().mockResolvedValue({
         close,
         listen: vi.fn().mockRejectedValue(error),
-        log: { error: logError }
-      })
+        log: { error: logError },
+      }),
     }));
     vi.doMock("./config/env.js", () => ({ loadConfig: () => config }));
     vi.doMock("./db/prisma.js", () => ({
-      prisma: { $disconnect: disconnect }
+      prisma: { $disconnect: disconnect },
     }));
 
     await import("./server.js");

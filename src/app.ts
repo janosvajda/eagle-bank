@@ -22,8 +22,8 @@ import {
   createDynamoDbClient,
   DynamoDbAuthSessionStore,
   InMemoryAuthSessionStore,
-  type AuthSessionStore,
 } from "./modules/auth/auth-session.store.js";
+import type { AuthSessionStore } from "./modules/auth/auth-session.contracts.js";
 import {
   AuthHttpClient,
   RemoteAuthSessionStore,
@@ -72,9 +72,15 @@ export async function buildApp(
         : new DynamoDbAuthSessionStore(
             createDynamoDbClient({
               region: options.config.AWS_REGION ?? "eu-west-2",
-              endpoint: options.config.DYNAMODB_ENDPOINT,
-              accessKeyId: options.config.AWS_ACCESS_KEY_ID,
-              secretAccessKey: options.config.AWS_SECRET_ACCESS_KEY,
+              ...(options.config.DYNAMODB_ENDPOINT
+                ? { endpoint: options.config.DYNAMODB_ENDPOINT }
+                : {}),
+              ...(options.config.AWS_ACCESS_KEY_ID
+                ? { accessKeyId: options.config.AWS_ACCESS_KEY_ID }
+                : {}),
+              ...(options.config.AWS_SECRET_ACCESS_KEY
+                ? { secretAccessKey: options.config.AWS_SECRET_ACCESS_KEY }
+                : {}),
             }),
             options.config.DYNAMODB_AUTH_SESSIONS_TABLE ??
               "eagle-bank-auth-sessions",

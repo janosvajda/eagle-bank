@@ -9,34 +9,34 @@ describe("transactionsRoutes", () => {
     const service = {
       create: vi.fn().mockResolvedValue({ id: "tan-abc123" }),
       list: vi.fn().mockResolvedValue({ transactions: [] }),
-      get: vi.fn().mockResolvedValue({ id: "tan-abc123" })
+      get: vi.fn().mockResolvedValue({ id: "tan-abc123" }),
     };
     const app = fastify();
     await app.register(fastifyJwt, {
-      secret: "test-secret-that-is-at-least-32-characters"
+      secret: "test-secret-that-is-at-least-32-characters",
     });
     app.decorate("authSessions", {
       create: vi.fn(),
       get: vi.fn().mockResolvedValue({
         tokenId: "token-id",
         revokedAt: null,
-        expiresAtEpoch: 9999999999
-      })
+        expiresAtEpoch: 9999999999,
+      }),
     });
     await app.register(
-      transactionsRoutes(service as unknown as TransactionsService)
+      transactionsRoutes(service as unknown as TransactionsService),
     );
     const headers = {
       authorization: `Bearer ${app.jwt.sign({
         sub: "usr-owner",
         sid: "session-id",
-        jti: "token-id"
-      })}`
+        jti: "token-id",
+      })}`,
     };
     const payload = {
       amount: 10,
       currency: "GBP",
-      type: "deposit"
+      type: "deposit",
     };
 
     expect(
@@ -45,15 +45,15 @@ describe("transactionsRoutes", () => {
           method: "POST",
           url: "/v1/accounts/01234567/transactions",
           headers,
-          payload
+          payload,
         })
-      ).statusCode
+      ).statusCode,
     ).toBe(201);
     expect(service.create).toHaveBeenCalledWith(
       "01234567",
       "usr-owner",
       payload,
-      undefined
+      undefined,
     );
 
     expect(
@@ -61,9 +61,9 @@ describe("transactionsRoutes", () => {
         await app.inject({
           method: "GET",
           url: "/v1/accounts/01234567/transactions",
-          headers
+          headers,
         })
-      ).statusCode
+      ).statusCode,
     ).toBe(200);
     expect(service.list).toHaveBeenCalledWith("01234567", "usr-owner");
 
@@ -72,14 +72,14 @@ describe("transactionsRoutes", () => {
         await app.inject({
           method: "GET",
           url: "/v1/accounts/01234567/transactions/tan-abc123",
-          headers
+          headers,
         })
-      ).statusCode
+      ).statusCode,
     ).toBe(200);
     expect(service.get).toHaveBeenCalledWith(
       "01234567",
       "tan-abc123",
-      "usr-owner"
+      "usr-owner",
     );
     await app.close();
   });

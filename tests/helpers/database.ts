@@ -11,6 +11,6 @@ export async function resetDatabase(): Promise<void> {
     testPrisma.ledgerAccount.deleteMany(),
     testPrisma.transaction.deleteMany(),
     testPrisma.bankAccount.deleteMany(),
-    testPrisma.user.deleteMany()
+    testPrisma.user.deleteMany(),
   ]);
 }

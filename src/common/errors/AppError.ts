@@ -11,7 +11,7 @@ export class AppError extends Error {
     public readonly statusCode: number,
     public readonly code: ErrorCode,
     message: string,
-    public readonly details?: ErrorDetail[]
+    public readonly details?: ErrorDetail[],
   ) {
     super(message);
     this.name = "AppError";

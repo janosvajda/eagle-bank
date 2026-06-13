@@ -11,7 +11,7 @@ describe("loginSchema", () => {
   it("rejects malformed credentials", () => {
     expect(() => loginSchema.parse({ email: "bad", password: "x" })).toThrow();
     expect(() =>
-      loginSchema.parse({ email: "user@example.com", password: "" })
+      loginSchema.parse({ email: "user@example.com", password: "" }),
     ).toThrow();
   });
 });

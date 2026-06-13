@@ -1,0 +1,16 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "exactOptionalPropertyTypes": false,
+    "noEmit": true,
+    "rootDir": "..",
+    "types": ["node", "vitest/globals"]
+  },
+  "include": [
+    "bin/**/*.ts",
+    "lib/**/*.ts",
+    "test/**/*.ts",
+    "../vitest.infra.config.ts"
+  ],
+  "exclude": ["../node_modules", "../dist"]
+}

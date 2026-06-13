@@ -9,7 +9,17 @@ import { ErrorCode } from "../common/errors/error-codes.js";
 import { UsersRepository } from "../modules/users/users.repository.js";
 import { AuthService } from "../modules/auth/auth.service.js";
 import { authRoutes } from "../modules/auth/auth.routes.js";
-import type { AuthSessionStore } from "../modules/auth/auth-session.store.js";
+import type { AuthSessionStore } from "../modules/auth/auth-session.contracts.js";
+import type {
+  PasswordHashRequest,
+  PasswordHashResponse,
+  SessionIntrospectionRequest,
+  SessionIntrospectionResponse,
+} from "../modules/auth/auth.contracts.js";
+import {
+  passwordHashRequestSchema,
+  sessionIntrospectionRequestSchema,
+} from "../modules/auth/auth.contracts.js";
 import { healthRoutes } from "../modules/health/health.routes.js";
 import { verifyInternalServiceToken } from "../common/auth/internal-service-jwt.js";
 import { MILLISECONDS_PER_SECOND } from "../common/constants.js";
@@ -52,17 +62,19 @@ export async function buildAuthApp(options: {
       throw new AppError(401, ErrorCode.UNAUTHORIZED, "Unauthorized");
     }
   });
-  app.post("/internal/auth/password-hash", async (request) => ({
-    passwordHash: await argon2.hash(
-      (request.body as { password: string }).password,
-    ),
-  }));
-  app.post("/internal/auth/sessions/introspect", async (request) => {
-    const body = request.body as {
-      userId: string;
-      sessionId: string;
-      tokenId: string;
-    };
+  app.post<{ Body: PasswordHashRequest; Reply: PasswordHashResponse }>(
+    "/internal/auth/password-hash",
+    async (request) => ({
+      passwordHash: await argon2.hash(
+        passwordHashRequestSchema.parse(request.body).password,
+      ),
+    }),
+  );
+  app.post<{
+    Body: SessionIntrospectionRequest;
+    Reply: SessionIntrospectionResponse;
+  }>("/internal/auth/sessions/introspect", async (request) => {
+    const body = sessionIntrospectionRequestSchema.parse(request.body);
     const session = await options.sessions.get(body.userId, body.sessionId);
 
     // A valid JWT is insufficient by itself: the backing session must still

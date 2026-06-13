@@ -16,8 +16,8 @@ try {
       postcode: "SW1A 1AA",
       phoneNumber: "+447700900001",
       email: "demo@eaglebank.test",
-      passwordHash: await argon2.hash("DemoPassword123!")
-    }
+      passwordHash: await argon2.hash("DemoPassword123!"),
+    },
   });
 } finally {
   await prisma.$disconnect();

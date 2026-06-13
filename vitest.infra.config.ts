@@ -4,6 +4,6 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["infra/test/**/*.test.ts"],
-    coverage: { enabled: false }
-  }
+    coverage: { enabled: false },
+  },
 });

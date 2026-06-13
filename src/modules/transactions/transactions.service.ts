@@ -7,7 +7,7 @@ import type { AccountsService } from "../accounts/accounts.service.js";
 import { mapTransaction } from "./transactions.mapper.js";
 import type { TransactionsRepository } from "./transactions.repository.js";
 import type { CreateTransactionInput } from "./transactions.schemas.js";
-import type { LedgerGateway } from "../ledger/ledger.service.js";
+import type { LedgerGateway } from "../ledger/ledger.contracts.js";
 
 export class TransactionsService {
   constructor(
@@ -30,8 +30,13 @@ export class TransactionsService {
       return this.ledger.postTransaction({
         accountNumber,
         userId,
-        ...input,
-        idempotencyKey,
+        amount: input.amount,
+        currency: input.currency,
+        type: input.type,
+        ...(input.reference !== undefined
+          ? { reference: input.reference }
+          : {}),
+        ...(idempotencyKey !== undefined ? { idempotencyKey } : {}),
       });
     }
     const amount = toDecimal(input.amount);
@@ -65,7 +70,9 @@ export class TransactionsService {
             amount,
             currency: input.currency,
             type: input.type,
-            reference: input.reference,
+            ...(input.reference !== undefined
+              ? { reference: input.reference }
+              : {}),
             userId,
             accountId: account.id,
           },
