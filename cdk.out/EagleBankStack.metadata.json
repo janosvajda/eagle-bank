@@ -1,0 +1,1629 @@
+{
+  "/EagleBankStack": [
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/AuthSessions": [
+    {
+      "type": "aws:cdk:hasPhysicalName",
+      "data": {
+        "Ref": "AuthSessions6F3F594E"
+      }
+    }
+  ],
+  "/EagleBankStack/ApiService": [
+    {
+      "type": "aws:cdk:warning",
+      "data": "Enable the 'circuitBreaker' property to trigger a quicker deployment failure if tasks are failing to come start (without this setting deployments may take up to 3 hours to fail). [ack: @aws-cdk/aws-ecs:shouldUseCircuitBreaker]",
+      "trace": [
+        "Annotations.addMessage (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/core/lib/annotations.js:1:3441)",
+        "Annotations.addWarningV2 (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/core/lib/annotations.js:1:2129)",
+        "new BaseService2 (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ecs/lib/base/base-service.js:1:14671)",
+        "new BaseService2 (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/core/lib/no-box-stack-traces.js:1:345)",
+        "new FargateService2 (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ecs/lib/fargate/fargate-service.js:1:7829)",
+        "new FargateService2 (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/core/lib/prop-injectable.js:1:855)",
+        "service (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:177:7)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:185:17)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "ModuleJob.run (node:internal/modules/esm/module_job:263:25)",
+        "async ModuleLoader.import (node:internal/modules/esm/loader:540:24)",
+        "async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)"
+      ]
+    },
+    {
+      "type": "aws:cdk:warning",
+      "data": "minHealthyPercent has not been configured so the default value of 50% is used. The number of running tasks will decrease below the desired count during deployments etc. See https://github.com/aws/aws-cdk/issues/31705 [ack: @aws-cdk/aws-ecs:minHealthyPercent]",
+      "trace": [
+        "Annotations.addMessage (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/core/lib/annotations.js:1:3441)",
+        "Annotations.addWarningV2 (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/core/lib/annotations.js:1:2129)",
+        "new BaseService2 (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ecs/lib/base/base-service.js:1:16295)",
+        "new BaseService2 (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/core/lib/no-box-stack-traces.js:1:345)",
+        "new FargateService2 (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ecs/lib/fargate/fargate-service.js:1:7829)",
+        "new FargateService2 (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/core/lib/prop-injectable.js:1:855)",
+        "service (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:177:7)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:185:17)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "ModuleJob.run (node:internal/modules/esm/module_job:263:25)",
+        "async ModuleLoader.import (node:internal/modules/esm/loader:540:24)",
+        "async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)"
+      ]
+    }
+  ],
+  "/EagleBankStack/AuthService": [
+    {
+      "type": "aws:cdk:warning",
+      "data": "Enable the 'circuitBreaker' property to trigger a quicker deployment failure if tasks are failing to come start (without this setting deployments may take up to 3 hours to fail). [ack: @aws-cdk/aws-ecs:shouldUseCircuitBreaker]",
+      "trace": [
+        "Annotations.addMessage (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/core/lib/annotations.js:1:3441)",
+        "Annotations.addWarningV2 (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/core/lib/annotations.js:1:2129)",
+        "new BaseService2 (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ecs/lib/base/base-service.js:1:14671)",
+        "new BaseService2 (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/core/lib/no-box-stack-traces.js:1:345)",
+        "new FargateService2 (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ecs/lib/fargate/fargate-service.js:1:7829)",
+        "new FargateService2 (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/core/lib/prop-injectable.js:1:855)",
+        "service (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:177:7)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:186:18)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "ModuleJob.run (node:internal/modules/esm/module_job:263:25)",
+        "async ModuleLoader.import (node:internal/modules/esm/loader:540:24)",
+        "async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)"
+      ]
+    },
+    {
+      "type": "aws:cdk:warning",
+      "data": "minHealthyPercent has not been configured so the default value of 50% is used. The number of running tasks will decrease below the desired count during deployments etc. See https://github.com/aws/aws-cdk/issues/31705 [ack: @aws-cdk/aws-ecs:minHealthyPercent]",
+      "trace": [
+        "Annotations.addMessage (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/core/lib/annotations.js:1:3441)",
+        "Annotations.addWarningV2 (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/core/lib/annotations.js:1:2129)",
+        "new BaseService2 (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ecs/lib/base/base-service.js:1:16295)",
+        "new BaseService2 (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/core/lib/no-box-stack-traces.js:1:345)",
+        "new FargateService2 (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ecs/lib/fargate/fargate-service.js:1:7829)",
+        "new FargateService2 (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/core/lib/prop-injectable.js:1:855)",
+        "service (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:177:7)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:186:18)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "ModuleJob.run (node:internal/modules/esm/module_job:263:25)",
+        "async ModuleLoader.import (node:internal/modules/esm/loader:540:24)",
+        "async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)"
+      ]
+    }
+  ],
+  "/EagleBankStack/LedgerService": [
+    {
+      "type": "aws:cdk:warning",
+      "data": "Enable the 'circuitBreaker' property to trigger a quicker deployment failure if tasks are failing to come start (without this setting deployments may take up to 3 hours to fail). [ack: @aws-cdk/aws-ecs:shouldUseCircuitBreaker]",
+      "trace": [
+        "Annotations.addMessage (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/core/lib/annotations.js:1:3441)",
+        "Annotations.addWarningV2 (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/core/lib/annotations.js:1:2129)",
+        "new BaseService2 (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ecs/lib/base/base-service.js:1:14671)",
+        "new BaseService2 (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/core/lib/no-box-stack-traces.js:1:345)",
+        "new FargateService2 (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ecs/lib/fargate/fargate-service.js:1:7829)",
+        "new FargateService2 (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/core/lib/prop-injectable.js:1:855)",
+        "service (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:177:7)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:187:5)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "ModuleJob.run (node:internal/modules/esm/module_job:263:25)",
+        "async ModuleLoader.import (node:internal/modules/esm/loader:540:24)",
+        "async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)"
+      ]
+    },
+    {
+      "type": "aws:cdk:warning",
+      "data": "minHealthyPercent has not been configured so the default value of 50% is used. The number of running tasks will decrease below the desired count during deployments etc. See https://github.com/aws/aws-cdk/issues/31705 [ack: @aws-cdk/aws-ecs:minHealthyPercent]",
+      "trace": [
+        "Annotations.addMessage (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/core/lib/annotations.js:1:3441)",
+        "Annotations.addWarningV2 (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/core/lib/annotations.js:1:2129)",
+        "new BaseService2 (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ecs/lib/base/base-service.js:1:16295)",
+        "new BaseService2 (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/core/lib/no-box-stack-traces.js:1:345)",
+        "new FargateService2 (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ecs/lib/fargate/fargate-service.js:1:7829)",
+        "new FargateService2 (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/core/lib/prop-injectable.js:1:855)",
+        "service (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:177:7)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:187:5)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "ModuleJob.run (node:internal/modules/esm/module_job:263:25)",
+        "async ModuleLoader.import (node:internal/modules/esm/loader:540:24)",
+        "async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)"
+      ]
+    }
+  ],
+  "/EagleBankStack/LedgerWorkerService": [
+    {
+      "type": "aws:cdk:warning",
+      "data": "Enable the 'circuitBreaker' property to trigger a quicker deployment failure if tasks are failing to come start (without this setting deployments may take up to 3 hours to fail). [ack: @aws-cdk/aws-ecs:shouldUseCircuitBreaker]",
+      "trace": [
+        "Annotations.addMessage (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/core/lib/annotations.js:1:3441)",
+        "Annotations.addWarningV2 (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/core/lib/annotations.js:1:2129)",
+        "new BaseService2 (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ecs/lib/base/base-service.js:1:14671)",
+        "new BaseService2 (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/core/lib/no-box-stack-traces.js:1:345)",
+        "new FargateService2 (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ecs/lib/fargate/fargate-service.js:1:7829)",
+        "new FargateService2 (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/core/lib/prop-injectable.js:1:855)",
+        "service (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:177:7)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:188:5)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "ModuleJob.run (node:internal/modules/esm/module_job:263:25)",
+        "async ModuleLoader.import (node:internal/modules/esm/loader:540:24)",
+        "async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)"
+      ]
+    },
+    {
+      "type": "aws:cdk:warning",
+      "data": "minHealthyPercent has not been configured so the default value of 50% is used. The number of running tasks will decrease below the desired count during deployments etc. See https://github.com/aws/aws-cdk/issues/31705 [ack: @aws-cdk/aws-ecs:minHealthyPercent]",
+      "trace": [
+        "Annotations.addMessage (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/core/lib/annotations.js:1:3441)",
+        "Annotations.addWarningV2 (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/core/lib/annotations.js:1:2129)",
+        "new BaseService2 (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ecs/lib/base/base-service.js:1:16295)",
+        "new BaseService2 (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/core/lib/no-box-stack-traces.js:1:345)",
+        "new FargateService2 (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ecs/lib/fargate/fargate-service.js:1:7829)",
+        "new FargateService2 (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/core/lib/prop-injectable.js:1:855)",
+        "service (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:177:7)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:188:5)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "ModuleJob.run (node:internal/modules/esm/module_job:263:25)",
+        "async ModuleLoader.import (node:internal/modules/esm/loader:540:24)",
+        "async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)"
+      ]
+    }
+  ],
+  "/EagleBankStack/LedgerEventPublisherService": [
+    {
+      "type": "aws:cdk:warning",
+      "data": "Enable the 'circuitBreaker' property to trigger a quicker deployment failure if tasks are failing to come start (without this setting deployments may take up to 3 hours to fail). [ack: @aws-cdk/aws-ecs:shouldUseCircuitBreaker]",
+      "trace": [
+        "Annotations.addMessage (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/core/lib/annotations.js:1:3441)",
+        "Annotations.addWarningV2 (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/core/lib/annotations.js:1:2129)",
+        "new BaseService2 (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ecs/lib/base/base-service.js:1:14671)",
+        "new BaseService2 (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/core/lib/no-box-stack-traces.js:1:345)",
+        "new FargateService2 (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ecs/lib/fargate/fargate-service.js:1:7829)",
+        "new FargateService2 (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/core/lib/prop-injectable.js:1:855)",
+        "service (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:177:7)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:189:5)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "ModuleJob.run (node:internal/modules/esm/module_job:263:25)",
+        "async ModuleLoader.import (node:internal/modules/esm/loader:540:24)",
+        "async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)"
+      ]
+    },
+    {
+      "type": "aws:cdk:warning",
+      "data": "minHealthyPercent has not been configured so the default value of 50% is used. The number of running tasks will decrease below the desired count during deployments etc. See https://github.com/aws/aws-cdk/issues/31705 [ack: @aws-cdk/aws-ecs:minHealthyPercent]",
+      "trace": [
+        "Annotations.addMessage (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/core/lib/annotations.js:1:3441)",
+        "Annotations.addWarningV2 (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/core/lib/annotations.js:1:2129)",
+        "new BaseService2 (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ecs/lib/base/base-service.js:1:16295)",
+        "new BaseService2 (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/core/lib/no-box-stack-traces.js:1:345)",
+        "new FargateService2 (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ecs/lib/fargate/fargate-service.js:1:7829)",
+        "new FargateService2 (/Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/core/lib/prop-injectable.js:1:855)",
+        "service (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:177:7)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:189:5)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "ModuleJob.run (node:internal/modules/esm/module_job:263:25)",
+        "async ModuleLoader.import (node:internal/modules/esm/loader:540:24)",
+        "async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)"
+      ]
+    }
+  ],
+  "/EagleBankStack/WebAcl": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "WebAcl"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:222:20)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/WebAclAssociation": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "WebAclAssociation"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:260:5)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/BootstrapVersion": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "BootstrapVersion"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/EagleBankStack/CheckBootstrapVersion": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CheckBootstrapVersion"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/EagleBankStack/Vpc/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "Vpc8378EB38"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Vpc2 in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:22:17)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/Vpc/IGW": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcIGWD7BA715C"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Vpc2 in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:22:17)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/Vpc/VPCGW": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcVPCGWBF912B6E"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Vpc2 in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:22:17)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/Cluster/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ClusterEB0386A7"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Cluster2 in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:43:21)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/DatabaseSecret/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "DatabaseSecret86DBB7B3"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new DatabaseSecret2 in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:44:28)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/JwtSecret/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "JwtSecretB8834B39"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Secret2 in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:47:23)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/InternalJwtSecret/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "InternalJwtSecretF22A2718"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Secret2 in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:48:31)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/DatabaseSecurityGroup/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "DatabaseSecurityGroup7319C0F6"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new SecurityGroup2 in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:50:24)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/DatabaseSecurityGroup/from EagleBankStackServiceSecurityGroup1A870012:5432": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "DatabaseSecurityGroupfromEagleBankStackServiceSecurityGroup1A87001254321A8B37F9"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.<anonymous> in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:57:16)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/ServiceSecurityGroup/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ServiceSecurityGroup61DE1A49"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new SecurityGroup2 in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:54:23)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/ServiceSecurityGroup/from EagleBankStackAlbSecurityGroupBF9B5E44:3000-3002": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ServiceSecurityGroupfromEagleBankStackAlbSecurityGroupBF9B5E44300030022EC0ECEE"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.<anonymous> in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:193:15)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/ServiceSecurityGroup/from EagleBankStackAlbSecurityGroupBF9B5E44:3000": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ServiceSecurityGroupfromEagleBankStackAlbSecurityGroupBF9B5E4430009D22F445"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/EagleBankStack/ServiceSecurityGroup/from EagleBankStackAlbSecurityGroupBF9B5E44:3001": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ServiceSecurityGroupfromEagleBankStackAlbSecurityGroupBF9B5E4430016589171A"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/EagleBankStack/Database/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "DatabaseB269D8BB"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new DatabaseInstance2 in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:58:22)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/AuthSessions/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "AuthSessions6F3F594E"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Table2 in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:76:22)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/LedgerEventsDlq/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "LedgerEventsDlqCCEBB20E"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Queue2 in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:86:23)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/LedgerEvents/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "LedgerEventsFA32F47B"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Queue2 in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:89:20)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/LedgerCommandsDlq/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "LedgerCommandsDlq11B4FA9A"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Queue2 in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:93:25)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/LedgerCommands/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "LedgerCommands3998913B"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Queue2 in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:98:22)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/apiTask/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "apiTask2CF13C0A"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new FargateTaskDefinition2 in .pnpm...",
+        "makeTask (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:117:20)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:140:21)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/apiLogs/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "apiLogsC6C29EB1"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new LogGroup2 in .pnpm...",
+        "makeTask (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:121:24)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:140:21)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/auth-serviceTask/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "authserviceTask30F43778"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new FargateTaskDefinition2 in .pnpm...",
+        "makeTask (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:117:20)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:141:22)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/auth-serviceLogs/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "authserviceLogs9D762449"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new LogGroup2 in .pnpm...",
+        "makeTask (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:121:24)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:141:22)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/ledger-serviceTask/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ledgerserviceTaskD3A8C9C9"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new FargateTaskDefinition2 in .pnpm...",
+        "makeTask (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:117:20)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:146:24)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/ledger-serviceLogs/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ledgerserviceLogs24721A01"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new LogGroup2 in .pnpm...",
+        "makeTask (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:121:24)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:146:24)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/ledger-workerTask/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ledgerworkerTask32E880EB"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new FargateTaskDefinition2 in .pnpm...",
+        "makeTask (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:117:20)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:151:24)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/ledger-workerLogs/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ledgerworkerLogs0630664D"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new LogGroup2 in .pnpm...",
+        "makeTask (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:121:24)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:151:24)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/ledger-event-publisherTask/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ledgereventpublisherTask05FA370B"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new FargateTaskDefinition2 in .pnpm...",
+        "makeTask (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:117:20)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:155:27)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/ledger-event-publisherLogs/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ledgereventpublisherLogsE6C5F0E7"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new LogGroup2 in .pnpm...",
+        "makeTask (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:121:24)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:155:27)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/migrationTask/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "migrationTaskD97490C8"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new FargateTaskDefinition2 in .pnpm...",
+        "makeTask (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:117:20)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:159:5)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/migrationLogs/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "migrationLogs47067290"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new LogGroup2 in .pnpm...",
+        "makeTask (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:121:24)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:159:5)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/ApiService/Service": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ApiServiceC9037CF0"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new FargateService2 in .pnpm...",
+        "service (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:177:7)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:185:17)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/AuthService/Service": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "AuthService3C2B741A"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new FargateService2 in .pnpm...",
+        "service (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:177:7)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:186:18)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/LedgerService/Service": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "LedgerService4B131B90"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new FargateService2 in .pnpm...",
+        "service (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:177:7)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:187:5)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/LedgerWorkerService/Service": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "LedgerWorkerServiceCC2275AC"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new FargateService2 in .pnpm...",
+        "service (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:177:7)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:188:5)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/LedgerEventPublisherService/Service": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "LedgerEventPublisherService73F91A91"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new FargateService2 in .pnpm...",
+        "service (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:177:7)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:189:5)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/AlbSecurityGroup/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "AlbSecurityGroup86A59E99"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new SecurityGroup2 in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:191:19)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/Alb/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "Alb16C2F182"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new ApplicationLoadBalancer2 in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:194:17)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/CDKMetadata/Default": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CDKMetadata"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm, node internals...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/EagleBankStack/Vpc/publicSubnet1/Subnet": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcpublicSubnet1Subnet2BB74ED7"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:268 in .pnpm...",
+        "Array.forEach (:)",
+        "....pnpm..."
+      ]
+    }
+  ],
+  "/EagleBankStack/Vpc/publicSubnet1/RouteTable": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcpublicSubnet1RouteTable15C15F8E"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:268 in .pnpm...",
+        "Array.forEach (:)",
+        "....pnpm..."
+      ]
+    }
+  ],
+  "/EagleBankStack/Vpc/publicSubnet1/RouteTableAssociation": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcpublicSubnet1RouteTableAssociation4E83B6E4"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:268 in .pnpm...",
+        "Array.forEach (:)",
+        "....pnpm..."
+      ]
+    }
+  ],
+  "/EagleBankStack/Vpc/publicSubnet1/DefaultRoute": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcpublicSubnet1DefaultRouteB88F9E93"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:208 in .pnpm...",
+        "Array.forEach (:)",
+        "...new Vpc2 in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:22:17)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/Vpc/publicSubnet1/EIP": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcpublicSubnet1EIP411541E6"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Vpc2 in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:22:17)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/Vpc/publicSubnet1/NATGateway": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcpublicSubnet1NATGatewayA036E8A6"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Vpc2 in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:22:17)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/Vpc/publicSubnet2/Subnet": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcpublicSubnet2SubnetE34B022A"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:268 in .pnpm...",
+        "Array.forEach (:)",
+        "....pnpm..."
+      ]
+    }
+  ],
+  "/EagleBankStack/Vpc/publicSubnet2/RouteTable": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcpublicSubnet2RouteTableC5A6DF77"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:268 in .pnpm...",
+        "Array.forEach (:)",
+        "....pnpm..."
+      ]
+    }
+  ],
+  "/EagleBankStack/Vpc/publicSubnet2/RouteTableAssociation": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcpublicSubnet2RouteTableAssociationCCE257FF"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:268 in .pnpm...",
+        "Array.forEach (:)",
+        "....pnpm..."
+      ]
+    }
+  ],
+  "/EagleBankStack/Vpc/publicSubnet2/DefaultRoute": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcpublicSubnet2DefaultRoute732F0BEB"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:208 in .pnpm...",
+        "Array.forEach (:)",
+        "...new Vpc2 in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:22:17)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/Vpc/servicesSubnet1/Subnet": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcservicesSubnet1Subnet0A6944DC"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:270 in .pnpm...",
+        "Array.forEach (:)",
+        "....pnpm..."
+      ]
+    }
+  ],
+  "/EagleBankStack/Vpc/servicesSubnet1/RouteTable": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcservicesSubnet1RouteTable9D793B35"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:270 in .pnpm...",
+        "Array.forEach (:)",
+        "....pnpm..."
+      ]
+    }
+  ],
+  "/EagleBankStack/Vpc/servicesSubnet1/RouteTableAssociation": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcservicesSubnet1RouteTableAssociation4B159B0C"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:270 in .pnpm...",
+        "Array.forEach (:)",
+        "....pnpm..."
+      ]
+    }
+  ],
+  "/EagleBankStack/Vpc/servicesSubnet1/DefaultRoute": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcservicesSubnet1DefaultRoute3E87CB76"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Vpc2 in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:22:17)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/Vpc/servicesSubnet2/Subnet": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcservicesSubnet2SubnetBE6AFE4D"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:270 in .pnpm...",
+        "Array.forEach (:)",
+        "....pnpm..."
+      ]
+    }
+  ],
+  "/EagleBankStack/Vpc/servicesSubnet2/RouteTable": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcservicesSubnet2RouteTableF459E087"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:270 in .pnpm...",
+        "Array.forEach (:)",
+        "....pnpm..."
+      ]
+    }
+  ],
+  "/EagleBankStack/Vpc/servicesSubnet2/RouteTableAssociation": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcservicesSubnet2RouteTableAssociationCF8833E3"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:270 in .pnpm...",
+        "Array.forEach (:)",
+        "....pnpm..."
+      ]
+    }
+  ],
+  "/EagleBankStack/Vpc/servicesSubnet2/DefaultRoute": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcservicesSubnet2DefaultRoute88FE18EB"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Vpc2 in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:22:17)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/Vpc/databaseSubnet1/Subnet": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcdatabaseSubnet1SubnetD53A427B"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:272 in .pnpm...",
+        "Array.forEach (:)",
+        "....pnpm..."
+      ]
+    }
+  ],
+  "/EagleBankStack/Vpc/databaseSubnet1/RouteTable": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcdatabaseSubnet1RouteTableF3B572E4"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:272 in .pnpm...",
+        "Array.forEach (:)",
+        "....pnpm..."
+      ]
+    }
+  ],
+  "/EagleBankStack/Vpc/databaseSubnet1/RouteTableAssociation": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcdatabaseSubnet1RouteTableAssociationEE6CA36B"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:272 in .pnpm...",
+        "Array.forEach (:)",
+        "....pnpm..."
+      ]
+    }
+  ],
+  "/EagleBankStack/Vpc/databaseSubnet2/Subnet": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcdatabaseSubnet2Subnet75663D63"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:272 in .pnpm...",
+        "Array.forEach (:)",
+        "....pnpm..."
+      ]
+    }
+  ],
+  "/EagleBankStack/Vpc/databaseSubnet2/RouteTable": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcdatabaseSubnet2RouteTable1E50BD8E"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:272 in .pnpm...",
+        "Array.forEach (:)",
+        "....pnpm..."
+      ]
+    }
+  ],
+  "/EagleBankStack/Vpc/databaseSubnet2/RouteTableAssociation": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcdatabaseSubnet2RouteTableAssociationCADBAF9A"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:272 in .pnpm...",
+        "Array.forEach (:)",
+        "....pnpm..."
+      ]
+    }
+  ],
+  "/EagleBankStack/DatabaseSecret/Attachment/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "DatabaseSecretAttachment9A63A3D4"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new DatabaseInstance2 in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:58:22)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/Database/SubnetGroup/Default": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "DatabaseSubnetGroup7D60F180"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new DatabaseInstance2 in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:58:22)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/apiTask/TaskRole/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "apiTaskTaskRole9C931702"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new FargateTaskDefinition2 in .pnpm...",
+        "makeTask (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:117:20)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:140:21)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/apiTask/ExecutionRole/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "apiTaskExecutionRole05C20F32"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/EagleBankStack/auth-serviceTask/TaskRole/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "authserviceTaskTaskRoleD1F6B291"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new FargateTaskDefinition2 in .pnpm...",
+        "makeTask (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:117:20)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:141:22)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/auth-serviceTask/ExecutionRole/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "authserviceTaskExecutionRole48D7CFF8"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/EagleBankStack/ledger-serviceTask/TaskRole/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ledgerserviceTaskTaskRoleEE98D0BF"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new FargateTaskDefinition2 in .pnpm...",
+        "makeTask (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:117:20)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:146:24)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/ledger-serviceTask/ExecutionRole/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ledgerserviceTaskExecutionRoleDFC53E2F"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/EagleBankStack/ledger-workerTask/TaskRole/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ledgerworkerTaskTaskRole8E96408D"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new FargateTaskDefinition2 in .pnpm...",
+        "makeTask (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:117:20)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:151:24)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/ledger-workerTask/ExecutionRole/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ledgerworkerTaskExecutionRole9A50B027"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/EagleBankStack/ledger-event-publisherTask/TaskRole/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ledgereventpublisherTaskTaskRole1405840F"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new FargateTaskDefinition2 in .pnpm...",
+        "makeTask (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:117:20)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:155:27)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/ledger-event-publisherTask/ExecutionRole/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ledgereventpublisherTaskExecutionRole17CC5140"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/EagleBankStack/migrationTask/TaskRole/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "migrationTaskTaskRole38CB3069"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new FargateTaskDefinition2 in .pnpm...",
+        "makeTask (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:117:20)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:159:5)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/migrationTask/ExecutionRole/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "migrationTaskExecutionRole62BB75B4"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/EagleBankStack/Alb/Http/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "AlbHttp7966E42E"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.<anonymous> in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:199:26)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/apiTask/TaskRole/DefaultPolicy/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "apiTaskTaskRoleDefaultPolicy770F6D5B"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.grantRead in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:170:22)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)"
+      ]
+    }
+  ],
+  "/EagleBankStack/apiTask/ExecutionRole/DefaultPolicy/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "apiTaskExecutionRoleDefaultPolicy05632708"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/EagleBankStack/auth-serviceTask/TaskRole/DefaultPolicy/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "authserviceTaskTaskRoleDefaultPolicy00A54A4C"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/EagleBankStack/auth-serviceTask/ExecutionRole/DefaultPolicy/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "authserviceTaskExecutionRoleDefaultPolicy40B7CDF8"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/EagleBankStack/ledger-serviceTask/TaskRole/DefaultPolicy/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ledgerserviceTaskTaskRoleDefaultPolicy05B7D518"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.grantRead in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:170:22)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)"
+      ]
+    }
+  ],
+  "/EagleBankStack/ledger-serviceTask/ExecutionRole/DefaultPolicy/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ledgerserviceTaskExecutionRoleDefaultPolicy30E45670"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/EagleBankStack/ledger-workerTask/TaskRole/DefaultPolicy/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ledgerworkerTaskTaskRoleDefaultPolicy3CAE3A10"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/EagleBankStack/ledger-workerTask/ExecutionRole/DefaultPolicy/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ledgerworkerTaskExecutionRoleDefaultPolicy84CA9DF2"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/EagleBankStack/ledger-event-publisherTask/TaskRole/DefaultPolicy/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ledgereventpublisherTaskTaskRoleDefaultPolicy77BFC4D8"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/EagleBankStack/ledger-event-publisherTask/ExecutionRole/DefaultPolicy/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ledgereventpublisherTaskExecutionRoleDefaultPolicyCAEDD246"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/EagleBankStack/migrationTask/ExecutionRole/DefaultPolicy/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "migrationTaskExecutionRoleDefaultPolicy0CBA669C"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/EagleBankStack/Alb/Http/ApiRoutesGroup/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "AlbHttpApiRoutesGroup9E9D3723"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.<anonymous> in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:203:14)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/Alb/Http/ApiRoutesRule/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "AlbHttpApiRoutesRuleA2AAC707"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.<anonymous> in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:203:14)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/Alb/Http/AuthRoutesGroup/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "AlbHttpAuthRoutesGroup63D031FF"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.<anonymous> in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:213:14)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBankStack/Alb/Http/AuthRoutesRule/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "AlbHttpAuthRoutesRule623E57DE"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.<anonymous> in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:213:14)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:12:1)",
+        "...node internals..."
+      ]
+    }
+  ]
+}
