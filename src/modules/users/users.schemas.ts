@@ -1,4 +1,8 @@
-import { z } from "zod";
+import { z } from 'zod';
+import {
+  MAXIMUM_EMAIL_LENGTH,
+  MAXIMUM_PHONE_NUMBER_LENGTH,
+} from './users.constants.js';
 
 const MINIMUM_PASSWORD_LENGTH = 8;
 const MAXIMUM_PASSWORD_LENGTH = 128;
@@ -18,8 +22,11 @@ export const createUserSchema = z
   .object({
     name: z.string().min(1),
     address: addressSchema,
-    phoneNumber: z.string().regex(/^\+[1-9]\d{1,14}$/),
-    email: z.email(),
+    phoneNumber: z
+      .string()
+      .max(MAXIMUM_PHONE_NUMBER_LENGTH)
+      .regex(/^\+[1-9]\d{1,14}$/),
+    email: z.email().max(MAXIMUM_EMAIL_LENGTH),
     password: z
       .string()
       .min(MINIMUM_PASSWORD_LENGTH)
@@ -33,13 +40,14 @@ export const updateUserSchema = z
     address: addressSchema.optional(),
     phoneNumber: z
       .string()
+      .max(MAXIMUM_PHONE_NUMBER_LENGTH)
       .regex(/^\+[1-9]\d{1,14}$/)
       .optional(),
-    email: z.email().optional(),
+    email: z.email().max(MAXIMUM_EMAIL_LENGTH).optional(),
   })
   .strict()
   .refine((value) => Object.keys(value).length > 0, {
-    message: "At least one field must be supplied",
+    message: 'At least one field must be supplied',
   });
 
 export const userParamsSchema = z.object({ userId: userIdSchema });

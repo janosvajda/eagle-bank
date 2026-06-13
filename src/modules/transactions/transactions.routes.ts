@@ -1,20 +1,21 @@
-import type { FastifyPluginAsync } from "fastify";
-import { authenticate } from "../../common/middleware/authenticate.js";
-import type { TransactionsService } from "./transactions.service.js";
+import type { FastifyPluginAsync } from 'fastify';
+import { constants as httpConstants } from 'node:http2';
+import { authenticate } from '../../common/middleware/authenticate.js';
+import type { TransactionsService } from './transactions.service.js';
 import {
   createTransactionSchema,
   transactionAccountParamsSchema,
   transactionParamsSchema,
-} from "./transactions.schemas.js";
+} from './transactions.schemas.js';
 
 export function transactionsRoutes(
   service: TransactionsService,
 ): FastifyPluginAsync {
   return async (app) => {
-    app.addHook("preHandler", authenticate);
+    app.addHook('preHandler', authenticate);
 
     app.post(
-      "/v1/accounts/:accountNumber/transactions",
+      '/v1/accounts/:accountNumber/transactions',
       async (request, reply) => {
         const { accountNumber } = transactionAccountParamsSchema.parse(
           request.params,
@@ -23,13 +24,22 @@ export function transactionsRoutes(
           accountNumber,
           request.user.sub,
           createTransactionSchema.parse(request.body),
-          request.headers["idempotency-key"] as string | undefined,
+          request.headers['idempotency-key'] as string | undefined,
         );
-        return reply.status(201).send(result);
+        request.log.info(
+          {
+            accountNumber,
+            transactionId: result.id,
+            transactionType: result.type,
+            userId: request.user.sub,
+          },
+          'Transaction posted',
+        );
+        return reply.status(httpConstants.HTTP_STATUS_CREATED).send(result);
       },
     );
 
-    app.get("/v1/accounts/:accountNumber/transactions", async (request) => {
+    app.get('/v1/accounts/:accountNumber/transactions', async (request) => {
       const { accountNumber } = transactionAccountParamsSchema.parse(
         request.params,
       );
@@ -37,7 +47,7 @@ export function transactionsRoutes(
     });
 
     app.get(
-      "/v1/accounts/:accountNumber/transactions/:transactionId",
+      '/v1/accounts/:accountNumber/transactions/:transactionId',
       async (request) => {
         const { accountNumber, transactionId } = transactionParamsSchema.parse(
           request.params,

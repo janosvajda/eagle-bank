@@ -1,5 +1,5 @@
-import type { FastifyInstance } from "fastify";
-import { InMemoryAuthSessionStore } from "../../src/modules/auth/auth-session.store.js";
+import type { FastifyInstance } from 'fastify';
+import { InMemoryAuthSessionStore } from '../../src/modules/auth/auth-session.store.js';
 
 export function tokenFor(app: FastifyInstance, userId: string): string {
   const session = (app.authSessions as InMemoryAuthSessionStore).seed(

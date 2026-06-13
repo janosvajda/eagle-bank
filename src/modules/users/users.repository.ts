@@ -1,4 +1,4 @@
-import type { Prisma, PrismaClient } from "@prisma/client";
+import { AccountStatus, type Prisma, type PrismaClient } from '@prisma/client';
 
 export class UsersRepository {
   constructor(private readonly db: PrismaClient) {}
@@ -25,7 +25,7 @@ export class UsersRepository {
 
   countAccounts(id: string) {
     return this.db.bankAccount.count({
-      where: { userId: id, status: { not: "CLOSED" } },
+      where: { userId: id, status: { not: AccountStatus.CLOSED } },
     });
   }
 }

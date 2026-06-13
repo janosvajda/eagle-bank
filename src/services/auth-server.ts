@@ -1,10 +1,10 @@
-import { loadConfig } from "../config/env.js";
-import { prisma } from "../db/prisma.js";
+import { loadConfig } from '../config/env.js';
+import { prisma } from '../db/prisma.js';
 import {
   createDynamoDbClient,
   DynamoDbAuthSessionStore,
-} from "../modules/auth/auth-session.store.js";
-import { buildAuthApp } from "./auth-app.js";
+} from '../modules/auth/auth-session.store.js';
+import { buildAuthApp } from './auth-app.js';
 
 const config = loadConfig();
 const sessions = new DynamoDbAuthSessionStore(
@@ -30,6 +30,6 @@ const app = await buildAuthApp({
   logger: true,
 });
 await app.listen({
-  host: "0.0.0.0",
+  host: '0.0.0.0',
   port: Number(process.env.AUTH_SERVICE_PORT ?? config.PORT),
 });

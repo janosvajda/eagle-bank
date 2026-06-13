@@ -1,13 +1,14 @@
-import { z } from "zod";
-import { SECONDS_PER_HOUR } from "../common/constants.js";
+import { z } from 'zod';
+import { SECONDS_PER_HOUR } from '../common/constants.js';
+import { Environment } from '../common/config/runtime.constants.js';
 
 const DEFAULT_API_PORT = 3000;
 const MINIMUM_SECRET_LENGTH = 32;
-const DEFAULT_JWT_EXPIRES_IN = "1h";
-const DEFAULT_AWS_REGION = "eu-west-2";
+const DEFAULT_JWT_EXPIRES_IN = '1h';
+const DEFAULT_AWS_REGION = 'eu-west-2';
 
 const envSchema = z.object({
-  NODE_ENV: z.enum(["local", "prod", "preprod", "test"]),
+  NODE_ENV: z.enum(Environment),
   PORT: z.coerce.number().int().positive().default(DEFAULT_API_PORT),
   DATABASE_URL: z.string().min(1),
   JWT_SECRET: z.string().min(MINIMUM_SECRET_LENGTH),
@@ -22,7 +23,7 @@ const envSchema = z.object({
   DYNAMODB_AUTH_SESSIONS_TABLE: z
     .string()
     .min(1)
-    .default("eagle-bank-auth-sessions"),
+    .default('eagle-bank-auth-sessions'),
   AWS_ACCESS_KEY_ID: z.string().optional(),
   AWS_SECRET_ACCESS_KEY: z.string().optional(),
   LEDGER_SERVICE_BASE_URL: z.string().url().optional(),

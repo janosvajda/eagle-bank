@@ -1,6 +1,11 @@
-import { createInternalServiceToken } from "../../common/auth/internal-service-jwt.js";
-import { AppError } from "../../common/errors/AppError.js";
-import { ErrorCode } from "../../common/errors/error-codes.js";
+import { constants as httpConstants } from 'node:http2';
+import { createInternalServiceToken } from '../../common/auth/internal-service-jwt.js';
+import {
+  AUTHORIZATION_BEARER_PREFIX,
+  ServiceIdentity,
+} from '../../common/auth/auth.constants.js';
+import { AppError } from '../../common/errors/AppError.js';
+import { ErrorCode } from '../../common/errors/error-codes.js';
 import {
   ledgerAccountResponseSchema,
   ledgerBalanceResponseSchema,
@@ -12,15 +17,20 @@ import {
   type LedgerGateway,
   type LedgerTransactionResponse,
   type PostLedgerTransactionCommand,
-} from "./ledger.contracts.js";
+} from './ledger.contracts.js';
+import {
+  HttpHeader,
+  HttpMethod,
+  MediaType,
+} from '../../common/http/http.constants.js';
 
 const LEDGER_REQUEST_TIMEOUT_MS = 2000;
 
 function responseMessage(payload: unknown, fallback: string): string {
-  return typeof payload === "object" &&
+  return typeof payload === 'object' &&
     payload !== null &&
-    "message" in payload &&
-    typeof payload.message === "string"
+    'message' in payload &&
+    typeof payload.message === 'string'
     ? payload.message
     : fallback;
 }
@@ -35,8 +45,8 @@ export class LedgerHttpClient implements LedgerGateway {
     command: LedgerAccountCommand,
   ): Promise<LedgerAccountResponse> {
     return ledgerAccountResponseSchema.parse(
-      await this.request("/internal/ledger/accounts", {
-        method: "POST",
+      await this.request('/internal/ledger/accounts', {
+        method: HttpMethod.POST,
         body: JSON.stringify(command),
       }),
     );
@@ -50,8 +60,8 @@ export class LedgerHttpClient implements LedgerGateway {
 
   async getBalances(accountNumbers: string[]): Promise<Record<string, number>> {
     return ledgerBalancesResponseSchema.parse(
-      await this.request("/internal/ledger/accounts/balances", {
-        method: "POST",
+      await this.request('/internal/ledger/accounts/balances', {
+        method: HttpMethod.POST,
         body: JSON.stringify({ accountNumbers }),
       }),
     ).balances;
@@ -59,7 +69,7 @@ export class LedgerHttpClient implements LedgerGateway {
 
   async closeAccount(accountNumber: string): Promise<void> {
     await this.request(`/internal/ledger/accounts/${accountNumber}/close`, {
-      method: "POST",
+      method: HttpMethod.POST,
     });
   }
 
@@ -70,7 +80,7 @@ export class LedgerHttpClient implements LedgerGateway {
       await this.request(
         `/internal/ledger/accounts/${command.accountNumber}/transactions`,
         {
-          method: "POST",
+          method: HttpMethod.POST,
           body: JSON.stringify(command),
         },
       ),
@@ -110,30 +120,36 @@ export class LedgerHttpClient implements LedgerGateway {
         ...init,
         signal: AbortSignal.timeout(LEDGER_REQUEST_TIMEOUT_MS),
         headers: {
-          ...(init.body ? { "content-type": "application/json" } : {}),
-          authorization: `Bearer ${createInternalServiceToken({
-            issuer: "api",
-            audience: "ledger-service",
-            secret: this.internalSecret,
-          })}`,
+          ...(init.body ? { [HttpHeader.CONTENT_TYPE]: MediaType.JSON } : {}),
+          authorization: `${AUTHORIZATION_BEARER_PREFIX}${createInternalServiceToken(
+            {
+              issuer: ServiceIdentity.API,
+              audience: ServiceIdentity.LEDGER,
+              secret: this.internalSecret,
+            },
+          )}`,
           ...init.headers,
         },
       });
     } catch {
       throw new AppError(
-        503,
+        httpConstants.HTTP_STATUS_SERVICE_UNAVAILABLE,
         ErrorCode.SERVICE_UNAVAILABLE,
-        "Ledger service is unavailable",
+        'Ledger service is unavailable',
       );
     }
 
     const payload: unknown =
-      response.status === 204 ? undefined : await response.json();
+      response.status === httpConstants.HTTP_STATUS_NO_CONTENT
+        ? undefined
+        : await response.json();
     if (!response.ok) {
       throw new AppError(
         response.status,
-        response.status === 404 ? ErrorCode.NOT_FOUND : ErrorCode.CONFLICT,
-        responseMessage(payload, "Ledger request failed"),
+        response.status === httpConstants.HTTP_STATUS_NOT_FOUND
+          ? ErrorCode.NOT_FOUND
+          : ErrorCode.CONFLICT,
+        responseMessage(payload, 'Ledger request failed'),
       );
     }
     return payload;

@@ -1,4 +1,4 @@
-import type { AccountStatus, Prisma, PrismaClient } from "@prisma/client";
+import { AccountStatus, Prisma, type PrismaClient } from '@prisma/client';
 
 export class AccountsRepository {
   constructor(private readonly db: PrismaClient) {}
@@ -9,8 +9,8 @@ export class AccountsRepository {
 
   listByUser(userId: string) {
     return this.db.bankAccount.findMany({
-      where: { userId, status: "ACTIVE" },
-      orderBy: { createdAt: "asc" },
+      where: { userId, status: AccountStatus.ACTIVE },
+      orderBy: { createdAt: Prisma.SortOrder.asc },
     });
   }
 
@@ -36,7 +36,7 @@ export class AccountsRepository {
   close(accountNumber: string) {
     return this.db.bankAccount.update({
       where: { accountNumber },
-      data: { status: "CLOSED", deletedAt: new Date() },
+      data: { status: AccountStatus.CLOSED, deletedAt: new Date() },
     });
   }
 }

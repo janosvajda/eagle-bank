@@ -1,5 +1,5 @@
-import type { Transaction } from "@prisma/client";
-import { fromDecimal } from "../../common/money/money.js";
+import type { Transaction } from '@prisma/client';
+import { fromDecimal } from '../../common/money/money.js';
 
 export function mapTransaction(transaction: Transaction) {
   return {

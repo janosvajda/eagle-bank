@@ -1,4 +1,4 @@
-import type { PrismaClient } from "@prisma/client";
+import { Prisma, type PrismaClient } from '@prisma/client';
 
 export class TransactionsRepository {
   constructor(readonly db: PrismaClient) {}
@@ -6,7 +6,7 @@ export class TransactionsRepository {
   listByAccount(accountId: string) {
     return this.db.transaction.findMany({
       where: { accountId },
-      orderBy: { createdAt: "asc" },
+      orderBy: { createdAt: Prisma.SortOrder.asc },
     });
   }
 

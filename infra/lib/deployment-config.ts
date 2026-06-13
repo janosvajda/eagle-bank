@@ -3,9 +3,19 @@ import {
   RemovalPolicy,
   aws_ec2 as ec2,
   aws_logs as logs,
-} from "aws-cdk-lib";
+} from 'aws-cdk-lib';
 
-export type DeploymentStage = "test" | "preprod" | "prod";
+const PREPROD_DATABASE_BACKUP_RETENTION_DAYS = 7;
+const PROD_DATABASE_BACKUP_RETENTION_DAYS = 14;
+
+export const DeploymentStage = {
+  PREPROD: 'preprod',
+  PROD: 'prod',
+  TEST: 'test',
+} as const;
+
+export type DeploymentStage =
+  (typeof DeploymentStage)[keyof typeof DeploymentStage];
 
 export interface DeploymentConfig {
   stage: DeploymentStage;
@@ -30,9 +40,9 @@ export interface DeploymentConfig {
 // while this table owns cost, durability, capacity, and protection trade-offs.
 const STAGE_SETTINGS: Record<
   DeploymentStage,
-  Omit<DeploymentConfig, "stage" | "resourcePrefix">
+  Omit<DeploymentConfig, 'stage' | 'resourcePrefix'>
 > = {
-  test: {
+  [DeploymentStage.TEST]: {
     availabilityZoneCount: 2,
     natGateways: 1,
     serviceCpu: 256,
@@ -51,7 +61,7 @@ const STAGE_SETTINGS: Record<
     removalPolicy: RemovalPolicy.DESTROY,
     wafRateLimit: 5000,
   },
-  preprod: {
+  [DeploymentStage.PREPROD]: {
     availabilityZoneCount: 2,
     natGateways: 1,
     serviceCpu: 512,
@@ -63,14 +73,16 @@ const STAGE_SETTINGS: Record<
     ),
     databaseAllocatedStorageGiB: 50,
     databaseMaxAllocatedStorageGiB: 200,
-    databaseBackupRetention: Duration.days(7),
+    databaseBackupRetention: Duration.days(
+      PREPROD_DATABASE_BACKUP_RETENTION_DAYS,
+    ),
     databaseMultiAz: false,
     databaseDeletionProtection: true,
     logRetention: logs.RetentionDays.ONE_MONTH,
     removalPolicy: RemovalPolicy.RETAIN,
     wafRateLimit: 2000,
   },
-  prod: {
+  [DeploymentStage.PROD]: {
     availabilityZoneCount: 2,
     natGateways: 2,
     serviceCpu: 1024,
@@ -82,7 +94,7 @@ const STAGE_SETTINGS: Record<
     ),
     databaseAllocatedStorageGiB: 100,
     databaseMaxAllocatedStorageGiB: 500,
-    databaseBackupRetention: Duration.days(14),
+    databaseBackupRetention: Duration.days(PROD_DATABASE_BACKUP_RETENTION_DAYS),
     databaseMultiAz: true,
     databaseDeletionProtection: true,
     logRetention: logs.RetentionDays.THREE_MONTHS,
@@ -100,7 +112,11 @@ export function deploymentConfig(stage: DeploymentStage): DeploymentConfig {
 }
 
 export function parseDeploymentStage(value: string): DeploymentStage {
-  if (value === "test" || value === "preprod" || value === "prod") {
+  if (
+    value === DeploymentStage.TEST ||
+    value === DeploymentStage.PREPROD ||
+    value === DeploymentStage.PROD
+  ) {
     return value;
   }
   throw new Error(

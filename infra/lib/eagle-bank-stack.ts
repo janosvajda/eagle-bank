@@ -13,29 +13,49 @@ import {
   aws_secretsmanager as secretsmanager,
   aws_sqs as sqs,
   aws_wafv2 as wafv2,
-} from "aws-cdk-lib";
-import type { Construct } from "constructs";
-import { deploymentConfig, type DeploymentStage } from "./deployment-config.js";
+} from 'aws-cdk-lib';
+import type { Construct } from 'constructs';
+import {
+  deploymentConfig,
+  DeploymentStage,
+  type DeploymentStage as DeploymentStageType,
+} from './deployment-config.js';
 
-const DATABASE_NAME = "eagle_bank";
-const DATABASE_USERNAME = "eagle";
+const DATABASE_NAME = 'eagle_bank';
+const DATABASE_USERNAME = 'eagle';
 const DATABASE_PORT = 5432;
 const API_PORT = 3000;
 const AUTH_PORT = 3001;
 const LEDGER_PORT = 3002;
-const SERVICE_CONNECT_NAMESPACE = "eagle-bank.internal";
-const AUTH_SERVICE_DNS_NAME = "auth-service";
-const LEDGER_SERVICE_DNS_NAME = "ledger-service";
-const DEFAULT_JWT_EXPIRY = "1h";
-const AUTH_SESSION_TTL_SECONDS = "3600";
+const SERVICE_CONNECT_NAMESPACE = 'eagle-bank.internal';
+const API_SERVICE_NAME = 'api';
+const AUTH_SERVICE_DNS_NAME = 'auth-service';
+const LEDGER_SERVICE_DNS_NAME = 'ledger-service';
+const DEFAULT_JWT_EXPIRY = '1h';
+const AUTH_SESSION_TTL_SECONDS = '3600';
 const QUEUE_MAX_RECEIVE_COUNT = 5;
-const TASK_STOP_TIMEOUT = Duration.seconds(30);
-const HEALTH_CHECK_GRACE_PERIOD = Duration.seconds(60);
-const QUEUE_VISIBILITY_TIMEOUT = Duration.seconds(60);
-const QUEUE_RETENTION_PERIOD = Duration.days(4);
-const DLQ_RETENTION_PERIOD = Duration.days(14);
-const SERVICE_CONNECT_REQUEST_TIMEOUT = Duration.seconds(5);
-const SERVICE_CONNECT_IDLE_TIMEOUT = Duration.seconds(30);
+const TASK_STOP_TIMEOUT_SECONDS = 30;
+const HEALTH_CHECK_GRACE_PERIOD_SECONDS = 60;
+const QUEUE_VISIBILITY_TIMEOUT_SECONDS = 60;
+const QUEUE_RETENTION_DAYS = 4;
+const DLQ_RETENTION_DAYS = 14;
+const SERVICE_CONNECT_REQUEST_TIMEOUT_SECONDS = 5;
+const SERVICE_CONNECT_IDLE_TIMEOUT_SECONDS = 30;
+const TASK_STOP_TIMEOUT = Duration.seconds(TASK_STOP_TIMEOUT_SECONDS);
+const HEALTH_CHECK_GRACE_PERIOD = Duration.seconds(
+  HEALTH_CHECK_GRACE_PERIOD_SECONDS,
+);
+const QUEUE_VISIBILITY_TIMEOUT = Duration.seconds(
+  QUEUE_VISIBILITY_TIMEOUT_SECONDS,
+);
+const QUEUE_RETENTION_PERIOD = Duration.days(QUEUE_RETENTION_DAYS);
+const DLQ_RETENTION_PERIOD = Duration.days(DLQ_RETENTION_DAYS);
+const SERVICE_CONNECT_REQUEST_TIMEOUT = Duration.seconds(
+  SERVICE_CONNECT_REQUEST_TIMEOUT_SECONDS,
+);
+const SERVICE_CONNECT_IDLE_TIMEOUT = Duration.seconds(
+  SERVICE_CONNECT_IDLE_TIMEOUT_SECONDS,
+);
 const SUBNET_CIDR_MASK = 24;
 const STOPPED_SERVICE_DESIRED_COUNT = 0;
 const ECS_MINIMUM_HEALTHY_PERCENT = 100;
@@ -65,7 +85,7 @@ interface TaskOptions {
 }
 
 export interface EagleBankStackProps extends StackProps {
-  stage: DeploymentStage;
+  stage: DeploymentStageType;
   certificateArn?: string;
   activateServices?: boolean;
 }
@@ -75,35 +95,35 @@ export class EagleBankStack extends Stack {
     super(scope, id, props);
 
     const config = deploymentConfig(props.stage);
-    if (config.stage === "prod" && !props.certificateArn) {
-      throw new Error("certificateArn is required for the prod stage");
+    if (config.stage === DeploymentStage.PROD && !props.certificateArn) {
+      throw new Error('certificateArn is required for the prod stage');
     }
 
     // Public subnets contain only the ALB/NAT gateways. Application tasks use
     // private subnets, while RDS has no route to the public internet.
-    const vpc = new ec2.Vpc(this, "Vpc", {
+    const vpc = new ec2.Vpc(this, 'Vpc', {
       maxAzs: config.availabilityZoneCount,
       natGateways: config.natGateways,
       subnetConfiguration: [
         {
-          name: "public",
+          name: 'public',
           subnetType: ec2.SubnetType.PUBLIC,
           cidrMask: SUBNET_CIDR_MASK,
         },
         {
-          name: "services",
+          name: 'services',
           subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
           cidrMask: SUBNET_CIDR_MASK,
         },
         {
-          name: "database",
+          name: 'database',
           subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
           cidrMask: SUBNET_CIDR_MASK,
         },
       ],
     });
 
-    const cluster = new ecs.Cluster(this, "Cluster", {
+    const cluster = new ecs.Cluster(this, 'Cluster', {
       vpc,
       containerInsightsV2: ecs.ContainerInsights.ENABLED,
       defaultCloudMapNamespace: {
@@ -114,16 +134,16 @@ export class EagleBankStack extends Stack {
 
     // ECS receives secret values at task startup. No secret value is embedded
     // in the synthesized CloudFormation template.
-    const databaseSecret = new rds.DatabaseSecret(this, "DatabaseSecret", {
+    const databaseSecret = new rds.DatabaseSecret(this, 'DatabaseSecret', {
       secretName: `${config.resourcePrefix}/database`,
       username: DATABASE_USERNAME,
     });
-    const jwtSecret = new secretsmanager.Secret(this, "JwtSecret", {
+    const jwtSecret = new secretsmanager.Secret(this, 'JwtSecret', {
       secretName: `${config.resourcePrefix}/jwt`,
     });
     const internalJwtSecret = new secretsmanager.Secret(
       this,
-      "InternalJwtSecret",
+      'InternalJwtSecret',
       { secretName: `${config.resourcePrefix}/internal-jwt` },
     );
     databaseSecret.applyRemovalPolicy(config.removalPolicy);
@@ -132,22 +152,22 @@ export class EagleBankStack extends Stack {
 
     const databaseSecurityGroup = new ec2.SecurityGroup(
       this,
-      "DatabaseSecurityGroup",
+      'DatabaseSecurityGroup',
       {
         vpc,
         allowAllOutbound: false,
-        description: "Accept PostgreSQL only from database client tasks",
+        description: 'Accept PostgreSQL only from database client tasks',
       },
     );
-    const apiSecurityGroup = this.serviceSecurityGroup(vpc, "Api");
-    const authSecurityGroup = this.serviceSecurityGroup(vpc, "Auth");
-    const ledgerSecurityGroup = this.serviceSecurityGroup(vpc, "Ledger");
-    const workerSecurityGroup = this.serviceSecurityGroup(vpc, "LedgerWorker");
+    const apiSecurityGroup = this.serviceSecurityGroup(vpc, 'Api');
+    const authSecurityGroup = this.serviceSecurityGroup(vpc, 'Auth');
+    const ledgerSecurityGroup = this.serviceSecurityGroup(vpc, 'Ledger');
+    const workerSecurityGroup = this.serviceSecurityGroup(vpc, 'LedgerWorker');
     const publisherSecurityGroup = this.serviceSecurityGroup(
       vpc,
-      "LedgerEventPublisher",
+      'LedgerEventPublisher',
     );
-    const migrationSecurityGroup = this.serviceSecurityGroup(vpc, "Migration");
+    const migrationSecurityGroup = this.serviceSecurityGroup(vpc, 'Migration');
 
     // PostgreSQL accepts traffic only from workloads that actually use it.
     // The worker is intentionally absent because the disabled worker has no DB path.
@@ -161,23 +181,23 @@ export class EagleBankStack extends Stack {
       databaseSecurityGroup.addIngressRule(
         client,
         ec2.Port.tcp(DATABASE_PORT),
-        "PostgreSQL from an authorized database client",
+        'PostgreSQL from an authorized database client',
       );
     }
     authSecurityGroup.addIngressRule(
       apiSecurityGroup,
       ec2.Port.tcp(AUTH_PORT),
-      "Private API to Auth traffic",
+      'Private API to Auth traffic',
     );
     ledgerSecurityGroup.addIngressRule(
       apiSecurityGroup,
       ec2.Port.tcp(LEDGER_PORT),
-      "Private API to Ledger traffic",
+      'Private API to Ledger traffic',
     );
 
     // RDS is the durable source for users, accounts, ledger records, and outbox
     // events. Stage configuration controls availability and deletion safeguards.
-    const database = new rds.DatabaseInstance(this, "Database", {
+    const database = new rds.DatabaseInstance(this, 'Database', {
       databaseName: DATABASE_NAME,
       vpc,
       vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_ISOLATED },
@@ -195,18 +215,18 @@ export class EagleBankStack extends Stack {
       deletionProtection: config.databaseDeletionProtection,
       backupRetention: config.databaseBackupRetention,
       autoMinorVersionUpgrade: true,
-      cloudwatchLogsExports: ["postgresql"],
+      cloudwatchLogsExports: ['postgresql'],
       cloudwatchLogsRetention: config.logRetention,
       removalPolicy: config.removalPolicy,
     });
 
     // Auth sessions use the same pk/sk and TTL contract as DynamoDB Local:
     // USER#<userId> / SESSION#<sessionId>, expired by expiresAtEpoch.
-    const sessions = new dynamodb.Table(this, "AuthSessions", {
+    const sessions = new dynamodb.Table(this, 'AuthSessions', {
       tableName: `${config.resourcePrefix}-auth-sessions`,
-      partitionKey: { name: "pk", type: dynamodb.AttributeType.STRING },
-      sortKey: { name: "sk", type: dynamodb.AttributeType.STRING },
-      timeToLiveAttribute: "expiresAtEpoch",
+      partitionKey: { name: 'pk', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'sk', type: dynamodb.AttributeType.STRING },
+      timeToLiveAttribute: 'expiresAtEpoch',
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       encryption: dynamodb.TableEncryption.AWS_MANAGED,
       pointInTimeRecoverySpecification: {
@@ -217,12 +237,12 @@ export class EagleBankStack extends Stack {
 
     // Event DLQs represent downstream consumer failures. Publisher retries are
     // tracked separately in PostgreSQL before a message reaches this queue.
-    const eventsDlq = this.queue("LedgerEventsDlq", {
+    const eventsDlq = this.queue('LedgerEventsDlq', {
       queueName: `${config.resourcePrefix}-ledger-events-dlq`,
       retentionPeriod: DLQ_RETENTION_PERIOD,
       removalPolicy: config.removalPolicy,
     });
-    const events = this.queue("LedgerEvents", {
+    const events = this.queue('LedgerEvents', {
       queueName: `${config.resourcePrefix}-ledger-events`,
       visibilityTimeout: QUEUE_VISIBILITY_TIMEOUT,
       retentionPeriod: QUEUE_RETENTION_PERIOD,
@@ -235,14 +255,14 @@ export class EagleBankStack extends Stack {
 
     // FIFO command queues model the future asynchronous ledger path. That path
     // remains disabled until a response/correlation workflow is implemented.
-    const commandsDlq = this.queue("LedgerCommandsDlq", {
+    const commandsDlq = this.queue('LedgerCommandsDlq', {
       queueName: `${config.resourcePrefix}-ledger-commands-dlq.fifo`,
       fifo: true,
       contentBasedDeduplication: true,
       retentionPeriod: DLQ_RETENTION_PERIOD,
       removalPolicy: config.removalPolicy,
     });
-    const commands = this.queue("LedgerCommands", {
+    const commands = this.queue('LedgerCommands', {
       queueName: `${config.resourcePrefix}-ledger-commands.fifo`,
       fifo: true,
       contentBasedDeduplication: true,
@@ -268,16 +288,16 @@ export class EagleBankStack extends Stack {
       SQS_LEDGER_EVENTS_DLQ_URL: eventsDlq.queueUrl,
       SQS_LEDGER_COMMANDS_QUEUE_URL: commands.queueUrl,
       SQS_LEDGER_COMMANDS_DLQ_URL: commandsDlq.queueUrl,
-      LEDGER_ASYNC_COMMANDS_ENABLED: "false",
+      LEDGER_ASYNC_COMMANDS_ENABLED: 'false',
     };
     const databaseSecrets = {
       DATABASE_USERNAME: ecs.Secret.fromSecretsManager(
         databaseSecret,
-        "username",
+        'username',
       ),
       DATABASE_PASSWORD: ecs.Secret.fromSecretsManager(
         databaseSecret,
-        "password",
+        'password',
       ),
     };
     const applicationSecrets = {
@@ -285,7 +305,7 @@ export class EagleBankStack extends Stack {
       INTERNAL_SERVICE_JWT_SECRET:
         ecs.Secret.fromSecretsManager(internalJwtSecret),
     };
-    const image = ecs.ContainerImage.fromAsset(".");
+    const image = ecs.ContainerImage.fromAsset('.');
 
     // All runtimes use the same image. This factory keeps task sizing, logs,
     // secret injection, and database bootstrapping consistent between services.
@@ -337,9 +357,9 @@ export class EagleBankStack extends Stack {
 
     const apiTask = makeTask(
       {
-        id: "Api",
-        serviceName: "api",
-        command: ["node", "dist/src/server.js"],
+        id: 'Api',
+        serviceName: API_SERVICE_NAME,
+        command: ['node', 'dist/src/server.js'],
         port: API_PORT,
       },
       {
@@ -353,9 +373,9 @@ export class EagleBankStack extends Stack {
     );
     const authTask = makeTask(
       {
-        id: "Auth",
+        id: 'Auth',
         serviceName: AUTH_SERVICE_DNS_NAME,
-        command: ["node", "dist/src/services/auth-server.js"],
+        command: ['node', 'dist/src/services/auth-server.js'],
         port: AUTH_PORT,
       },
       {
@@ -369,9 +389,9 @@ export class EagleBankStack extends Stack {
     );
     const ledgerTask = makeTask(
       {
-        id: "Ledger",
+        id: 'Ledger',
         serviceName: LEDGER_SERVICE_DNS_NAME,
-        command: ["node", "dist/src/services/ledger-server.js"],
+        command: ['node', 'dist/src/services/ledger-server.js'],
         port: LEDGER_PORT,
       },
       {
@@ -383,9 +403,9 @@ export class EagleBankStack extends Stack {
     );
     const workerTask = makeTask(
       {
-        id: "LedgerWorker",
-        serviceName: "ledger-worker",
-        command: ["node", "dist/src/services/ledger-worker.js"],
+        id: 'LedgerWorker',
+        serviceName: 'ledger-worker',
+        command: ['node', 'dist/src/services/ledger-worker.js'],
       },
       {
         includeApplicationSecrets: false,
@@ -393,15 +413,15 @@ export class EagleBankStack extends Stack {
       },
     );
     const publisherTask = makeTask({
-      id: "LedgerEventPublisher",
-      serviceName: "ledger-event-publisher",
-      command: ["node", "dist/src/services/ledger-event-publisher.js"],
+      id: 'LedgerEventPublisher',
+      serviceName: 'ledger-event-publisher',
+      command: ['node', 'dist/src/services/ledger-event-publisher.js'],
     });
     const migrationTask = makeTask(
       {
-        id: "Migration",
-        serviceName: "migration",
-        command: ["pnpm", "prisma", "migrate", "deploy"],
+        id: 'Migration',
+        serviceName: 'migration',
+        command: ['pnpm', 'prisma', 'migrate', 'deploy'],
       },
       { includeApplicationSecrets: false },
     );
@@ -428,7 +448,7 @@ export class EagleBankStack extends Stack {
         minHealthyPercent: ECS_MINIMUM_HEALTHY_PERCENT,
         maxHealthyPercent: ECS_MAXIMUM_HEALTHY_PERCENT,
         assignPublicIp: false,
-        enableExecuteCommand: config.stage !== "prod",
+        enableExecuteCommand: config.stage !== DeploymentStage.PROD,
         healthCheckGracePeriod: HEALTH_CHECK_GRACE_PERIOD,
         securityGroups: [securityGroup],
         vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
@@ -437,8 +457,8 @@ export class EagleBankStack extends Stack {
 
     // Service Connect gives the API stable private names for Auth and Ledger.
     // These services are not exposed through public DNS or public IP addresses.
-    const api = service("Api", apiTask.task, apiSecurityGroup, {});
-    const auth = service("Auth", authTask.task, authSecurityGroup, {
+    const api = service('Api', apiTask.task, apiSecurityGroup, {});
+    const auth = service('Auth', authTask.task, authSecurityGroup, {
       services: [
         {
           portMappingName: AUTH_SERVICE_DNS_NAME,
@@ -450,7 +470,7 @@ export class EagleBankStack extends Stack {
         },
       ],
     });
-    service("Ledger", ledgerTask.task, ledgerSecurityGroup, {
+    service('Ledger', ledgerTask.task, ledgerSecurityGroup, {
       services: [
         {
           portMappingName: LEDGER_SERVICE_DNS_NAME,
@@ -462,9 +482,9 @@ export class EagleBankStack extends Stack {
         },
       ],
     });
-    service("LedgerWorker", workerTask.task, workerSecurityGroup, {});
+    service('LedgerWorker', workerTask.task, workerSecurityGroup, {});
     service(
-      "LedgerEventPublisher",
+      'LedgerEventPublisher',
       publisherTask.task,
       publisherSecurityGroup,
       {},
@@ -472,39 +492,39 @@ export class EagleBankStack extends Stack {
 
     // Only API and the public login route on Auth are reachable from the ALB.
     // Ledger, worker, and publisher remain private ECS services.
-    const albSecurityGroup = new ec2.SecurityGroup(this, "AlbSecurityGroup", {
+    const albSecurityGroup = new ec2.SecurityGroup(this, 'AlbSecurityGroup', {
       vpc,
       allowAllOutbound: false,
-      description: "Public ingress to the Eagle Bank ALB",
+      description: 'Public ingress to the Eagle Bank ALB',
     });
     const publicListenerPort = props.certificateArn ? HTTPS_PORT : HTTP_PORT;
     albSecurityGroup.addIngressRule(
       ec2.Peer.anyIpv4(),
       ec2.Port.tcp(publicListenerPort),
-      "Public client traffic",
+      'Public client traffic',
     );
     apiSecurityGroup.addIngressRule(
       albSecurityGroup,
       ec2.Port.tcp(API_PORT),
-      "ALB to API",
+      'ALB to API',
     );
     authSecurityGroup.addIngressRule(
       albSecurityGroup,
       ec2.Port.tcp(AUTH_PORT),
-      "ALB to public Auth routes",
+      'ALB to public Auth routes',
     );
     albSecurityGroup.addEgressRule(
       apiSecurityGroup,
       ec2.Port.tcp(API_PORT),
-      "ALB to API",
+      'ALB to API',
     );
     albSecurityGroup.addEgressRule(
       authSecurityGroup,
       ec2.Port.tcp(AUTH_PORT),
-      "ALB to Auth",
+      'ALB to Auth',
     );
 
-    const alb = new elbv2.ApplicationLoadBalancer(this, "Alb", {
+    const alb = new elbv2.ApplicationLoadBalancer(this, 'Alb', {
       vpc,
       internetFacing: true,
       securityGroup: albSecurityGroup,
@@ -517,11 +537,11 @@ export class EagleBankStack extends Stack {
     const certificate = props.certificateArn
       ? acm.Certificate.fromCertificateArn(
           this,
-          "AlbCertificate",
+          'AlbCertificate',
           props.certificateArn,
         )
       : undefined;
-    const listener = alb.addListener("PublicListener", {
+    const listener = alb.addListener('PublicListener', {
       port: publicListenerPort,
       protocol: certificate
         ? elbv2.ApplicationProtocol.HTTPS
@@ -542,95 +562,95 @@ export class EagleBankStack extends Stack {
       albSecurityGroup.addIngressRule(
         ec2.Peer.anyIpv4(),
         ec2.Port.tcp(HTTP_PORT),
-        "Redirect HTTP to HTTPS",
+        'Redirect HTTP to HTTPS',
       );
     }
-    listener.addTargets("ApiRoutes", {
+    listener.addTargets('ApiRoutes', {
       priority: API_ROUTE_PRIORITY,
       conditions: [
-        elbv2.ListenerCondition.pathPatterns(["/health", "/ready", "/v1/*"]),
+        elbv2.ListenerCondition.pathPatterns(['/health', '/ready', '/v1/*']),
       ],
       port: API_PORT,
       protocol: elbv2.ApplicationProtocol.HTTP,
       targets: [api],
-      healthCheck: { path: "/ready" },
+      healthCheck: { path: '/ready' },
     });
-    listener.addTargets("AuthRoutes", {
+    listener.addTargets('AuthRoutes', {
       priority: AUTH_ROUTE_PRIORITY,
-      conditions: [elbv2.ListenerCondition.pathPatterns(["/v1/auth/*"])],
+      conditions: [elbv2.ListenerCondition.pathPatterns(['/v1/auth/*'])],
       port: AUTH_PORT,
       protocol: elbv2.ApplicationProtocol.HTTP,
       targets: [auth],
-      healthCheck: { path: "/ready" },
+      healthCheck: { path: '/ready' },
     });
 
     // WAF runs before ALB routing. Managed rule groups cover common exploits,
     // known bad payloads, SQL injection, and AWS-maintained IP reputation.
-    const webAcl = new wafv2.CfnWebACL(this, "WebAcl", {
+    const webAcl = new wafv2.CfnWebACL(this, 'WebAcl', {
       name: `${config.resourcePrefix}-web-acl`,
-      scope: "REGIONAL",
+      scope: 'REGIONAL',
       defaultAction: { allow: {} },
       visibilityConfig: this.wafVisibility(`${config.resourcePrefix}-waf`),
       rules: [
         this.managedWafRule(
-          "aws-managed-common",
+          'aws-managed-common',
           WAF_COMMON_RULE_PRIORITY,
-          "AWSManagedRulesCommonRuleSet",
+          'AWSManagedRulesCommonRuleSet',
         ),
         this.managedWafRule(
-          "aws-managed-known-bad-inputs",
+          'aws-managed-known-bad-inputs',
           WAF_KNOWN_BAD_INPUTS_RULE_PRIORITY,
-          "AWSManagedRulesKnownBadInputsRuleSet",
+          'AWSManagedRulesKnownBadInputsRuleSet',
         ),
         this.managedWafRule(
-          "aws-managed-sqli",
+          'aws-managed-sqli',
           WAF_SQLI_RULE_PRIORITY,
-          "AWSManagedRulesSQLiRuleSet",
+          'AWSManagedRulesSQLiRuleSet',
         ),
         this.managedWafRule(
-          "aws-managed-ip-reputation",
+          'aws-managed-ip-reputation',
           WAF_IP_REPUTATION_RULE_PRIORITY,
-          "AWSManagedRulesAmazonIpReputationList",
+          'AWSManagedRulesAmazonIpReputationList',
         ),
         {
-          name: "rate-limit",
+          name: 'rate-limit',
           priority: WAF_RATE_LIMIT_RULE_PRIORITY,
           action: { block: {} },
           statement: {
             rateBasedStatement: {
-              aggregateKeyType: "IP",
+              aggregateKeyType: 'IP',
               limit: config.wafRateLimit,
             },
           },
-          visibilityConfig: this.wafVisibility("rate-limit"),
+          visibilityConfig: this.wafVisibility('rate-limit'),
         },
       ],
     });
-    new wafv2.CfnWebACLAssociation(this, "WebAclAssociation", {
+    new wafv2.CfnWebACLAssociation(this, 'WebAclAssociation', {
       resourceArn: alb.loadBalancerArn,
       webAclArn: webAcl.attrArn,
     });
 
     // The first deployment leaves services at desiredCount=0. Operators run
     // the emitted migration task, then redeploy with ACTIVATE_SERVICES=true.
-    new CfnOutput(this, "PublicUrl", {
-      value: `${certificate ? "https" : "http"}://${alb.loadBalancerDnsName}`,
+    new CfnOutput(this, 'PublicUrl', {
+      value: `${certificate ? 'https' : 'http'}://${alb.loadBalancerDnsName}`,
     });
-    new CfnOutput(this, "MigrationClusterName", {
+    new CfnOutput(this, 'MigrationClusterName', {
       value: cluster.clusterName,
     });
-    new CfnOutput(this, "MigrationTaskDefinitionArn", {
+    new CfnOutput(this, 'MigrationTaskDefinitionArn', {
       value: migrationTask.task.taskDefinitionArn,
     });
-    new CfnOutput(this, "MigrationSecurityGroupId", {
+    new CfnOutput(this, 'MigrationSecurityGroupId', {
       value: migrationSecurityGroup.securityGroupId,
     });
-    new CfnOutput(this, "MigrationSubnetIds", {
+    new CfnOutput(this, 'MigrationSubnetIds', {
       value: vpc
         .selectSubnets({ subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS })
-        .subnetIds.join(","),
+        .subnetIds.join(','),
     });
-    new CfnOutput(this, "ServicesActivated", {
+    new CfnOutput(this, 'ServicesActivated', {
       value: String(props.activateServices ?? false),
     });
   }
@@ -652,16 +672,16 @@ export class EagleBankStack extends Stack {
   }
 
   private databaseCommand(command: string[]): string[] {
-    const executable = command.map((part) => JSON.stringify(part)).join(" ");
+    const executable = command.map((part) => JSON.stringify(part)).join(' ');
     const databaseUrl =
-      "postgresql://${DATABASE_USERNAME}:${DATABASE_PASSWORD}" +
-      "@${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}?schema=public";
+      'postgresql://${DATABASE_USERNAME}:${DATABASE_PASSWORD}' +
+      '@${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}?schema=public';
 
     // Prisma requires one DATABASE_URL. The username/password arrive as ECS
     // secrets, so the shell assembles the URL only inside the running container.
     return [
-      "sh",
-      "-c",
+      'sh',
+      '-c',
       `export DATABASE_URL="${databaseUrl}"; exec ${executable}`,
     ];
   }
@@ -685,7 +705,7 @@ export class EagleBankStack extends Stack {
       overrideAction: { none: {} },
       statement: {
         managedRuleGroupStatement: {
-          vendorName: "AWS",
+          vendorName: 'AWS',
           name: managedRuleName,
         },
       },

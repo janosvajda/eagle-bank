@@ -1,66 +1,84 @@
-import { readFile } from "node:fs/promises";
-import { resolve } from "node:path";
-import $RefParser from "@apidevtools/json-schema-ref-parser";
-import addFormats from "ajv-formats";
-import type { FastifyInstance, FastifyRequest } from "fastify";
+import { readFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
+import $RefParser from '@apidevtools/json-schema-ref-parser';
+import addFormats from 'ajv-formats';
+import type { FastifyInstance, FastifyRequest } from 'fastify';
+import { constants as httpConstants } from 'node:http2';
 import {
   type Document,
   type Operation,
   OpenAPIRouter,
   OpenAPIValidator,
-} from "openapi-backend";
-import { parse } from "yaml";
-import { AppError, type ErrorDetail } from "../errors/AppError.js";
-import { ErrorCode } from "../errors/error-codes.js";
+  type ValidationResult,
+} from 'openapi-backend';
+import { parse } from 'yaml';
+import { AppError, type ErrorDetail } from '../errors/AppError.js';
+import { ErrorCode } from '../errors/error-codes.js';
 
 type ApiOperation = Operation<Document>;
+type OpenApiValidationError = NonNullable<ValidationResult['errors']>[number];
 
+const AJV_NUMBER_FORMAT_TYPE = 'number';
 const operations = new WeakMap<FastifyRequest, ApiOperation>();
 const responseValidationFailures = new WeakSet<FastifyRequest>();
+const validatedResponses = new WeakSet<FastifyRequest>();
 
 // Convert AJV JSON-pointer errors into the public assessment error shape.
-function requestDetails(errors: unknown[] | null | undefined): ErrorDetail[] {
+function requestDetails(
+  errors: OpenApiValidationError[] | null | undefined,
+): ErrorDetail[] {
   return (errors ?? []).map((error) => {
-    const issue = error as {
-      instancePath?: string;
-      keyword?: string;
-      message?: string;
-      params?: { missingProperty?: string };
-    };
-    const missingProperty = issue.params?.missingProperty;
+    const missingProperty =
+      'missingProperty' in error.params &&
+      typeof error.params.missingProperty === 'string'
+        ? error.params.missingProperty
+        : undefined;
     const field =
       missingProperty ??
-      issue.instancePath?.replace(/^\//, "").replaceAll("/", ".") ??
-      "request";
+      error.instancePath.replace(/^\//, '').replaceAll('/', '.') ??
+      'request';
 
     return {
-      field: field || "request",
-      message: issue.message ?? "Invalid value",
-      type: issue.keyword ?? "validation",
+      field: field || 'request',
+      message: error.message ?? 'Invalid value',
+      type: error.keyword,
     };
   });
 }
 
-function responseBody(payload: unknown): unknown {
-  // Fastify may pass an object, serialized string, Buffer, or an empty body to
-  // onSend. Normalize those forms before response-schema validation.
-  if (payload === undefined || payload === null || payload === "") {
-    return null;
-  }
-  if (typeof payload !== "string" && !Buffer.isBuffer(payload)) {
-    return payload;
-  }
-
-  const text = Buffer.isBuffer(payload) ? payload.toString("utf8") : payload;
-  if (!text) {
-    return null;
+function validateResponse(
+  request: FastifyRequest,
+  statusCode: number,
+  payload: unknown,
+  validator: OpenAPIValidator,
+): void {
+  const operation = operations.get(request);
+  if (!operation || responseValidationFailures.has(request)) {
+    return;
   }
 
-  try {
-    return JSON.parse(text) as unknown;
-  } catch {
-    return text;
+  const result = validator.validateResponse(payload, operation, statusCode);
+  if (result.valid) {
+    validatedResponses.add(request);
+    return;
   }
+
+  // A response mismatch is an implementation defect. Keep detailed schema
+  // errors in logs and return a generic 500 instead of leaking internals.
+  responseValidationFailures.add(request);
+  request.log.error(
+    {
+      operationId: operation.operationId,
+      statusCode,
+      validationErrors: result.errors,
+    },
+    'Response does not conform to openapi.yaml',
+  );
+  throw new AppError(
+    httpConstants.HTTP_STATUS_INTERNAL_SERVER_ERROR,
+    ErrorCode.INTERNAL_ERROR,
+    'An unexpected error occurred',
+  );
 }
 
 export interface OpenApiValidationOptions {
@@ -72,8 +90,8 @@ export async function registerOpenApiValidation(
   options: OpenApiValidationOptions = {},
 ): Promise<void> {
   const definition =
-    options.definition ?? resolve(process.cwd(), "openapi.yaml");
-  const parsed = parse(await readFile(definition, "utf8")) as Document;
+    options.definition ?? resolve(process.cwd(), 'openapi.yaml');
+  const parsed = parse(await readFile(definition, 'utf8')) as Document;
 
   // Resolve shared component references once during startup so runtime
   // validation uses the complete contract rather than partial YAML fragments.
@@ -90,8 +108,8 @@ export async function registerOpenApiValidation(
     },
     customizeAjv: (ajv) => {
       (addFormats as unknown as (value: typeof ajv) => void)(ajv);
-      ajv.addFormat("double", {
-        type: "number",
+      ajv.addFormat('double', {
+        type: AJV_NUMBER_FORMAT_TYPE,
         validate: Number.isFinite,
       });
       return ajv;
@@ -101,7 +119,7 @@ export async function registerOpenApiValidation(
   validator.preCompileRequestValidators();
   validator.preCompileResponseValidators();
 
-  app.addHook("preValidation", async (request) => {
+  app.addHook('preValidation', async (request) => {
     const openApiRequest = {
       method: request.method,
       path: request.url,
@@ -121,44 +139,29 @@ export async function registerOpenApiValidation(
     const result = validator.validateRequest(openApiRequest, operation);
     if (!result.valid) {
       throw new AppError(
-        400,
+        httpConstants.HTTP_STATUS_BAD_REQUEST,
         ErrorCode.BAD_REQUEST,
-        "Invalid details supplied",
+        'Invalid details supplied',
         requestDetails(result.errors),
       );
     }
   });
 
-  app.addHook("onSend", async (request, reply, payload) => {
-    const operation = operations.get(request);
-    if (!operation || responseValidationFailures.has(request)) {
-      return payload;
-    }
+  app.addHook('preSerialization', async (request, reply, payload) => {
+    validateResponse(request, reply.statusCode, payload, validator);
+    return payload;
+  });
 
-    const result = validator.validateResponse(
-      responseBody(payload),
-      operation,
-      reply.statusCode,
-    );
-    if (!result.valid) {
-      // A response mismatch is an implementation defect. Keep detailed schema
-      // errors in logs and return a generic 500 instead of leaking internals.
-      responseValidationFailures.add(request);
-      request.log.error(
-        {
-          operationId: operation.operationId,
-          statusCode: reply.statusCode,
-          validationErrors: result.errors,
-        },
-        "Response does not conform to openapi.yaml",
-      );
-      throw new AppError(
-        500,
-        ErrorCode.INTERNAL_ERROR,
-        "An unexpected error occurred",
-      );
+  app.addHook('onSend', async (request, reply, payload) => {
+    // Fastify skips preSerialization for strings, Buffers, streams, null, and
+    // empty responses. Validate those payloads directly without parsing them.
+    if (!validatedResponses.has(request)) {
+      const validationPayload =
+        reply.statusCode === httpConstants.HTTP_STATUS_NO_CONTENT
+          ? null
+          : payload;
+      validateResponse(request, reply.statusCode, validationPayload, validator);
     }
-
     return payload;
   });
 }

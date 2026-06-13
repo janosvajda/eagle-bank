@@ -1,5 +1,5 @@
-import type { BankAccount } from "@prisma/client";
-import { fromDecimal } from "../../common/money/money.js";
+import type { BankAccount } from '@prisma/client';
+import { fromDecimal } from '../../common/money/money.js';
 
 export function mapAccount(account: BankAccount, balance?: number) {
   return {

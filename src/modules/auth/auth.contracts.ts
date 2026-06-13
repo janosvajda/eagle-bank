@@ -1,10 +1,11 @@
-import { z } from "zod";
-import { authSessionSchema } from "./auth-session.contracts.js";
+import { z } from 'zod';
+import { AuthTokenType } from '../../common/auth/auth.constants.js';
+import { authSessionSchema } from './auth-session.contracts.js';
 
 export const loginResultSchema = z
   .object({
     accessToken: z.string().min(1),
-    tokenType: z.literal("Bearer"),
+    tokenType: z.literal(AuthTokenType.BEARER),
     expiresIn: z.number().int().positive(),
   })
   .strict();

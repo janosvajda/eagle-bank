@@ -1,7 +1,8 @@
-import type { FastifyReply, FastifyRequest } from "fastify";
-import { AppError } from "../errors/AppError.js";
-import { ErrorCode } from "../errors/error-codes.js";
-import { MILLISECONDS_PER_SECOND } from "../constants.js";
+import type { FastifyReply, FastifyRequest } from 'fastify';
+import { constants as httpConstants } from 'node:http2';
+import { AppError } from '../errors/AppError.js';
+import { ErrorCode } from '../errors/error-codes.js';
+import { MILLISECONDS_PER_SECOND } from '../constants.js';
 
 export async function authenticate(
   request: FastifyRequest,
@@ -11,14 +12,14 @@ export async function authenticate(
     await request.jwtVerify();
   } catch {
     throw new AppError(
-      401,
+      httpConstants.HTTP_STATUS_UNAUTHORIZED,
       ErrorCode.UNAUTHORIZED,
-      "Access token is missing or invalid",
+      'Access token is missing or invalid',
     );
   }
   const session = await request.server.authSessions.get(
     request.user.sub,
-    request.user.sid ?? "",
+    request.user.sid ?? '',
     request.user.jti,
   );
   if (
@@ -28,9 +29,9 @@ export async function authenticate(
     session.expiresAtEpoch <= Math.floor(Date.now() / MILLISECONDS_PER_SECOND)
   ) {
     throw new AppError(
-      401,
+      httpConstants.HTTP_STATUS_UNAUTHORIZED,
       ErrorCode.UNAUTHORIZED,
-      "Access token is missing or invalid",
+      'Access token is missing or invalid',
     );
   }
 }

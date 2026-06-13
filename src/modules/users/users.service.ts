@@ -1,11 +1,12 @@
-import { randomUUID } from "node:crypto";
-import argon2 from "argon2";
-import { AppError } from "../../common/errors/AppError.js";
-import { ErrorCode } from "../../common/errors/error-codes.js";
-import { mapUser } from "./users.mapper.js";
-import type { UsersRepository } from "./users.repository.js";
-import type { CreateUserInput, UpdateUserInput } from "./users.schemas.js";
-import type { PasswordHasher } from "./users.ports.js";
+import { randomUUID } from 'node:crypto';
+import { constants as httpConstants } from 'node:http2';
+import argon2 from 'argon2';
+import { AppError } from '../../common/errors/AppError.js';
+import { ErrorCode } from '../../common/errors/error-codes.js';
+import { mapUser } from './users.mapper.js';
+import type { UsersRepository } from './users.repository.js';
+import type { CreateUserInput, UpdateUserInput } from './users.schemas.js';
+import type { PasswordHasher } from './users.ports.js';
 
 export class UsersService {
   constructor(
@@ -19,15 +20,15 @@ export class UsersService {
     const email = input.email.toLowerCase();
     if (await this.users.findByEmail(email)) {
       throw new AppError(
-        409,
+        httpConstants.HTTP_STATUS_CONFLICT,
         ErrorCode.CONFLICT,
-        "A user with this email already exists",
+        'A user with this email already exists',
       );
     }
 
     const passwordHash = await this.passwordHasher.hash(input.password);
     const user = await this.users.create({
-      id: `usr-${randomUUID().replaceAll("-", "")}`,
+      id: `usr-${randomUUID().replaceAll('-', '')}`,
       name: input.name,
       email,
       phoneNumber: input.phoneNumber,
@@ -45,12 +46,16 @@ export class UsersService {
   async getAuthorized(targetId: string, authenticatedId: string) {
     const user = await this.users.findById(targetId);
     if (!user)
-      throw new AppError(404, ErrorCode.NOT_FOUND, "User was not found");
+      throw new AppError(
+        httpConstants.HTTP_STATUS_NOT_FOUND,
+        ErrorCode.NOT_FOUND,
+        'User was not found',
+      );
     if (user.id !== authenticatedId) {
       throw new AppError(
-        403,
+        httpConstants.HTTP_STATUS_FORBIDDEN,
         ErrorCode.FORBIDDEN,
-        "You are not allowed to access this user",
+        'You are not allowed to access this user',
       );
     }
     return user;
@@ -93,9 +98,9 @@ export class UsersService {
     await this.getAuthorized(targetId, authenticatedId);
     if ((await this.users.countAccounts(targetId)) > 0) {
       throw new AppError(
-        409,
+        httpConstants.HTTP_STATUS_CONFLICT,
         ErrorCode.CONFLICT,
-        "A user cannot be deleted while associated with a bank account",
+        'A user cannot be deleted while associated with a bank account',
       );
     }
     await this.users.delete(targetId);

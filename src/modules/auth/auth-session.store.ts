@@ -1,19 +1,20 @@
-import { randomUUID } from "node:crypto";
+import { randomUUID } from 'node:crypto';
 import {
   DynamoDBClient,
   type DynamoDBClientConfig,
-} from "@aws-sdk/client-dynamodb";
+} from '@aws-sdk/client-dynamodb';
 import {
   DynamoDBDocumentClient,
   GetCommand,
   PutCommand,
-} from "@aws-sdk/lib-dynamodb";
-import { MILLISECONDS_PER_SECOND } from "../../common/constants.js";
+} from '@aws-sdk/lib-dynamodb';
+import { MILLISECONDS_PER_SECOND } from '../../common/constants.js';
+import { LOCAL_AWS_CREDENTIAL } from '../../common/config/runtime.constants.js';
 import type {
   AuthSession,
   AuthSessionStore,
-} from "./auth-session.contracts.js";
-import { authSessionSchema } from "./auth-session.contracts.js";
+} from './auth-session.contracts.js';
+import { authSessionSchema } from './auth-session.contracts.js';
 
 export class InMemoryAuthSessionStore implements AuthSessionStore {
   private readonly sessions = new Map<string, AuthSession>();
@@ -87,7 +88,7 @@ export class DynamoDbAuthSessionStore implements AuthSessionStore {
           ...session,
         },
         ConditionExpression:
-          "attribute_not_exists(pk) AND attribute_not_exists(sk)",
+          'attribute_not_exists(pk) AND attribute_not_exists(sk)',
       }),
     );
     return session;
@@ -121,8 +122,8 @@ export function createDynamoDbClient(options: {
   if (options.endpoint) {
     config.endpoint = options.endpoint;
     config.credentials = {
-      accessKeyId: options.accessKeyId ?? "test",
-      secretAccessKey: options.secretAccessKey ?? "test",
+      accessKeyId: options.accessKeyId ?? LOCAL_AWS_CREDENTIAL,
+      secretAccessKey: options.secretAccessKey ?? LOCAL_AWS_CREDENTIAL,
     };
   }
   return new DynamoDBClient(config);

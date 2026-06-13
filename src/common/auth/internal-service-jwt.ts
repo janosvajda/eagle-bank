@@ -1,36 +1,42 @@
-import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
-import { MILLISECONDS_PER_SECOND } from "../constants.js";
+import { createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
+import { MILLISECONDS_PER_SECOND } from '../constants.js';
+import {
+  AUTHORIZATION_BEARER_PREFIX,
+  type ServiceIdentity,
+} from './auth.constants.js';
 
 const INTERNAL_SERVICE_TOKEN_TTL_SECONDS = 60;
 const INTERNAL_SERVICE_CLOCK_TOLERANCE_SECONDS = 5;
+const BEARER_PREFIX_LENGTH = AUTHORIZATION_BEARER_PREFIX.length;
+const JWT_SEGMENT_COUNT = 3;
 
 interface InternalServiceClaims {
-  iss: string;
-  aud: string;
+  iss: ServiceIdentity;
+  aud: ServiceIdentity;
   iat: number;
   exp: number;
   jti: string;
 }
 
 function encode(value: object): string {
-  return Buffer.from(JSON.stringify(value)).toString("base64url");
+  return Buffer.from(JSON.stringify(value)).toString('base64url');
 }
 
 function signature(value: string, secret: string): Buffer {
-  return createHmac("sha256", secret).update(value).digest();
+  return createHmac('sha256', secret).update(value).digest();
 }
 
 // Internal tokens are deliberately short-lived and audience-bound. They prove
 // service identity but are not user access tokens and carry no user authority.
 export function createInternalServiceToken(options: {
-  issuer: string;
-  audience: string;
+  issuer: ServiceIdentity;
+  audience: ServiceIdentity;
   secret: string;
   now?: number;
 }): string {
   const issuedAt =
     options.now ?? Math.floor(Date.now() / MILLISECONDS_PER_SECOND);
-  const header = encode({ alg: "HS256", typ: "JWT" });
+  const header = encode({ alg: 'HS256', typ: 'JWT' });
   const payload = encode({
     iss: options.issuer,
     aud: options.audience,
@@ -39,23 +45,23 @@ export function createInternalServiceToken(options: {
     jti: randomUUID(),
   });
   const unsigned = `${header}.${payload}`;
-  return `${unsigned}.${signature(unsigned, options.secret).toString("base64url")}`;
+  return `${unsigned}.${signature(unsigned, options.secret).toString('base64url')}`;
 }
 
 export function verifyInternalServiceToken(options: {
   token: string | undefined;
-  audience: string;
-  allowedIssuers: string[];
+  audience: ServiceIdentity;
+  allowedIssuers: ServiceIdentity[];
   secret: string;
   now?: number;
 }): InternalServiceClaims | null {
-  if (!options.token?.startsWith("Bearer ")) return null;
-  const parts = options.token.slice(7).split(".");
-  if (parts.length !== 3) return null;
+  if (!options.token?.startsWith(AUTHORIZATION_BEARER_PREFIX)) return null;
+  const parts = options.token.slice(BEARER_PREFIX_LENGTH).split('.');
+  if (parts.length !== JWT_SEGMENT_COUNT) return null;
   const [header, payload, encodedSignature] = parts;
   if (!header || !payload || !encodedSignature) return null;
   const unsigned = `${header}.${payload}`;
-  const supplied = Buffer.from(encodedSignature, "base64url");
+  const supplied = Buffer.from(encodedSignature, 'base64url');
   const expected = signature(unsigned, options.secret);
 
   // Compare signatures in constant time to avoid leaking matching-prefix
@@ -68,7 +74,7 @@ export function verifyInternalServiceToken(options: {
   }
   try {
     const claims = JSON.parse(
-      Buffer.from(payload, "base64url").toString("utf8"),
+      Buffer.from(payload, 'base64url').toString('utf8'),
     ) as InternalServiceClaims;
     const now = options.now ?? Math.floor(Date.now() / MILLISECONDS_PER_SECOND);
     if (
