@@ -1,15 +1,17 @@
-import { z } from "zod";
+import { z } from 'zod';
+import { Currency, TransactionType } from '../../common/domain/banking.js';
 
 const accountNumberSchema = z.string().regex(/^01\d{6}$/);
 const userIdSchema = z.string().regex(/^usr-[A-Za-z0-9]+$/);
-const transactionTypeSchema = z.enum(["deposit", "withdrawal"]);
+const transactionTypeSchema = z.enum(TransactionType);
+const MINIMUM_IDEMPOTENCY_KEY_LENGTH = 8;
 
 export const ledgerAccountCommandSchema = z
   .object({
     accountId: z.uuid(),
     accountNumber: accountNumberSchema,
     userId: userIdSchema,
-    currency: z.literal("GBP"),
+    currency: z.literal(Currency.GBP),
   })
   .strict();
 
@@ -27,9 +29,9 @@ export const postLedgerTransactionCommandSchema = z
     userId: userIdSchema,
     type: transactionTypeSchema,
     amount: z.number().positive(),
-    currency: z.literal("GBP"),
+    currency: z.literal(Currency.GBP),
     reference: z.string().optional(),
-    idempotencyKey: z.string().min(8).optional(),
+    idempotencyKey: z.string().min(MINIMUM_IDEMPOTENCY_KEY_LENGTH).optional(),
     requestId: z.string().optional(),
     correlationId: z.string().optional(),
   })
@@ -43,7 +45,7 @@ export const ledgerTransactionResponseSchema = z
   .object({
     id: z.string().regex(/^tan-[A-Za-z0-9]+$/),
     amount: z.number().positive(),
-    currency: z.literal("GBP"),
+    currency: z.literal(Currency.GBP),
     type: transactionTypeSchema,
     reference: z.string().optional(),
     userId: userIdSchema,

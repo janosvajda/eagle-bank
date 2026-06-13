@@ -1,6 +1,6 @@
-import { loadConfig } from "../config/env.js";
-import { prisma } from "../db/prisma.js";
-import { buildLedgerApp } from "./ledger-app.js";
+import { loadConfig } from '../config/env.js';
+import { prisma } from '../db/prisma.js';
+import { buildLedgerApp } from './ledger-app.js';
 
 const config = loadConfig();
 const app = await buildLedgerApp({
@@ -10,6 +10,6 @@ const app = await buildLedgerApp({
 });
 
 await app.listen({
-  host: "0.0.0.0",
+  host: '0.0.0.0',
   port: Number(process.env.LEDGER_SERVICE_PORT ?? config.PORT),
 });

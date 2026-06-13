@@ -1,6 +1,14 @@
-import { randomUUID } from "node:crypto";
-import type { LedgerOutboxEvent, PrismaClient } from "@prisma/client";
-import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
+import { randomUUID } from 'node:crypto';
+import {
+  OutboxStatus,
+  Prisma,
+  type LedgerOutboxEvent,
+  type PrismaClient,
+} from '@prisma/client';
+import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs';
+import type { Logger } from 'pino';
+import { LOCAL_AWS_CREDENTIAL } from '../../common/config/runtime.constants.js';
+import { SqsMessageDataType } from './ledger.constants.js';
 
 const EXPONENTIAL_BACKOFF_BASE = 2;
 const JITTER_DIVISOR = 4;
@@ -21,10 +29,17 @@ export class LedgerEventPublisher {
     private readonly db: PrismaClient,
     private readonly sqs: SQSClient,
     private readonly options: LedgerEventPublisherOptions,
+    private readonly logger: Logger,
   ) {}
 
   async publishBatch(): Promise<number> {
     const claimed = await this.claim();
+    if (claimed.length > 0) {
+      this.logger.info(
+        { claimedEventCount: claimed.length },
+        'Ledger outbox events claimed',
+      );
+    }
     for (const event of claimed) {
       try {
         // Publishing happens after the claim transaction. If this process dies,
@@ -35,7 +50,7 @@ export class LedgerEventPublisher {
             MessageBody: JSON.stringify(event.payload),
             MessageAttributes: {
               eventType: {
-                DataType: "String",
+                DataType: SqsMessageDataType.STRING,
                 StringValue: event.eventType,
               },
             },
@@ -44,12 +59,16 @@ export class LedgerEventPublisher {
         await this.db.ledgerOutboxEvent.update({
           where: { id: event.id },
           data: {
-            status: "PUBLISHED",
+            status: OutboxStatus.PUBLISHED,
             publishedAt: new Date(),
             processingLeaseExpiresAt: null,
             lastError: null,
           },
         });
+        this.logger.info(
+          { eventId: event.eventId, eventType: event.eventType },
+          'Ledger event published',
+        );
       } catch (error) {
         await this.markFailed(event, error);
       }
@@ -66,9 +85,9 @@ export class LedgerEventPublisher {
         SELECT "id"
         FROM "LedgerOutboxEvent"
         WHERE (
-          ("status" IN ('PENDING', 'FAILED') AND "nextAttemptAt" <= NOW())
+          ("status" IN (${OutboxStatus.PENDING}::"OutboxStatus", ${OutboxStatus.FAILED}::"OutboxStatus") AND "nextAttemptAt" <= NOW())
           OR
-          ("status" = 'PROCESSING' AND "processingLeaseExpiresAt" <= NOW())
+          ("status" = ${OutboxStatus.PROCESSING}::"OutboxStatus" AND "processingLeaseExpiresAt" <= NOW())
         )
         ORDER BY "createdAt" ASC
         FOR UPDATE SKIP LOCKED
@@ -78,14 +97,14 @@ export class LedgerEventPublisher {
       await tx.ledgerOutboxEvent.updateMany({
         where: { id: { in: rows.map(({ id }) => id) } },
         data: {
-          status: "PROCESSING",
+          status: OutboxStatus.PROCESSING,
           processingLeaseExpiresAt: leaseExpiry,
           attempts: { increment: 1 },
         },
       });
       return tx.ledgerOutboxEvent.findMany({
         where: { id: { in: rows.map(({ id }) => id) } },
-        orderBy: { createdAt: "asc" },
+        orderBy: { createdAt: Prisma.SortOrder.asc },
       });
     });
   }
@@ -109,7 +128,7 @@ export class LedgerEventPublisher {
     await this.db.ledgerOutboxEvent.update({
       where: { id: event.id },
       data: {
-        status: dead ? "DEAD" : "FAILED",
+        status: dead ? OutboxStatus.DEAD : OutboxStatus.FAILED,
         nextAttemptAt: new Date(Date.now() + delay + jitter),
         processingLeaseExpiresAt: null,
         lastError:
@@ -118,6 +137,23 @@ export class LedgerEventPublisher {
             : `Publish failure ${randomUUID()}`,
       },
     });
+    const context = {
+      attempts,
+      eventId: event.eventId,
+      eventType: event.eventType,
+      nextStatus: dead ? OutboxStatus.DEAD : OutboxStatus.FAILED,
+    };
+    if (dead) {
+      this.logger.error(
+        { ...context, err: error },
+        'Ledger event dead-lettered',
+      );
+    } else {
+      this.logger.warn(
+        { ...context, err: error },
+        'Ledger event publish failed',
+      );
+    }
   }
 }
 
@@ -135,8 +171,8 @@ export function createSqsClient(options: {
       ? {
           endpoint: options.endpoint,
           credentials: {
-            accessKeyId: options.accessKeyId ?? "test",
-            secretAccessKey: options.secretAccessKey ?? "test",
+            accessKeyId: options.accessKeyId ?? LOCAL_AWS_CREDENTIAL,
+            secretAccessKey: options.secretAccessKey ?? LOCAL_AWS_CREDENTIAL,
           },
         }
       : {}),

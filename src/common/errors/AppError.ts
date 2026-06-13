@@ -1,4 +1,4 @@
-import type { ErrorCode } from "./error-codes.js";
+import type { ErrorCode } from './error-codes.js';
 
 export interface ErrorDetail {
   field: string;
@@ -14,6 +14,6 @@ export class AppError extends Error {
     public readonly details?: ErrorDetail[],
   ) {
     super(message);
-    this.name = "AppError";
+    this.name = 'AppError';
   }
 }

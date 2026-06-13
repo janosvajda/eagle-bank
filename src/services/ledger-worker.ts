@@ -1,19 +1,30 @@
-const enabled = process.env.LEDGER_ASYNC_COMMANDS_ENABLED === "true";
+import pino from 'pino';
+import { ENVIRONMENT_ENABLED_VALUE } from '../common/config/runtime.constants.js';
+
+const enabled =
+  process.env.LEDGER_ASYNC_COMMANDS_ENABLED === ENVIRONMENT_ENABLED_VALUE;
 const LEDGER_WORKER_HEARTBEAT_INTERVAL_MS = 60000;
+const logger = pino({ name: 'ledger-worker' });
 
 if (enabled) {
+  logger.error('Asynchronous Ledger commands were enabled but are unsupported');
   throw new Error(
-    "Asynchronous Ledger commands are modeled but intentionally not enabled",
+    'Asynchronous Ledger commands are modeled but intentionally not enabled',
   );
 }
 
+logger.info(
+  { heartbeatIntervalMs: LEDGER_WORKER_HEARTBEAT_INTERVAL_MS },
+  'Ledger worker started in idle mode',
+);
 const interval = setInterval(
-  () => undefined,
+  () => logger.info('Ledger worker heartbeat'),
   LEDGER_WORKER_HEARTBEAT_INTERVAL_MS,
 );
 const stop = (): void => {
+  logger.info('Ledger worker shutdown requested');
   clearInterval(interval);
   process.exitCode = 0;
 };
-process.on("SIGINT", stop);
-process.on("SIGTERM", stop);
+process.on('SIGINT', stop);
+process.on('SIGTERM', stop);

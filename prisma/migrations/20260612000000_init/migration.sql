@@ -2,7 +2,7 @@ CREATE TYPE "AccountType" AS ENUM ('personal');
 CREATE TYPE "TransactionType" AS ENUM ('deposit', 'withdrawal');
 
 CREATE TABLE "User" (
-  "id" TEXT NOT NULL,
+  "id" VARCHAR(36) NOT NULL,
   "name" TEXT NOT NULL,
   "addressLine1" TEXT NOT NULL,
   "addressLine2" TEXT,
@@ -10,8 +10,8 @@ CREATE TABLE "User" (
   "town" TEXT NOT NULL,
   "county" TEXT NOT NULL,
   "postcode" TEXT NOT NULL,
-  "phoneNumber" TEXT NOT NULL,
-  "email" TEXT NOT NULL,
+  "phoneNumber" VARCHAR(16) NOT NULL,
+  "email" VARCHAR(254) NOT NULL,
   "passwordHash" TEXT NOT NULL,
   "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -26,7 +26,7 @@ CREATE TABLE "BankAccount" (
   "accountType" "AccountType" NOT NULL,
   "balance" DECIMAL(12,2) NOT NULL DEFAULT 0,
   "currency" TEXT NOT NULL DEFAULT 'GBP',
-  "userId" TEXT NOT NULL,
+  "userId" VARCHAR(36) NOT NULL,
   "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "updatedAt" TIMESTAMP(3) NOT NULL,
   CONSTRAINT "BankAccount_pkey" PRIMARY KEY ("id")
@@ -38,7 +38,7 @@ CREATE TABLE "Transaction" (
   "currency" TEXT NOT NULL,
   "type" "TransactionType" NOT NULL,
   "reference" TEXT,
-  "userId" TEXT NOT NULL,
+  "userId" VARCHAR(36) NOT NULL,
   "accountId" UUID NOT NULL,
   "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "Transaction_pkey" PRIMARY KEY ("id")

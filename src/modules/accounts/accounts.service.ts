@@ -1,18 +1,21 @@
-import { randomInt } from "node:crypto";
-import { Prisma } from "@prisma/client";
-import { AppError } from "../../common/errors/AppError.js";
-import { ErrorCode } from "../../common/errors/error-codes.js";
-import { mapAccount } from "./accounts.mapper.js";
-import type { AccountsRepository } from "./accounts.repository.js";
+import { randomInt } from 'node:crypto';
+import { AccountStatus, Prisma } from '@prisma/client';
+import { constants as httpConstants } from 'node:http2';
+import { AppError } from '../../common/errors/AppError.js';
+import { ErrorCode } from '../../common/errors/error-codes.js';
+import { mapAccount } from './accounts.mapper.js';
+import type { AccountsRepository } from './accounts.repository.js';
 import type {
   CreateAccountInput,
   UpdateAccountInput,
-} from "./accounts.schemas.js";
-import type { LedgerGateway } from "../ledger/ledger.contracts.js";
+} from './accounts.schemas.js';
+import type { LedgerGateway } from '../ledger/ledger.contracts.js';
+import { PrismaErrorCode } from '../../common/errors/prisma-error-codes.js';
+import { Currency } from '../../common/domain/banking.js';
 
 const ACCOUNT_NUMBER_RANGE = 1000000;
 const ACCOUNT_NUMBER_ALLOCATION_ATTEMPTS = 5;
-const ACCOUNT_NUMBER_PREFIX = "01";
+const ACCOUNT_NUMBER_PREFIX = '01';
 const ACCOUNT_NUMBER_SUFFIX_LENGTH = 6;
 
 export class AccountsService {
@@ -24,7 +27,7 @@ export class AccountsService {
   private generateAccountNumber(): string {
     return `${ACCOUNT_NUMBER_PREFIX}${randomInt(0, ACCOUNT_NUMBER_RANGE)
       .toString()
-      .padStart(ACCOUNT_NUMBER_SUFFIX_LENGTH, "0")}`;
+      .padStart(ACCOUNT_NUMBER_SUFFIX_LENGTH, '0')}`;
   }
 
   async create(userId: string, input: CreateAccountInput) {
@@ -41,7 +44,9 @@ export class AccountsService {
           name: input.name,
           accountType: input.accountType,
           userId,
-          status: this.ledger ? "PENDING_LEDGER_CREATION" : "ACTIVE",
+          status: this.ledger
+            ? AccountStatus.PENDING_LEDGER_CREATION
+            : AccountStatus.ACTIVE,
         });
         if (!this.ledger) return mapAccount(account);
 
@@ -52,11 +57,11 @@ export class AccountsService {
             accountId: account.id,
             accountNumber: account.accountNumber,
             userId,
-            currency: "GBP",
+            currency: Currency.GBP,
           });
           const active = await this.accounts.setStatus(
             account.accountNumber,
-            "ACTIVE",
+            AccountStatus.ACTIVE,
           );
           return mapAccount(active, ledgerAccount.availableBalance);
         } catch (error) {
@@ -64,14 +69,14 @@ export class AccountsService {
           // of presenting an account whose ledger projection is missing.
           await this.accounts.setStatus(
             account.accountNumber,
-            "LEDGER_CREATION_FAILED",
+            AccountStatus.LEDGER_CREATION_FAILED,
           );
           throw error;
         }
       } catch (error) {
         if (
           error instanceof Prisma.PrismaClientKnownRequestError &&
-          error.code === "P2002"
+          error.code === PrismaErrorCode.UNIQUE_CONSTRAINT
         ) {
           continue;
         }
@@ -79,26 +84,26 @@ export class AccountsService {
       }
     }
     throw new AppError(
-      500,
+      httpConstants.HTTP_STATUS_INTERNAL_SERVER_ERROR,
       ErrorCode.INTERNAL_ERROR,
-      "Unable to allocate account number",
+      'Unable to allocate account number',
     );
   }
 
   async getAuthorized(accountNumber: string, userId: string) {
     const account = await this.accounts.findByNumber(accountNumber);
-    if (!account || account.status !== "ACTIVE") {
+    if (!account || account.status !== AccountStatus.ACTIVE) {
       throw new AppError(
-        404,
+        httpConstants.HTTP_STATUS_NOT_FOUND,
         ErrorCode.NOT_FOUND,
-        "Bank account was not found",
+        'Bank account was not found',
       );
     }
     if (account.userId !== userId) {
       throw new AppError(
-        403,
+        httpConstants.HTTP_STATUS_FORBIDDEN,
         ErrorCode.FORBIDDEN,
-        "You are not allowed to access this bank account",
+        'You are not allowed to access this bank account',
       );
     }
     return account;
@@ -149,13 +154,19 @@ export class AccountsService {
     if (this.ledger) {
       // Closing spans two services, so explicit states make this small saga
       // observable and recoverable when the Ledger call fails.
-      await this.accounts.setStatus(accountNumber, "PENDING_LEDGER_CLOSURE");
+      await this.accounts.setStatus(
+        accountNumber,
+        AccountStatus.PENDING_LEDGER_CLOSURE,
+      );
       try {
         await this.ledger.closeAccount(accountNumber);
         await this.accounts.close(accountNumber);
         return;
       } catch (error) {
-        await this.accounts.setStatus(accountNumber, "LEDGER_CLOSURE_FAILED");
+        await this.accounts.setStatus(
+          accountNumber,
+          AccountStatus.LEDGER_CLOSURE_FAILED,
+        );
         throw error;
       }
     }
@@ -164,12 +175,12 @@ export class AccountsService {
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === "P2003"
+        error.code === PrismaErrorCode.FOREIGN_KEY_CONSTRAINT
       ) {
         throw new AppError(
-          409,
+          httpConstants.HTTP_STATUS_CONFLICT,
           ErrorCode.CONFLICT,
-          "A bank account with transactions cannot be deleted",
+          'A bank account with transactions cannot be deleted',
         );
       }
       throw error;

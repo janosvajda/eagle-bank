@@ -1,12 +1,12 @@
-const baseUrl = process.env.BASE_URL ?? "http://localhost:3000";
+const baseUrl = process.env.BASE_URL ?? 'http://localhost:3000';
 
 async function request(method, path, { token, body, idempotencyKey } = {}) {
   const response = await fetch(`${baseUrl}${path}`, {
     method,
     headers: {
-      ...(body ? { "content-type": "application/json" } : {}),
+      ...(body ? { 'content-type': 'application/json' } : {}),
       ...(token ? { authorization: `Bearer ${token}` } : {}),
-      ...(idempotencyKey ? { "idempotency-key": idempotencyKey } : {}),
+      ...(idempotencyKey ? { 'idempotency-key': idempotencyKey } : {}),
     },
     body: body ? JSON.stringify(body) : undefined,
   });
@@ -29,7 +29,7 @@ function expectStatus(result, expected, step) {
 let ready = false;
 for (let attempt = 0; attempt < 60; attempt += 1) {
   try {
-    const result = await request("GET", "/ready");
+    const result = await request('GET', '/ready');
     if (result.status === 200) {
       ready = true;
       break;
@@ -37,100 +37,100 @@ for (let attempt = 0; attempt < 60; attempt += 1) {
   } catch {}
   await new Promise((resolve) => setTimeout(resolve, 1000));
 }
-if (!ready) throw new Error("API did not become ready within 60 seconds");
+if (!ready) throw new Error('API did not become ready within 60 seconds');
 
-expectStatus(await request("GET", "/health"), 200, "health");
-expectStatus(await request("GET", "/ready"), 200, "ready");
+expectStatus(await request('GET', '/health'), 200, 'health');
+expectStatus(await request('GET', '/ready'), 200, 'ready');
 
 const unique = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 const email = `smoke-${unique}@example.com`;
-const password = "SmokePassword123!";
-const user = await request("POST", "/v1/users", {
+const password = 'SmokePassword123!';
+const user = await request('POST', '/v1/users', {
   body: {
-    name: "Smoke Test",
+    name: 'Smoke Test',
     address: {
-      line1: "1 Test Road",
-      town: "London",
-      county: "Greater London",
-      postcode: "SW1A 1AA",
+      line1: '1 Test Road',
+      town: 'London',
+      county: 'Greater London',
+      postcode: 'SW1A 1AA',
     },
     phoneNumber: `+4477${String(Date.now()).slice(-8)}`,
     email,
     password,
   },
 });
-expectStatus(user, 201, "create user");
+expectStatus(user, 201, 'create user');
 
-const login = await request("POST", "/v1/auth/login", {
+const login = await request('POST', '/v1/auth/login', {
   body: { email, password },
 });
-expectStatus(login, 200, "login");
+expectStatus(login, 200, 'login');
 const token = login.body.accessToken;
 
-const account = await request("POST", "/v1/accounts", {
+const account = await request('POST', '/v1/accounts', {
   token,
-  body: { name: "Smoke Account", accountType: "personal" },
+  body: { name: 'Smoke Account', accountType: 'personal' },
 });
-expectStatus(account, 201, "create account");
+expectStatus(account, 201, 'create account');
 const accountNumber = account.body.accountNumber;
 
 const deposit = await request(
-  "POST",
+  'POST',
   `/v1/accounts/${accountNumber}/transactions`,
   {
     token,
     idempotencyKey: `deposit-${unique}`,
     body: {
       amount: 100,
-      currency: "GBP",
-      type: "deposit",
-      reference: "Smoke deposit",
+      currency: 'GBP',
+      type: 'deposit',
+      reference: 'Smoke deposit',
     },
   },
 );
-expectStatus(deposit, 201, "deposit");
+expectStatus(deposit, 201, 'deposit');
 
 expectStatus(
-  await request("POST", `/v1/accounts/${accountNumber}/transactions`, {
+  await request('POST', `/v1/accounts/${accountNumber}/transactions`, {
     token,
     idempotencyKey: `withdrawal-${unique}`,
     body: {
       amount: 25,
-      currency: "GBP",
-      type: "withdrawal",
-      reference: "Smoke withdrawal",
+      currency: 'GBP',
+      type: 'withdrawal',
+      reference: 'Smoke withdrawal',
     },
   }),
   201,
-  "withdraw",
+  'withdraw',
 );
 expectStatus(
-  await request("GET", `/v1/accounts/${accountNumber}`, { token }),
+  await request('GET', `/v1/accounts/${accountNumber}`, { token }),
   200,
-  "fetch account",
+  'fetch account',
 );
 expectStatus(
-  await request("GET", `/v1/accounts/${accountNumber}/transactions`, { token }),
+  await request('GET', `/v1/accounts/${accountNumber}/transactions`, { token }),
   200,
-  "list transactions",
+  'list transactions',
 );
 expectStatus(
   await request(
-    "GET",
+    'GET',
     `/v1/accounts/${accountNumber}/transactions/${deposit.body.id}`,
     { token },
   ),
   200,
-  "fetch transaction",
+  'fetch transaction',
 );
 expectStatus(
-  await request("DELETE", `/v1/accounts/${accountNumber}`, { token }),
+  await request('DELETE', `/v1/accounts/${accountNumber}`, { token }),
   204,
-  "delete account",
+  'delete account',
 );
 expectStatus(
-  await request("DELETE", `/v1/users/${user.body.id}`, { token }),
+  await request('DELETE', `/v1/users/${user.body.id}`, { token }),
   204,
-  "delete user",
+  'delete user',
 );
-console.log("Eagle Bank smoke test passed");
+console.log('Eagle Bank smoke test passed');

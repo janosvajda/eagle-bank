@@ -1,18 +1,18 @@
-import { randomUUID } from "node:crypto";
-import argon2 from "argon2";
-import { testPrisma } from "./database.js";
+import { randomUUID } from 'node:crypto';
+import argon2 from 'argon2';
+import { testPrisma } from './database.js';
 
 export const userPayload = {
-  name: "Test User",
+  name: 'Test User',
   address: {
-    line1: "1 Test Road",
-    town: "London",
-    county: "Greater London",
-    postcode: "SW1A 1AA",
+    line1: '1 Test Road',
+    town: 'London',
+    county: 'Greater London',
+    postcode: 'SW1A 1AA',
   },
-  phoneNumber: "+447700900001",
-  email: "test@example.com",
-  password: "Password123!",
+  phoneNumber: '+447700900001',
+  email: 'test@example.com',
+  password: 'Password123!',
 };
 
 export async function createUser(overrides: Partial<typeof userPayload> = {}) {
@@ -23,7 +23,7 @@ export async function createUser(overrides: Partial<typeof userPayload> = {}) {
   };
   return testPrisma.user.create({
     data: {
-      id: `usr-${randomUUID().replaceAll("-", "")}`,
+      id: `usr-${randomUUID().replaceAll('-', '')}`,
       name: payload.name,
       addressLine1: payload.address.line1,
       town: payload.address.town,
@@ -38,20 +38,20 @@ export async function createUser(overrides: Partial<typeof userPayload> = {}) {
 
 export async function createAccount(
   userId: string,
-  accountNumber = "01234567",
+  accountNumber = '01234567',
 ) {
   return testPrisma.bankAccount.create({
     data: {
       accountNumber,
-      name: "Personal Bank Account",
-      accountType: "personal",
+      name: 'Personal Bank Account',
+      accountType: 'personal',
       userId,
-      status: "ACTIVE",
+      status: 'ACTIVE',
       ledgerAccount: {
         create: {
           accountNumber,
           userId,
-          currency: "GBP",
+          currency: 'GBP',
         },
       },
     },

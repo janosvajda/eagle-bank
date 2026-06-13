@@ -1,4 +1,4 @@
-import type { User } from "@prisma/client";
+import type { User } from '@prisma/client';
 
 export function mapUser(user: User) {
   return {

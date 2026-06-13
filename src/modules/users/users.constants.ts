@@ -1,0 +1,2 @@
+export const MAXIMUM_EMAIL_LENGTH = 254;
+export const MAXIMUM_PHONE_NUMBER_LENGTH = 16;

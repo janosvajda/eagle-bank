@@ -1,28 +1,34 @@
-import { createHash, randomUUID } from "node:crypto";
+import { createHash, randomUUID } from 'node:crypto';
+import { constants as httpConstants } from 'node:http2';
 import {
+  IdempotencyStatus,
+  LedgerAccountStatus,
+  LedgerEntryDirection,
   Prisma,
   type LedgerAccount,
   type LedgerTransaction,
   type PrismaClient,
-} from "@prisma/client";
-import { AppError } from "../../common/errors/AppError.js";
-import { ErrorCode } from "../../common/errors/error-codes.js";
-import { toDecimal } from "../../common/money/money.js";
+} from '@prisma/client';
+import { AppError } from '../../common/errors/AppError.js';
+import { ErrorCode } from '../../common/errors/error-codes.js';
+import { toDecimal } from '../../common/money/money.js';
 import {
   MILLISECONDS_PER_SECOND,
   MONEY_DECIMAL_PLACES,
   SECONDS_PER_HOUR,
-} from "../../common/constants.js";
+} from '../../common/constants.js';
 import type {
   LedgerAccountCommand,
   LedgerAccountResponse,
   LedgerGateway,
   LedgerTransactionResponse,
   PostLedgerTransactionCommand,
-} from "./ledger.contracts.js";
-import { ledgerTransactionResponseSchema } from "./ledger.contracts.js";
+} from './ledger.contracts.js';
+import { ledgerTransactionResponseSchema } from './ledger.contracts.js';
+import { Currency, TransactionType } from '../../common/domain/banking.js';
+import { LedgerEventType } from './ledger.constants.js';
 
-const MAX_ACCOUNT_BALANCE = "10000.00";
+const MAX_ACCOUNT_BALANCE = '10000.00';
 const IDEMPOTENCY_RETENTION_HOURS = 24;
 const IDEMPOTENCY_RETENTION_MS =
   IDEMPOTENCY_RETENTION_HOURS * SECONDS_PER_HOUR * MILLISECONDS_PER_SECOND;
@@ -33,7 +39,7 @@ function mapTransaction(
   return {
     id: transaction.transactionId,
     amount: Number(transaction.amount.toFixed(MONEY_DECIMAL_PLACES)),
-    currency: "GBP",
+    currency: Currency.GBP,
     type: transaction.type,
     ...(transaction.reference ? { reference: transaction.reference } : {}),
     userId: transaction.userId,
@@ -46,7 +52,7 @@ function mapAccount(account: LedgerAccount): LedgerAccountResponse {
     accountId: account.accountId,
     accountNumber: account.accountNumber,
     userId: account.userId,
-    currency: "GBP",
+    currency: Currency.GBP,
     availableBalance: Number(
       account.availableBalance.toFixed(MONEY_DECIMAL_PLACES),
     ),
@@ -56,7 +62,7 @@ function mapAccount(account: LedgerAccount): LedgerAccountResponse {
 function requestHash(command: PostLedgerTransactionCommand): string {
   // Bind an idempotency key to the business request. Reusing the key with
   // different money movement parameters is rejected rather than replayed.
-  return createHash("sha256")
+  return createHash('sha256')
     .update(
       JSON.stringify({
         accountNumber: command.accountNumber,
@@ -67,7 +73,7 @@ function requestHash(command: PostLedgerTransactionCommand): string {
         reference: command.reference ?? null,
       }),
     )
-    .digest("hex");
+    .digest('hex');
 }
 
 export class LedgerService implements LedgerGateway {
@@ -91,9 +97,9 @@ export class LedgerService implements LedgerGateway {
         return mapAccount(existing);
       }
       throw new AppError(
-        409,
+        httpConstants.HTTP_STATUS_CONFLICT,
         ErrorCode.CONFLICT,
-        "Ledger account already exists with different data",
+        'Ledger account already exists with different data',
       );
     }
 
@@ -110,14 +116,14 @@ export class LedgerService implements LedgerGateway {
     const accounts = await this.db.ledgerAccount.findMany({
       where: {
         accountNumber: { in: accountNumbers },
-        status: "ACTIVE",
+        status: LedgerAccountStatus.ACTIVE,
       },
     });
     if (accounts.length !== new Set(accountNumbers).size) {
       throw new AppError(
-        503,
+        httpConstants.HTTP_STATUS_SERVICE_UNAVAILABLE,
         ErrorCode.INTERNAL_ERROR,
-        "Ledger account projection is incomplete",
+        'Ledger account projection is incomplete',
       );
     }
     return Object.fromEntries(
@@ -134,15 +140,18 @@ export class LedgerService implements LedgerGateway {
     });
     if (!existing) {
       throw new AppError(
-        404,
+        httpConstants.HTTP_STATUS_NOT_FOUND,
         ErrorCode.NOT_FOUND,
-        "Ledger account was not found",
+        'Ledger account was not found',
       );
     }
-    if (existing.status === "CLOSED") return;
+    if (existing.status === LedgerAccountStatus.CLOSED) return;
     await this.db.ledgerAccount.update({
       where: { accountNumber },
-      data: { status: "CLOSED", version: { increment: 1 } },
+      data: {
+        status: LedgerAccountStatus.CLOSED,
+        version: { increment: 1 },
+      },
     });
   }
 
@@ -163,9 +172,9 @@ export class LedgerService implements LedgerGateway {
       if (previous) {
         if (previous.requestHash !== hash) {
           throw new AppError(
-            409,
+            httpConstants.HTTP_STATUS_CONFLICT,
             ErrorCode.CONFLICT,
-            "Idempotency key was reused for a different transaction",
+            'Idempotency key was reused for a different transaction',
           );
         }
         if (previous.responsePayload) {
@@ -191,31 +200,31 @@ export class LedgerService implements LedgerGateway {
         const account = await tx.ledgerAccount.findUnique({
           where: { accountNumber: command.accountNumber },
         });
-        if (!account || account.status !== "ACTIVE") {
+        if (!account || account.status !== LedgerAccountStatus.ACTIVE) {
           throw new AppError(
-            404,
+            httpConstants.HTTP_STATUS_NOT_FOUND,
             ErrorCode.NOT_FOUND,
-            "Bank account was not found",
+            'Bank account was not found',
           );
         }
 
         const amount = toDecimal(command.amount);
         const nextBalance =
-          command.type === "deposit"
+          command.type === TransactionType.DEPOSIT
             ? account.availableBalance.add(amount)
             : account.availableBalance.sub(amount);
         if (nextBalance.isNegative()) {
           throw new AppError(
-            422,
+            httpConstants.HTTP_STATUS_UNPROCESSABLE_ENTITY,
             ErrorCode.INSUFFICIENT_FUNDS,
-            "Insufficient funds to process transaction",
+            'Insufficient funds to process transaction',
           );
         }
         if (nextBalance.greaterThan(this.maxBalance)) {
           throw new AppError(
-            422,
+            httpConstants.HTTP_STATUS_UNPROCESSABLE_ENTITY,
             ErrorCode.BALANCE_LIMIT_EXCEEDED,
-            "Maximum account balance would be exceeded",
+            'Maximum account balance would be exceeded',
           );
         }
 
@@ -233,7 +242,7 @@ export class LedgerService implements LedgerGateway {
           });
         }
 
-        const transactionId = `tan-${randomUUID().replaceAll("-", "")}`;
+        const transactionId = `tan-${randomUUID().replaceAll('-', '')}`;
         const transaction = await tx.ledgerTransaction.create({
           data: {
             transactionId,
@@ -257,7 +266,10 @@ export class LedgerService implements LedgerGateway {
             ledgerTransactionId: transaction.id,
             ledgerAccountId: account.id,
             accountId: account.accountId,
-            direction: command.type === "deposit" ? "CREDIT" : "DEBIT",
+            direction:
+              command.type === TransactionType.DEPOSIT
+                ? LedgerEntryDirection.CREDIT
+                : LedgerEntryDirection.DEBIT,
             amount,
             currency: command.currency,
             balanceAfter: nextBalance,
@@ -278,11 +290,11 @@ export class LedgerService implements LedgerGateway {
         await tx.ledgerOutboxEvent.create({
           data: {
             eventId,
-            eventType: "TransactionPosted",
+            eventType: LedgerEventType.TRANSACTION_POSTED,
             aggregateId: account.accountNumber,
             payload: {
               eventId,
-              eventType: "TransactionPosted",
+              eventType: LedgerEventType.TRANSACTION_POSTED,
               occurredAt: transaction.createdAt.toISOString(),
               transactionId,
               accountNumber: account.accountNumber,
@@ -309,7 +321,7 @@ export class LedgerService implements LedgerGateway {
               },
             },
             data: {
-              status: "COMPLETED",
+              status: IdempotencyStatus.COMPLETED,
               responsePayload: { ...response },
             },
           });
@@ -329,7 +341,10 @@ export class LedgerService implements LedgerGateway {
     return (
       await this.db.ledgerTransaction.findMany({
         where: { accountId: account.accountId },
-        orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+        orderBy: [
+          { createdAt: Prisma.SortOrder.asc },
+          { id: Prisma.SortOrder.asc },
+        ],
       })
     ).map(mapTransaction);
   }
@@ -343,7 +358,11 @@ export class LedgerService implements LedgerGateway {
       where: { transactionId },
     });
     if (!transaction || transaction.ledgerAccountId !== account.id) {
-      throw new AppError(404, ErrorCode.NOT_FOUND, "Transaction was not found");
+      throw new AppError(
+        httpConstants.HTTP_STATUS_NOT_FOUND,
+        ErrorCode.NOT_FOUND,
+        'Transaction was not found',
+      );
     }
     return mapTransaction(transaction);
   }
@@ -352,11 +371,11 @@ export class LedgerService implements LedgerGateway {
     const account = await this.db.ledgerAccount.findUnique({
       where: { accountNumber },
     });
-    if (!account || account.status !== "ACTIVE") {
+    if (!account || account.status !== LedgerAccountStatus.ACTIVE) {
       throw new AppError(
-        404,
+        httpConstants.HTTP_STATUS_NOT_FOUND,
         ErrorCode.NOT_FOUND,
-        "Ledger account was not found",
+        'Ledger account was not found',
       );
     }
     return account;
