@@ -1,0 +1,85 @@
+{
+  "name": "eagle-bank",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Production-shaped Eagle Bank take-home platform",
+  "packageManager": "pnpm@10.12.1",
+  "main": "dist/src/server.js",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "api:dev": "tsx watch src/server.ts",
+    "auth:dev": "tsx watch src/services/auth-server.ts",
+    "ledger:dev": "tsx watch src/services/ledger-server.ts",
+    "ledger-worker:dev": "tsx watch src/services/ledger-worker.ts",
+    "ledger-event-publisher:dev": "tsx watch src/services/ledger-event-publisher.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/src/server.js",
+    "test": "pnpm test:unit && pnpm test:integration",
+    "test:unit": "vitest run --config vitest.unit.config.ts --coverage",
+    "test:integration": "vitest run --config vitest.config.ts",
+    "test:watch": "vitest",
+    "test:coverage": "pnpm test:unit",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "format": "prettier --check .",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:reset": "prisma migrate reset",
+    "db:studio": "prisma studio",
+    "seed": "tsx prisma/seed.ts",
+    "docker:up": "docker compose up --build",
+    "docker:down": "docker compose down",
+    "smoke": "bash scripts/smoke-test.sh",
+    "infra:test": "vitest run --config vitest.infra.config.ts",
+    "infra:synth": "cdk synth --no-lookups",
+    "infra:diff": "cdk diff",
+    "infra:deploy": "cdk deploy",
+    "infra:destroy": "cdk destroy"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@prisma/client",
+      "@prisma/engines",
+      "argon2",
+      "esbuild",
+      "prisma"
+    ]
+  },
+  "dependencies": {
+    "@apidevtools/json-schema-ref-parser": "^14.2.1",
+    "@aws-sdk/client-dynamodb": "^3.828.0",
+    "@aws-sdk/client-sqs": "^3.828.0",
+    "@aws-sdk/lib-dynamodb": "^3.828.0",
+    "@fastify/jwt": "^10.1.0",
+    "@prisma/client": "^6.19.0",
+    "argon2": "^0.44.0",
+    "fastify": "^5.6.2",
+    "fastify-plugin": "^5.1.0",
+    "openapi-backend": "^5.11.1",
+    "pino": "^10.1.0",
+    "prisma": "^6.19.0",
+    "yaml": "^2.8.1",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.150",
+    "@types/node": "^24.10.0",
+    "@vitest/coverage-v8": "^4.1.8",
+    "aws-cdk": "^2.1126.0",
+    "aws-cdk-lib": "^2.201.0",
+    "constructs": "^10.4.2",
+    "prettier": "^3.5.3",
+    "tsx": "^4.20.6",
+    "turbo": "^2.5.4",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.8"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}

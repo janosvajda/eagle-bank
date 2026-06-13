@@ -1,0 +1,36 @@
+{
+  "version": "54.0.0",
+  "files": {
+    "a6c94c30f82f3e3eeab8d4512f69b0debab9b6a68a3dc87961d3475fcc2f625e": {
+      "displayName": "EagleBankStack Template",
+      "source": {
+        "path": "EagleBankStack.template.json",
+        "packaging": "file"
+      },
+      "destinations": {
+        "653502182456-eu-west-2-9782fecf": {
+          "bucketName": "cdk-hnb659fds-assets-653502182456-eu-west-2",
+          "objectKey": "a6c94c30f82f3e3eeab8d4512f69b0debab9b6a68a3dc87961d3475fcc2f625e.json",
+          "region": "eu-west-2",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::653502182456:role/cdk-hnb659fds-file-publishing-role-653502182456-eu-west-2"
+        }
+      }
+    }
+  },
+  "dockerImages": {
+    "29c99603c37668df01a406d6c97757b1b8d732b299623ac88befbdadfda65b49": {
+      "displayName": "apiTask/api/AssetImage",
+      "source": {
+        "directory": "asset.29c99603c37668df01a406d6c97757b1b8d732b299623ac88befbdadfda65b49"
+      },
+      "destinations": {
+        "653502182456-eu-west-2-f27fcd58": {
+          "repositoryName": "cdk-hnb659fds-container-assets-653502182456-eu-west-2",
+          "imageTag": "29c99603c37668df01a406d6c97757b1b8d732b299623ac88befbdadfda65b49",
+          "region": "eu-west-2",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::653502182456:role/cdk-hnb659fds-image-publishing-role-653502182456-eu-west-2"
+        }
+      }
+    }
+  }
+}

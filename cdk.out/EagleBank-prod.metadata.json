@@ -1,0 +1,1867 @@
+{
+  "/EagleBank-prod": [
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/AuthSessions": [
+    {
+      "type": "aws:cdk:hasPhysicalName",
+      "data": {
+        "Ref": "AuthSessions6F3F594E"
+      }
+    }
+  ],
+  "/EagleBank-prod/WebAcl": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "WebAcl"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:521:20)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/WebAclAssociation": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "WebAclAssociation"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:561:5)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/PublicUrl": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "PublicUrl"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:566:5)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/MigrationClusterName": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "MigrationClusterName"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:569:5)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/MigrationTaskDefinitionArn": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "MigrationTaskDefinitionArn"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:572:5)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/MigrationSecurityGroupId": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "MigrationSecurityGroupId"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:575:5)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/MigrationSubnetIds": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "MigrationSubnetIds"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:578:5)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/ServicesActivated": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ServicesActivated"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:583:5)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/BootstrapVersion": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "BootstrapVersion"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/EagleBank-prod/CheckBootstrapVersion": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CheckBootstrapVersion"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/EagleBank-prod/Vpc/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "Vpc8378EB38"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Vpc2 in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:68:17)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/Vpc/IGW": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcIGWD7BA715C"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Vpc2 in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:68:17)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/Vpc/VPCGW": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcVPCGWBF912B6E"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Vpc2 in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:68:17)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/Cluster/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ClusterEB0386A7"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Cluster2 in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:90:21)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/DatabaseSecret/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "DatabaseSecret86DBB7B3"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new DatabaseSecret2 in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:99:28)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/JwtSecret/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "JwtSecretB8834B39"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Secret2 in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:103:23)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/InternalJwtSecret/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "InternalJwtSecretF22A2718"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Secret2 in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:106:31)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/DatabaseSecurityGroup/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "DatabaseSecurityGroup7319C0F6"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new SecurityGroup2 in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:115:35)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/DatabaseSecurityGroup/from EagleBankprodApiSecurityGroupC52284CA:5432": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "DatabaseSecurityGroupfromEagleBankprodApiSecurityGroupC52284CA5432182A140B"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.<anonymous> in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:141:29)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/DatabaseSecurityGroup/from EagleBankprodAuthSecurityGroup764776FE:5432": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "DatabaseSecurityGroupfromEagleBankprodAuthSecurityGroup764776FE5432B1012CCB"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.<anonymous> in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:141:29)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/DatabaseSecurityGroup/from EagleBankprodLedgerSecurityGroup3A917F42:5432": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "DatabaseSecurityGroupfromEagleBankprodLedgerSecurityGroup3A917F425432999DE2C8"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.<anonymous> in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:141:29)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/DatabaseSecurityGroup/from EagleBankprodLedgerEventPublisherSecurityGroup6234B8D3:5432": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "DatabaseSecurityGroupfromEagleBankprodLedgerEventPublisherSecurityGroup6234B8D35432BB963C26"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.<anonymous> in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:141:29)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/DatabaseSecurityGroup/from EagleBankprodMigrationSecurityGroup6E3DA7B0:5432": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "DatabaseSecurityGroupfromEagleBankprodMigrationSecurityGroup6E3DA7B054323E724CCC"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.<anonymous> in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:141:29)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/ApiSecurityGroup/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ApiSecurityGroup4E5BB726"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new SecurityGroup2 in .pnpm...",
+        "EagleBankStack.serviceSecurityGroup (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:589:12)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:124:35)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/ApiSecurityGroup/from EagleBankprodAlbSecurityGroupC3BF0479:3000": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ApiSecurityGroupfromEagleBankprodAlbSecurityGroupC3BF04793000BD2D90A8"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.<anonymous> in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:445:22)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/AuthSecurityGroup/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "AuthSecurityGroupF91C67E9"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new SecurityGroup2 in .pnpm...",
+        "EagleBankStack.serviceSecurityGroup (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:589:12)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:125:36)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/AuthSecurityGroup/from EagleBankprodApiSecurityGroupC52284CA:3001": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "AuthSecurityGroupfromEagleBankprodApiSecurityGroupC52284CA30013241AB60"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.<anonymous> in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:147:23)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/AuthSecurityGroup/from EagleBankprodAlbSecurityGroupC3BF0479:3001": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "AuthSecurityGroupfromEagleBankprodAlbSecurityGroupC3BF047930018946FBEE"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.<anonymous> in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:450:23)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/LedgerSecurityGroup/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "LedgerSecurityGroupF2C3C9EA"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new SecurityGroup2 in .pnpm...",
+        "EagleBankStack.serviceSecurityGroup (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:589:12)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:126:38)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/LedgerSecurityGroup/from EagleBankprodApiSecurityGroupC52284CA:3002": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "LedgerSecurityGroupfromEagleBankprodApiSecurityGroupC52284CA3002C05369E8"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.<anonymous> in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:152:25)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/LedgerWorkerSecurityGroup/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "LedgerWorkerSecurityGroupE08942FA"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new SecurityGroup2 in .pnpm...",
+        "EagleBankStack.serviceSecurityGroup (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:589:12)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:127:38)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/LedgerEventPublisherSecurityGroup/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "LedgerEventPublisherSecurityGroupEC89974D"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new SecurityGroup2 in .pnpm...",
+        "EagleBankStack.serviceSecurityGroup (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:589:12)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:128:41)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/MigrationSecurityGroup/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "MigrationSecurityGroupBCB362A0"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new SecurityGroup2 in .pnpm...",
+        "EagleBankStack.serviceSecurityGroup (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:589:12)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:132:41)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/Database/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "DatabaseB269D8BB"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new DatabaseInstance2 in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:158:22)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new DatabaseInstance2 in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:158:22)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/AuthSessions/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "AuthSessions6F3F594E"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Table2 in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:181:22)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/LedgerEventsDlq/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "LedgerEventsDlqCCEBB20E"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Queue2 in .pnpm...",
+        "EagleBankStack.queue (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:597:12)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:194:28)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/LedgerEvents/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "LedgerEventsFA32F47B"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Queue2 in .pnpm...",
+        "EagleBankStack.queue (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:597:12)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:199:25)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/LedgerCommandsDlq/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "LedgerCommandsDlq11B4FA9A"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Queue2 in .pnpm...",
+        "EagleBankStack.queue (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:597:12)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:209:30)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/LedgerCommands/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "LedgerCommands3998913B"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Queue2 in .pnpm...",
+        "EagleBankStack.queue (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:597:12)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:216:27)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/ApiTask/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ApiTask011D0955"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new FargateTaskDefinition2 in .pnpm...",
+        "makeTask (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:266:20)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:305:21)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/ApiLogs/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ApiLogs3D05D88B"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new LogGroup2 in .pnpm...",
+        "makeTask (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:270:24)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:305:21)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/AuthTask/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "AuthTask2DF203DC"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new FargateTaskDefinition2 in .pnpm...",
+        "makeTask (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:266:20)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:321:22)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/AuthLogs/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "AuthLogs839647A4"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new LogGroup2 in .pnpm...",
+        "makeTask (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:270:24)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:321:22)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/LedgerTask/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "LedgerTaskC6A427D0"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new FargateTaskDefinition2 in .pnpm...",
+        "makeTask (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:266:20)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:337:24)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/LedgerLogs/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "LedgerLogsB02557A0"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new LogGroup2 in .pnpm...",
+        "makeTask (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:270:24)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:337:24)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/LedgerWorkerTask/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "LedgerWorkerTaskF1D6A343"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new FargateTaskDefinition2 in .pnpm...",
+        "makeTask (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:266:20)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:351:24)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/LedgerWorkerLogs/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "LedgerWorkerLogs3E30BD16"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new LogGroup2 in .pnpm...",
+        "makeTask (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:270:24)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:351:24)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/LedgerEventPublisherTask/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "LedgerEventPublisherTaskD91E5024"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new FargateTaskDefinition2 in .pnpm...",
+        "makeTask (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:266:20)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:362:27)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/LedgerEventPublisherLogs/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "LedgerEventPublisherLogs2550A987"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new LogGroup2 in .pnpm...",
+        "makeTask (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:270:24)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:362:27)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/MigrationTask/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "MigrationTask69EAEF9D"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new FargateTaskDefinition2 in .pnpm...",
+        "makeTask (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:266:20)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:367:27)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/MigrationLogs/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "MigrationLogs670D4322"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new LogGroup2 in .pnpm...",
+        "makeTask (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:270:24)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:367:27)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/ApiService/Service": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ApiServiceC9037CF0"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new FargateService2 in .pnpm...",
+        "service (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:385:7)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:401:17)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/AuthService/Service": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "AuthService3C2B741A"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new FargateService2 in .pnpm...",
+        "service (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:385:7)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:402:18)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/LedgerService/Service": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "LedgerService4B131B90"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new FargateService2 in .pnpm...",
+        "service (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:385:7)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:414:5)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/LedgerWorkerService/Service": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "LedgerWorkerServiceCC2275AC"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new FargateService2 in .pnpm...",
+        "service (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:385:7)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:426:5)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/LedgerEventPublisherService/Service": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "LedgerEventPublisherService73F91A91"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new FargateService2 in .pnpm...",
+        "service (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:385:7)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:427:5)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/AlbSecurityGroup/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "AlbSecurityGroup86A59E99"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new SecurityGroup2 in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:434:30)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/AlbSecurityGroup/to EagleBankprodApiSecurityGroupC52284CA:3000": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "AlbSecurityGrouptoEagleBankprodApiSecurityGroupC52284CA3000A5884C25"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.<anonymous> in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:455:22)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/AlbSecurityGroup/to EagleBankprodAuthSecurityGroup764776FE:3001": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "AlbSecurityGrouptoEagleBankprodAuthSecurityGroup764776FE30011E1F5B93"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.<anonymous> in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:460:22)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/Alb/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "Alb16C2F182"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new ApplicationLoadBalancer2 in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:466:17)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/CDKMetadata/Default": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CDKMetadata"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm, node internals...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/EagleBank-prod/Vpc/publicSubnet1/Subnet": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcpublicSubnet1Subnet2BB74ED7"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:268 in .pnpm...",
+        "Array.forEach (:)",
+        "....pnpm..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/Vpc/publicSubnet1/RouteTable": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcpublicSubnet1RouteTable15C15F8E"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:268 in .pnpm...",
+        "Array.forEach (:)",
+        "....pnpm..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/Vpc/publicSubnet1/RouteTableAssociation": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcpublicSubnet1RouteTableAssociation4E83B6E4"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:268 in .pnpm...",
+        "Array.forEach (:)",
+        "....pnpm..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/Vpc/publicSubnet1/DefaultRoute": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcpublicSubnet1DefaultRouteB88F9E93"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:208 in .pnpm...",
+        "Array.forEach (:)",
+        "...new Vpc2 in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:68:17)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/Vpc/publicSubnet1/EIP": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcpublicSubnet1EIP411541E6"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Vpc2 in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:68:17)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/Vpc/publicSubnet1/NATGateway": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcpublicSubnet1NATGatewayA036E8A6"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Vpc2 in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:68:17)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/Vpc/publicSubnet2/Subnet": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcpublicSubnet2SubnetE34B022A"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:268 in .pnpm...",
+        "Array.forEach (:)",
+        "....pnpm..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/Vpc/publicSubnet2/RouteTable": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcpublicSubnet2RouteTableC5A6DF77"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:268 in .pnpm...",
+        "Array.forEach (:)",
+        "....pnpm..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/Vpc/publicSubnet2/RouteTableAssociation": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcpublicSubnet2RouteTableAssociationCCE257FF"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:268 in .pnpm...",
+        "Array.forEach (:)",
+        "....pnpm..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/Vpc/publicSubnet2/DefaultRoute": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcpublicSubnet2DefaultRoute732F0BEB"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:208 in .pnpm...",
+        "Array.forEach (:)",
+        "...new Vpc2 in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:68:17)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/Vpc/publicSubnet2/EIP": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcpublicSubnet2EIP811E07A7"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Vpc2 in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:68:17)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/Vpc/publicSubnet2/NATGateway": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcpublicSubnet2NATGateway4A29FD4F"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Vpc2 in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:68:17)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/Vpc/servicesSubnet1/Subnet": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcservicesSubnet1Subnet0A6944DC"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:270 in .pnpm...",
+        "Array.forEach (:)",
+        "....pnpm..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/Vpc/servicesSubnet1/RouteTable": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcservicesSubnet1RouteTable9D793B35"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:270 in .pnpm...",
+        "Array.forEach (:)",
+        "....pnpm..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/Vpc/servicesSubnet1/RouteTableAssociation": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcservicesSubnet1RouteTableAssociation4B159B0C"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:270 in .pnpm...",
+        "Array.forEach (:)",
+        "....pnpm..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/Vpc/servicesSubnet1/DefaultRoute": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcservicesSubnet1DefaultRoute3E87CB76"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Vpc2 in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:68:17)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/Vpc/servicesSubnet2/Subnet": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcservicesSubnet2SubnetBE6AFE4D"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:270 in .pnpm...",
+        "Array.forEach (:)",
+        "....pnpm..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/Vpc/servicesSubnet2/RouteTable": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcservicesSubnet2RouteTableF459E087"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:270 in .pnpm...",
+        "Array.forEach (:)",
+        "....pnpm..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/Vpc/servicesSubnet2/RouteTableAssociation": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcservicesSubnet2RouteTableAssociationCF8833E3"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:270 in .pnpm...",
+        "Array.forEach (:)",
+        "....pnpm..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/Vpc/servicesSubnet2/DefaultRoute": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcservicesSubnet2DefaultRoute88FE18EB"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Vpc2 in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:68:17)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/Vpc/databaseSubnet1/Subnet": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcdatabaseSubnet1SubnetD53A427B"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:272 in .pnpm...",
+        "Array.forEach (:)",
+        "....pnpm..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/Vpc/databaseSubnet1/RouteTable": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcdatabaseSubnet1RouteTableF3B572E4"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:272 in .pnpm...",
+        "Array.forEach (:)",
+        "....pnpm..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/Vpc/databaseSubnet1/RouteTableAssociation": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcdatabaseSubnet1RouteTableAssociationEE6CA36B"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:272 in .pnpm...",
+        "Array.forEach (:)",
+        "....pnpm..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/Vpc/databaseSubnet2/Subnet": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcdatabaseSubnet2Subnet75663D63"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:272 in .pnpm...",
+        "Array.forEach (:)",
+        "....pnpm..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/Vpc/databaseSubnet2/RouteTable": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcdatabaseSubnet2RouteTable1E50BD8E"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:272 in .pnpm...",
+        "Array.forEach (:)",
+        "....pnpm..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/Vpc/databaseSubnet2/RouteTableAssociation": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VpcdatabaseSubnet2RouteTableAssociationCADBAF9A"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        ".../Users/janvajda/projects/eagle-bank/node_modules/.pnpm/aws-cdk-lib@2.259.0_constructs@10.6.0/node_modules/aws-cdk-lib/aws-ec2/lib/vpc.js:1:272 in .pnpm...",
+        "Array.forEach (:)",
+        "....pnpm..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/Cluster/DefaultServiceDiscoveryNamespace/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ClusterDefaultServiceDiscoveryNamespaceC336F9B4"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Cluster2 in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:90:21)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/DatabaseSecret/Attachment/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "DatabaseSecretAttachment9A63A3D4"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new DatabaseInstance2 in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:158:22)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/Database/SubnetGroup/Default": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "DatabaseSubnetGroup7D60F180"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new DatabaseInstance2 in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:158:22)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/Database/LogRetentionpostgresql/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "DatabaseLogRetentionpostgresqlFBE8A947"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new DatabaseInstance2 in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:158:22)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/ServiceRole/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new DatabaseInstance2 in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:158:22)"
+      ]
+    }
+  ],
+  "/EagleBank-prod/LedgerEventsDlq/Policy/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "LedgerEventsDlqPolicy004848B4"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Queue2 in .pnpm...",
+        "EagleBankStack.queue (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:597:12)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:194:28)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/LedgerEvents/Policy/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "LedgerEventsPolicy33CBFB39"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Queue2 in .pnpm...",
+        "EagleBankStack.queue (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:597:12)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:199:25)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/LedgerCommandsDlq/Policy/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "LedgerCommandsDlqPolicy7F6813FC"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Queue2 in .pnpm...",
+        "EagleBankStack.queue (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:597:12)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:209:30)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/LedgerCommands/Policy/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "LedgerCommandsPolicy3BC0FFEA"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Queue2 in .pnpm...",
+        "EagleBankStack.queue (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:597:12)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:216:27)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/ApiTask/TaskRole/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ApiTaskTaskRoleD15A20E9"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new FargateTaskDefinition2 in .pnpm...",
+        "makeTask (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:266:20)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:305:21)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/ApiTask/ExecutionRole/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ApiTaskExecutionRoleC2344606"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/EagleBank-prod/AuthTask/TaskRole/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "AuthTaskTaskRole69C5B54F"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new FargateTaskDefinition2 in .pnpm...",
+        "makeTask (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:266:20)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:321:22)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/AuthTask/ExecutionRole/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "AuthTaskExecutionRoleFCBB9AA8"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/EagleBank-prod/LedgerTask/TaskRole/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "LedgerTaskTaskRoleAF448C20"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new FargateTaskDefinition2 in .pnpm...",
+        "makeTask (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:266:20)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:337:24)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/LedgerTask/ExecutionRole/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "LedgerTaskExecutionRole5C7A6977"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/EagleBank-prod/LedgerWorkerTask/TaskRole/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "LedgerWorkerTaskTaskRole749F025F"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new FargateTaskDefinition2 in .pnpm...",
+        "makeTask (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:266:20)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:351:24)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/LedgerWorkerTask/ExecutionRole/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "LedgerWorkerTaskExecutionRoleA92F635D"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/EagleBank-prod/LedgerEventPublisherTask/TaskRole/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "LedgerEventPublisherTaskTaskRoleD48E77D9"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new FargateTaskDefinition2 in .pnpm...",
+        "makeTask (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:266:20)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:362:27)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/LedgerEventPublisherTask/ExecutionRole/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "LedgerEventPublisherTaskExecutionRoleFF32A118"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/EagleBank-prod/MigrationTask/TaskRole/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "MigrationTaskTaskRole9CC4695E"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new FargateTaskDefinition2 in .pnpm...",
+        "makeTask (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:266:20)",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:367:27)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/MigrationTask/ExecutionRole/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "MigrationTaskExecutionRole54576998"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/EagleBank-prod/Alb/PublicListener/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "AlbPublicListener54E492A7"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.<anonymous> in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:480:26)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/Alb/Redirect80To443/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "AlbRedirect80To443C790C012"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.<anonymous> in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:490:11)"
+      ]
+    }
+  ],
+  "/EagleBank-prod/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/ServiceRole/DefaultPolicy/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRoleDefaultPolicyADDA7DEB"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/EagleBank-prod/ApiTask/ExecutionRole/DefaultPolicy/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ApiTaskExecutionRoleDefaultPolicyB5439AFC"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/EagleBank-prod/AuthTask/TaskRole/DefaultPolicy/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "AuthTaskTaskRoleDefaultPolicyDAECFA0D"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/EagleBank-prod/AuthTask/ExecutionRole/DefaultPolicy/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "AuthTaskExecutionRoleDefaultPolicy2D7A4AD9"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/EagleBank-prod/LedgerTask/ExecutionRole/DefaultPolicy/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "LedgerTaskExecutionRoleDefaultPolicy00BE29BB"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/EagleBank-prod/LedgerWorkerTask/TaskRole/DefaultPolicy/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "LedgerWorkerTaskTaskRoleDefaultPolicy27654875"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/EagleBank-prod/LedgerWorkerTask/ExecutionRole/DefaultPolicy/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "LedgerWorkerTaskExecutionRoleDefaultPolicyBABDD003"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/EagleBank-prod/LedgerEventPublisherTask/TaskRole/DefaultPolicy/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "LedgerEventPublisherTaskTaskRoleDefaultPolicy5A14854B"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/EagleBank-prod/LedgerEventPublisherTask/ExecutionRole/DefaultPolicy/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "LedgerEventPublisherTaskExecutionRoleDefaultPolicy058EB5E6"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/EagleBank-prod/MigrationTask/ExecutionRole/DefaultPolicy/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "MigrationTaskExecutionRoleDefaultPolicy91A4C2FE"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "....pnpm...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/EagleBank-prod/Alb/PublicListener/ApiRoutesGroup/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "AlbPublicListenerApiRoutesGroup6EA3120B"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.<anonymous> in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:502:14)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/Alb/PublicListener/ApiRoutesRule/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "AlbPublicListenerApiRoutesRuleCD28C8BA"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.<anonymous> in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:502:14)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/Alb/PublicListener/AuthRoutesGroup/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "AlbPublicListenerAuthRoutesGroup161B57E1"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.<anonymous> in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:512:14)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ],
+  "/EagleBank-prod/Alb/PublicListener/AuthRoutesRule/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "AlbPublicListenerAuthRoutesRuleA7DEDEE6"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.<anonymous> in .pnpm...",
+        "new EagleBankStack (/Users/janvajda/projects/eagle-bank/infra/lib/eagle-bank-stack.ts:512:14)",
+        "<anonymous> (/Users/janvajda/projects/eagle-bank/infra/bin/eagle-bank.ts:15:1)",
+        "...node internals..."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,141 @@
+@baseUrl = http://localhost:3000
+@email = reviewer{{$timestamp}}@example.com
+@password = ReviewPassword123!
+
+### Health - 200
+GET {{baseUrl}}/health
+
+### Readiness - 200
+GET {{baseUrl}}/ready
+
+### Create user - 201
+# @name createUser
+POST {{baseUrl}}/v1/users
+Content-Type: application/json
+
+{
+  "name": "Review User",
+  "address": {
+    "line1": "1 Eagle Street",
+    "town": "London",
+    "county": "Greater London",
+    "postcode": "SW1A 1AA"
+  },
+  "phoneNumber": "+447700900123",
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+@userId = {{createUser.response.body.id}}
+
+### Login - 200
+# @name login
+POST {{baseUrl}}/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+@token = {{login.response.body.accessToken}}
+
+### Fetch own user - 200
+GET {{baseUrl}}/v1/users/{{userId}}
+Authorization: Bearer {{token}}
+
+### Update own user - 200
+PATCH {{baseUrl}}/v1/users/{{userId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Updated Review User"
+}
+
+### Create account - 201
+# @name createAccount
+POST {{baseUrl}}/v1/accounts
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Everyday Account",
+  "accountType": "personal"
+}
+
+@accountNumber = {{createAccount.response.body.accountNumber}}
+
+### List accounts - 200
+GET {{baseUrl}}/v1/accounts
+Authorization: Bearer {{token}}
+
+### Fetch account - 200
+GET {{baseUrl}}/v1/accounts/{{accountNumber}}
+Authorization: Bearer {{token}}
+
+### Update account - 200
+PATCH {{baseUrl}}/v1/accounts/{{accountNumber}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Updated Everyday Account"
+}
+
+### Deposit - 201
+# @name deposit
+POST {{baseUrl}}/v1/accounts/{{accountNumber}}/transactions
+Authorization: Bearer {{token}}
+Idempotency-Key: reviewer-deposit-{{$timestamp}}
+Content-Type: application/json
+
+{
+  "amount": 100.00,
+  "currency": "GBP",
+  "type": "deposit",
+  "reference": "Initial funding"
+}
+
+@transactionId = {{deposit.response.body.id}}
+
+### Withdraw - 201
+POST {{baseUrl}}/v1/accounts/{{accountNumber}}/transactions
+Authorization: Bearer {{token}}
+Idempotency-Key: reviewer-withdrawal-{{$timestamp}}
+Content-Type: application/json
+
+{
+  "amount": 25.00,
+  "currency": "GBP",
+  "type": "withdrawal",
+  "reference": "Cash withdrawal"
+}
+
+### List transactions - 200
+GET {{baseUrl}}/v1/accounts/{{accountNumber}}/transactions
+Authorization: Bearer {{token}}
+
+### Fetch transaction - 200
+GET {{baseUrl}}/v1/accounts/{{accountNumber}}/transactions/{{transactionId}}
+Authorization: Bearer {{token}}
+
+### Insufficient funds - 422
+POST {{baseUrl}}/v1/accounts/{{accountNumber}}/transactions
+Authorization: Bearer {{token}}
+Idempotency-Key: reviewer-insufficient-{{$timestamp}}
+Content-Type: application/json
+
+{
+  "amount": 9999.00,
+  "currency": "GBP",
+  "type": "withdrawal"
+}
+
+### Delete account - 204
+DELETE {{baseUrl}}/v1/accounts/{{accountNumber}}
+Authorization: Bearer {{token}}
+
+### Delete user after account closure - 204
+DELETE {{baseUrl}}/v1/users/{{userId}}
+Authorization: Bearer {{token}}

@@ -1,0 +1,3247 @@
+{
+ "Resources": {
+  "Vpc8378EB38": {
+   "Type": "AWS::EC2::VPC",
+   "Properties": {
+    "CidrBlock": "10.0.0.0/16",
+    "EnableDnsHostnames": true,
+    "EnableDnsSupport": true,
+    "InstanceTenancy": "default",
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "EagleBankStack/Vpc"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/Vpc/Resource"
+   }
+  },
+  "VpcpublicSubnet1Subnet2BB74ED7": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": "eu-west-2a",
+    "CidrBlock": "10.0.0.0/24",
+    "MapPublicIpOnLaunch": true,
+    "Tags": [
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "public"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Public"
+     },
+     {
+      "Key": "Name",
+      "Value": "EagleBankStack/Vpc/publicSubnet1"
+     }
+    ],
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/Vpc/publicSubnet1/Subnet"
+   }
+  },
+  "VpcpublicSubnet1RouteTable15C15F8E": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "EagleBankStack/Vpc/publicSubnet1"
+     }
+    ],
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/Vpc/publicSubnet1/RouteTable"
+   }
+  },
+  "VpcpublicSubnet1RouteTableAssociation4E83B6E4": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "VpcpublicSubnet1RouteTable15C15F8E"
+    },
+    "SubnetId": {
+     "Ref": "VpcpublicSubnet1Subnet2BB74ED7"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/Vpc/publicSubnet1/RouteTableAssociation"
+   }
+  },
+  "VpcpublicSubnet1DefaultRouteB88F9E93": {
+   "Type": "AWS::EC2::Route",
+   "Properties": {
+    "DestinationCidrBlock": "0.0.0.0/0",
+    "GatewayId": {
+     "Ref": "VpcIGWD7BA715C"
+    },
+    "RouteTableId": {
+     "Ref": "VpcpublicSubnet1RouteTable15C15F8E"
+    }
+   },
+   "DependsOn": [
+    "VpcVPCGWBF912B6E"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/Vpc/publicSubnet1/DefaultRoute"
+   }
+  },
+  "VpcpublicSubnet1EIP411541E6": {
+   "Type": "AWS::EC2::EIP",
+   "Properties": {
+    "Domain": "vpc",
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "EagleBankStack/Vpc/publicSubnet1"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/Vpc/publicSubnet1/EIP"
+   }
+  },
+  "VpcpublicSubnet1NATGatewayA036E8A6": {
+   "Type": "AWS::EC2::NatGateway",
+   "Properties": {
+    "AllocationId": {
+     "Fn::GetAtt": [
+      "VpcpublicSubnet1EIP411541E6",
+      "AllocationId"
+     ]
+    },
+    "SubnetId": {
+     "Ref": "VpcpublicSubnet1Subnet2BB74ED7"
+    },
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "EagleBankStack/Vpc/publicSubnet1"
+     }
+    ]
+   },
+   "DependsOn": [
+    "VpcpublicSubnet1DefaultRouteB88F9E93",
+    "VpcpublicSubnet1RouteTableAssociation4E83B6E4"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/Vpc/publicSubnet1/NATGateway"
+   }
+  },
+  "VpcpublicSubnet2SubnetE34B022A": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": "eu-west-2b",
+    "CidrBlock": "10.0.1.0/24",
+    "MapPublicIpOnLaunch": true,
+    "Tags": [
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "public"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Public"
+     },
+     {
+      "Key": "Name",
+      "Value": "EagleBankStack/Vpc/publicSubnet2"
+     }
+    ],
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/Vpc/publicSubnet2/Subnet"
+   }
+  },
+  "VpcpublicSubnet2RouteTableC5A6DF77": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "EagleBankStack/Vpc/publicSubnet2"
+     }
+    ],
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/Vpc/publicSubnet2/RouteTable"
+   }
+  },
+  "VpcpublicSubnet2RouteTableAssociationCCE257FF": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "VpcpublicSubnet2RouteTableC5A6DF77"
+    },
+    "SubnetId": {
+     "Ref": "VpcpublicSubnet2SubnetE34B022A"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/Vpc/publicSubnet2/RouteTableAssociation"
+   }
+  },
+  "VpcpublicSubnet2DefaultRoute732F0BEB": {
+   "Type": "AWS::EC2::Route",
+   "Properties": {
+    "DestinationCidrBlock": "0.0.0.0/0",
+    "GatewayId": {
+     "Ref": "VpcIGWD7BA715C"
+    },
+    "RouteTableId": {
+     "Ref": "VpcpublicSubnet2RouteTableC5A6DF77"
+    }
+   },
+   "DependsOn": [
+    "VpcVPCGWBF912B6E"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/Vpc/publicSubnet2/DefaultRoute"
+   }
+  },
+  "VpcservicesSubnet1Subnet0A6944DC": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": "eu-west-2a",
+    "CidrBlock": "10.0.2.0/24",
+    "MapPublicIpOnLaunch": false,
+    "Tags": [
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "services"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Private"
+     },
+     {
+      "Key": "Name",
+      "Value": "EagleBankStack/Vpc/servicesSubnet1"
+     }
+    ],
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/Vpc/servicesSubnet1/Subnet"
+   }
+  },
+  "VpcservicesSubnet1RouteTable9D793B35": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "EagleBankStack/Vpc/servicesSubnet1"
+     }
+    ],
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/Vpc/servicesSubnet1/RouteTable"
+   }
+  },
+  "VpcservicesSubnet1RouteTableAssociation4B159B0C": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "VpcservicesSubnet1RouteTable9D793B35"
+    },
+    "SubnetId": {
+     "Ref": "VpcservicesSubnet1Subnet0A6944DC"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/Vpc/servicesSubnet1/RouteTableAssociation"
+   }
+  },
+  "VpcservicesSubnet1DefaultRoute3E87CB76": {
+   "Type": "AWS::EC2::Route",
+   "Properties": {
+    "DestinationCidrBlock": "0.0.0.0/0",
+    "NatGatewayId": {
+     "Ref": "VpcpublicSubnet1NATGatewayA036E8A6"
+    },
+    "RouteTableId": {
+     "Ref": "VpcservicesSubnet1RouteTable9D793B35"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/Vpc/servicesSubnet1/DefaultRoute"
+   }
+  },
+  "VpcservicesSubnet2SubnetBE6AFE4D": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": "eu-west-2b",
+    "CidrBlock": "10.0.3.0/24",
+    "MapPublicIpOnLaunch": false,
+    "Tags": [
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "services"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Private"
+     },
+     {
+      "Key": "Name",
+      "Value": "EagleBankStack/Vpc/servicesSubnet2"
+     }
+    ],
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/Vpc/servicesSubnet2/Subnet"
+   }
+  },
+  "VpcservicesSubnet2RouteTableF459E087": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "EagleBankStack/Vpc/servicesSubnet2"
+     }
+    ],
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/Vpc/servicesSubnet2/RouteTable"
+   }
+  },
+  "VpcservicesSubnet2RouteTableAssociationCF8833E3": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "VpcservicesSubnet2RouteTableF459E087"
+    },
+    "SubnetId": {
+     "Ref": "VpcservicesSubnet2SubnetBE6AFE4D"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/Vpc/servicesSubnet2/RouteTableAssociation"
+   }
+  },
+  "VpcservicesSubnet2DefaultRoute88FE18EB": {
+   "Type": "AWS::EC2::Route",
+   "Properties": {
+    "DestinationCidrBlock": "0.0.0.0/0",
+    "NatGatewayId": {
+     "Ref": "VpcpublicSubnet1NATGatewayA036E8A6"
+    },
+    "RouteTableId": {
+     "Ref": "VpcservicesSubnet2RouteTableF459E087"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/Vpc/servicesSubnet2/DefaultRoute"
+   }
+  },
+  "VpcdatabaseSubnet1SubnetD53A427B": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": "eu-west-2a",
+    "CidrBlock": "10.0.4.0/24",
+    "MapPublicIpOnLaunch": false,
+    "Tags": [
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "database"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Isolated"
+     },
+     {
+      "Key": "Name",
+      "Value": "EagleBankStack/Vpc/databaseSubnet1"
+     }
+    ],
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/Vpc/databaseSubnet1/Subnet"
+   }
+  },
+  "VpcdatabaseSubnet1RouteTableF3B572E4": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "EagleBankStack/Vpc/databaseSubnet1"
+     }
+    ],
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/Vpc/databaseSubnet1/RouteTable"
+   }
+  },
+  "VpcdatabaseSubnet1RouteTableAssociationEE6CA36B": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "VpcdatabaseSubnet1RouteTableF3B572E4"
+    },
+    "SubnetId": {
+     "Ref": "VpcdatabaseSubnet1SubnetD53A427B"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/Vpc/databaseSubnet1/RouteTableAssociation"
+   }
+  },
+  "VpcdatabaseSubnet2Subnet75663D63": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": "eu-west-2b",
+    "CidrBlock": "10.0.5.0/24",
+    "MapPublicIpOnLaunch": false,
+    "Tags": [
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "database"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Isolated"
+     },
+     {
+      "Key": "Name",
+      "Value": "EagleBankStack/Vpc/databaseSubnet2"
+     }
+    ],
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/Vpc/databaseSubnet2/Subnet"
+   }
+  },
+  "VpcdatabaseSubnet2RouteTable1E50BD8E": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "EagleBankStack/Vpc/databaseSubnet2"
+     }
+    ],
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/Vpc/databaseSubnet2/RouteTable"
+   }
+  },
+  "VpcdatabaseSubnet2RouteTableAssociationCADBAF9A": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "VpcdatabaseSubnet2RouteTable1E50BD8E"
+    },
+    "SubnetId": {
+     "Ref": "VpcdatabaseSubnet2Subnet75663D63"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/Vpc/databaseSubnet2/RouteTableAssociation"
+   }
+  },
+  "VpcIGWD7BA715C": {
+   "Type": "AWS::EC2::InternetGateway",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "EagleBankStack/Vpc"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/Vpc/IGW"
+   }
+  },
+  "VpcVPCGWBF912B6E": {
+   "Type": "AWS::EC2::VPCGatewayAttachment",
+   "Properties": {
+    "InternetGatewayId": {
+     "Ref": "VpcIGWD7BA715C"
+    },
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/Vpc/VPCGW"
+   }
+  },
+  "ClusterEB0386A7": {
+   "Type": "AWS::ECS::Cluster",
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/Cluster/Resource"
+   }
+  },
+  "DatabaseSecret86DBB7B3": {
+   "Type": "AWS::SecretsManager::Secret",
+   "Properties": {
+    "Description": {
+     "Fn::Join": [
+      "",
+      [
+       "Generated by the CDK for stack: ",
+       {
+        "Ref": "AWS::StackName"
+       }
+      ]
+     ]
+    },
+    "GenerateSecretString": {
+     "ExcludeCharacters": " %+~`#$&*()|[]{}:;<>?!'/@\"\\",
+     "GenerateStringKey": "password",
+     "PasswordLength": 30,
+     "SecretStringTemplate": "{\"username\":\"eagle\"}"
+    }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/DatabaseSecret/Resource"
+   }
+  },
+  "DatabaseSecretAttachment9A63A3D4": {
+   "Type": "AWS::SecretsManager::SecretTargetAttachment",
+   "Properties": {
+    "SecretId": {
+     "Ref": "DatabaseSecret86DBB7B3"
+    },
+    "TargetId": {
+     "Ref": "DatabaseB269D8BB"
+    },
+    "TargetType": "AWS::RDS::DBInstance"
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/DatabaseSecret/Attachment/Resource"
+   }
+  },
+  "JwtSecretB8834B39": {
+   "Type": "AWS::SecretsManager::Secret",
+   "Properties": {
+    "GenerateSecretString": {}
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/JwtSecret/Resource"
+   }
+  },
+  "InternalJwtSecretF22A2718": {
+   "Type": "AWS::SecretsManager::Secret",
+   "Properties": {
+    "GenerateSecretString": {}
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/InternalJwtSecret/Resource"
+   }
+  },
+  "DatabaseSecurityGroup7319C0F6": {
+   "Type": "AWS::EC2::SecurityGroup",
+   "Properties": {
+    "GroupDescription": "EagleBankStack/DatabaseSecurityGroup",
+    "SecurityGroupEgress": [
+     {
+      "CidrIp": "255.255.255.255/32",
+      "Description": "Disallow all traffic",
+      "FromPort": 252,
+      "IpProtocol": "icmp",
+      "ToPort": 86
+     }
+    ],
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/DatabaseSecurityGroup/Resource"
+   }
+  },
+  "DatabaseSecurityGroupfromEagleBankStackServiceSecurityGroup1A87001254321A8B37F9": {
+   "Type": "AWS::EC2::SecurityGroupIngress",
+   "Properties": {
+    "Description": "from EagleBankStackServiceSecurityGroup1A870012:5432",
+    "FromPort": 5432,
+    "GroupId": {
+     "Fn::GetAtt": [
+      "DatabaseSecurityGroup7319C0F6",
+      "GroupId"
+     ]
+    },
+    "IpProtocol": "tcp",
+    "SourceSecurityGroupId": {
+     "Fn::GetAtt": [
+      "ServiceSecurityGroup61DE1A49",
+      "GroupId"
+     ]
+    },
+    "ToPort": 5432
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/DatabaseSecurityGroup/from EagleBankStackServiceSecurityGroup1A870012:5432"
+   }
+  },
+  "ServiceSecurityGroup61DE1A49": {
+   "Type": "AWS::EC2::SecurityGroup",
+   "Properties": {
+    "GroupDescription": "EagleBankStack/ServiceSecurityGroup",
+    "SecurityGroupEgress": [
+     {
+      "CidrIp": "0.0.0.0/0",
+      "Description": "Allow all outbound traffic by default",
+      "IpProtocol": "-1"
+     }
+    ],
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/ServiceSecurityGroup/Resource"
+   }
+  },
+  "ServiceSecurityGroupfromEagleBankStackAlbSecurityGroupBF9B5E44300030022EC0ECEE": {
+   "Type": "AWS::EC2::SecurityGroupIngress",
+   "Properties": {
+    "Description": "from EagleBankStackAlbSecurityGroupBF9B5E44:3000-3002",
+    "FromPort": 3000,
+    "GroupId": {
+     "Fn::GetAtt": [
+      "ServiceSecurityGroup61DE1A49",
+      "GroupId"
+     ]
+    },
+    "IpProtocol": "tcp",
+    "SourceSecurityGroupId": {
+     "Fn::GetAtt": [
+      "AlbSecurityGroup86A59E99",
+      "GroupId"
+     ]
+    },
+    "ToPort": 3002
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/ServiceSecurityGroup/from EagleBankStackAlbSecurityGroupBF9B5E44:3000-3002"
+   }
+  },
+  "ServiceSecurityGroupfromEagleBankStackAlbSecurityGroupBF9B5E4430009D22F445": {
+   "Type": "AWS::EC2::SecurityGroupIngress",
+   "Properties": {
+    "Description": "Load balancer to target",
+    "FromPort": 3000,
+    "GroupId": {
+     "Fn::GetAtt": [
+      "ServiceSecurityGroup61DE1A49",
+      "GroupId"
+     ]
+    },
+    "IpProtocol": "tcp",
+    "SourceSecurityGroupId": {
+     "Fn::GetAtt": [
+      "AlbSecurityGroup86A59E99",
+      "GroupId"
+     ]
+    },
+    "ToPort": 3000
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/ServiceSecurityGroup/from EagleBankStackAlbSecurityGroupBF9B5E44:3000"
+   }
+  },
+  "ServiceSecurityGroupfromEagleBankStackAlbSecurityGroupBF9B5E4430016589171A": {
+   "Type": "AWS::EC2::SecurityGroupIngress",
+   "Properties": {
+    "Description": "Load balancer to target",
+    "FromPort": 3001,
+    "GroupId": {
+     "Fn::GetAtt": [
+      "ServiceSecurityGroup61DE1A49",
+      "GroupId"
+     ]
+    },
+    "IpProtocol": "tcp",
+    "SourceSecurityGroupId": {
+     "Fn::GetAtt": [
+      "AlbSecurityGroup86A59E99",
+      "GroupId"
+     ]
+    },
+    "ToPort": 3001
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/ServiceSecurityGroup/from EagleBankStackAlbSecurityGroupBF9B5E44:3001"
+   }
+  },
+  "DatabaseSubnetGroup7D60F180": {
+   "Type": "AWS::RDS::DBSubnetGroup",
+   "Properties": {
+    "DBSubnetGroupDescription": "Subnet group for Database database",
+    "SubnetIds": [
+     {
+      "Ref": "VpcdatabaseSubnet1SubnetD53A427B"
+     },
+     {
+      "Ref": "VpcdatabaseSubnet2Subnet75663D63"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/Database/SubnetGroup/Default"
+   }
+  },
+  "DatabaseB269D8BB": {
+   "Type": "AWS::RDS::DBInstance",
+   "Properties": {
+    "AllocatedStorage": "20",
+    "CopyTagsToSnapshot": true,
+    "DBInstanceClass": "db.t4g.micro",
+    "DBSubnetGroupName": {
+     "Ref": "DatabaseSubnetGroup7D60F180"
+    },
+    "Engine": "postgres",
+    "EngineVersion": "16",
+    "MasterUserPassword": {
+     "Fn::Join": [
+      "",
+      [
+       "{{resolve:secretsmanager:",
+       {
+        "Ref": "DatabaseSecret86DBB7B3"
+       },
+       ":SecretString:password::}}"
+      ]
+     ]
+    },
+    "MasterUsername": {
+     "Fn::Join": [
+      "",
+      [
+       "{{resolve:secretsmanager:",
+       {
+        "Ref": "DatabaseSecret86DBB7B3"
+       },
+       ":SecretString:username::}}"
+      ]
+     ]
+    },
+    "MultiAZ": false,
+    "PubliclyAccessible": false,
+    "StorageType": "gp2",
+    "VPCSecurityGroups": [
+     {
+      "Fn::GetAtt": [
+       "DatabaseSecurityGroup7319C0F6",
+       "GroupId"
+      ]
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Snapshot",
+   "DeletionPolicy": "Snapshot",
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/Database/Resource"
+   }
+  },
+  "AuthSessions6F3F594E": {
+   "Type": "AWS::DynamoDB::Table",
+   "Properties": {
+    "AttributeDefinitions": [
+     {
+      "AttributeName": "pk",
+      "AttributeType": "S"
+     },
+     {
+      "AttributeName": "sk",
+      "AttributeType": "S"
+     }
+    ],
+    "BillingMode": "PAY_PER_REQUEST",
+    "KeySchema": [
+     {
+      "AttributeName": "pk",
+      "KeyType": "HASH"
+     },
+     {
+      "AttributeName": "sk",
+      "KeyType": "RANGE"
+     }
+    ],
+    "PointInTimeRecoverySpecification": {
+     "PointInTimeRecoveryEnabled": true
+    },
+    "TableName": "eagle-bank-auth-sessions",
+    "TimeToLiveSpecification": {
+     "AttributeName": "expiresAtEpoch",
+     "Enabled": true
+    }
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/AuthSessions/Resource"
+   }
+  },
+  "LedgerEventsDlqCCEBB20E": {
+   "Type": "AWS::SQS::Queue",
+   "Properties": {
+    "QueueName": "eagle-bank-ledger-events-dlq"
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/LedgerEventsDlq/Resource"
+   }
+  },
+  "LedgerEventsFA32F47B": {
+   "Type": "AWS::SQS::Queue",
+   "Properties": {
+    "QueueName": "eagle-bank-ledger-events",
+    "RedrivePolicy": {
+     "deadLetterTargetArn": {
+      "Fn::GetAtt": [
+       "LedgerEventsDlqCCEBB20E",
+       "Arn"
+      ]
+     },
+     "maxReceiveCount": 5
+    }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/LedgerEvents/Resource"
+   }
+  },
+  "LedgerCommandsDlq11B4FA9A": {
+   "Type": "AWS::SQS::Queue",
+   "Properties": {
+    "ContentBasedDeduplication": true,
+    "FifoQueue": true,
+    "QueueName": "eagle-bank-ledger-command-dlq.fifo"
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/LedgerCommandsDlq/Resource"
+   }
+  },
+  "LedgerCommands3998913B": {
+   "Type": "AWS::SQS::Queue",
+   "Properties": {
+    "ContentBasedDeduplication": true,
+    "FifoQueue": true,
+    "QueueName": "eagle-bank-ledger-commands.fifo",
+    "RedrivePolicy": {
+     "deadLetterTargetArn": {
+      "Fn::GetAtt": [
+       "LedgerCommandsDlq11B4FA9A",
+       "Arn"
+      ]
+     },
+     "maxReceiveCount": 5
+    }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/LedgerCommands/Resource"
+   }
+  },
+  "apiTaskTaskRole9C931702": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/apiTask/TaskRole/Resource"
+   }
+  },
+  "apiTaskTaskRoleDefaultPolicy770F6D5B": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Ref": "DatabaseSecret86DBB7B3"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "apiTaskTaskRoleDefaultPolicy770F6D5B",
+    "Roles": [
+     {
+      "Ref": "apiTaskTaskRole9C931702"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/apiTask/TaskRole/DefaultPolicy/Resource"
+   }
+  },
+  "apiTask2CF13C0A": {
+   "Type": "AWS::ECS::TaskDefinition",
+   "Properties": {
+    "ContainerDefinitions": [
+     {
+      "Command": [
+       "node",
+       "dist/src/server.js"
+      ],
+      "Environment": [
+       {
+        "Name": "NODE_ENV",
+        "Value": "prod"
+       },
+       {
+        "Name": "AWS_REGION",
+        "Value": "eu-west-2"
+       },
+       {
+        "Name": "DATABASE_HOST",
+        "Value": {
+         "Fn::GetAtt": [
+          "DatabaseB269D8BB",
+          "Endpoint.Address"
+         ]
+        }
+       },
+       {
+        "Name": "DATABASE_PORT",
+        "Value": {
+         "Fn::GetAtt": [
+          "DatabaseB269D8BB",
+          "Endpoint.Port"
+         ]
+        }
+       },
+       {
+        "Name": "DYNAMODB_AUTH_SESSIONS_TABLE",
+        "Value": {
+         "Ref": "AuthSessions6F3F594E"
+        }
+       },
+       {
+        "Name": "SQS_LEDGER_EVENTS_QUEUE_URL",
+        "Value": {
+         "Ref": "LedgerEventsFA32F47B"
+        }
+       },
+       {
+        "Name": "SQS_LEDGER_COMMANDS_QUEUE_URL",
+        "Value": {
+         "Ref": "LedgerCommands3998913B"
+        }
+       },
+       {
+        "Name": "LEDGER_ASYNC_COMMANDS_ENABLED",
+        "Value": "false"
+       }
+      ],
+      "Essential": true,
+      "Image": {
+       "Fn::Sub": "653502182456.dkr.ecr.eu-west-2.${AWS::URLSuffix}/cdk-hnb659fds-container-assets-653502182456-eu-west-2:29c99603c37668df01a406d6c97757b1b8d732b299623ac88befbdadfda65b49"
+      },
+      "LogConfiguration": {
+       "LogDriver": "awslogs",
+       "Options": {
+        "awslogs-group": {
+         "Ref": "apiLogsC6C29EB1"
+        },
+        "awslogs-stream-prefix": "api",
+        "awslogs-region": "eu-west-2"
+       }
+      },
+      "Name": "api",
+      "PortMappings": [
+       {
+        "ContainerPort": 3000,
+        "Protocol": "tcp"
+       }
+      ],
+      "Secrets": [
+       {
+        "Name": "JWT_SECRET",
+        "ValueFrom": {
+         "Ref": "JwtSecretB8834B39"
+        }
+       },
+       {
+        "Name": "INTERNAL_SERVICE_JWT_SECRET",
+        "ValueFrom": {
+         "Ref": "InternalJwtSecretF22A2718"
+        }
+       },
+       {
+        "Name": "DATABASE_SECRET",
+        "ValueFrom": {
+         "Ref": "DatabaseSecret86DBB7B3"
+        }
+       }
+      ]
+     }
+    ],
+    "Cpu": "256",
+    "ExecutionRoleArn": {
+     "Fn::GetAtt": [
+      "apiTaskExecutionRole05C20F32",
+      "Arn"
+     ]
+    },
+    "Family": "EagleBankStackapiTask0E41A314",
+    "Memory": "512",
+    "NetworkMode": "awsvpc",
+    "RequiresCompatibilities": [
+     "FARGATE"
+    ],
+    "TaskRoleArn": {
+     "Fn::GetAtt": [
+      "apiTaskTaskRole9C931702",
+      "Arn"
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/apiTask/Resource"
+   }
+  },
+  "apiTaskExecutionRole05C20F32": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/apiTask/ExecutionRole/Resource"
+   }
+  },
+  "apiTaskExecutionRoleDefaultPolicy05632708": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:BatchGetImage"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          "arn:",
+          {
+           "Ref": "AWS::Partition"
+          },
+          ":ecr:eu-west-2:653502182456:repository/cdk-hnb659fds-container-assets-653502182456-eu-west-2"
+         ]
+        ]
+       }
+      },
+      {
+       "Action": "ecr:GetAuthorizationToken",
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "apiLogsC6C29EB1",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Ref": "JwtSecretB8834B39"
+       }
+      },
+      {
+       "Action": [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Ref": "InternalJwtSecretF22A2718"
+       }
+      },
+      {
+       "Action": [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Ref": "DatabaseSecret86DBB7B3"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "apiTaskExecutionRoleDefaultPolicy05632708",
+    "Roles": [
+     {
+      "Ref": "apiTaskExecutionRole05C20F32"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/apiTask/ExecutionRole/DefaultPolicy/Resource"
+   }
+  },
+  "apiLogsC6C29EB1": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "RetentionInDays": 30
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/apiLogs/Resource"
+   }
+  },
+  "authserviceTaskTaskRoleD1F6B291": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/auth-serviceTask/TaskRole/Resource"
+   }
+  },
+  "authserviceTaskTaskRoleDefaultPolicy00A54A4C": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:Query",
+        "dynamodb:GetItem",
+        "dynamodb:Scan",
+        "dynamodb:ConditionCheckItem",
+        "dynamodb:BatchWriteItem",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:DescribeTable"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "AuthSessions6F3F594E",
+          "Arn"
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "dynamodb:GetRecords",
+        "dynamodb:GetShardIterator"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "AuthSessions6F3F594E",
+          "Arn"
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Ref": "DatabaseSecret86DBB7B3"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "authserviceTaskTaskRoleDefaultPolicy00A54A4C",
+    "Roles": [
+     {
+      "Ref": "authserviceTaskTaskRoleD1F6B291"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/auth-serviceTask/TaskRole/DefaultPolicy/Resource"
+   }
+  },
+  "authserviceTask30F43778": {
+   "Type": "AWS::ECS::TaskDefinition",
+   "Properties": {
+    "ContainerDefinitions": [
+     {
+      "Command": [
+       "node",
+       "dist/src/services/auth-server.js"
+      ],
+      "Environment": [
+       {
+        "Name": "NODE_ENV",
+        "Value": "prod"
+       },
+       {
+        "Name": "AWS_REGION",
+        "Value": "eu-west-2"
+       },
+       {
+        "Name": "DATABASE_HOST",
+        "Value": {
+         "Fn::GetAtt": [
+          "DatabaseB269D8BB",
+          "Endpoint.Address"
+         ]
+        }
+       },
+       {
+        "Name": "DATABASE_PORT",
+        "Value": {
+         "Fn::GetAtt": [
+          "DatabaseB269D8BB",
+          "Endpoint.Port"
+         ]
+        }
+       },
+       {
+        "Name": "DYNAMODB_AUTH_SESSIONS_TABLE",
+        "Value": {
+         "Ref": "AuthSessions6F3F594E"
+        }
+       },
+       {
+        "Name": "SQS_LEDGER_EVENTS_QUEUE_URL",
+        "Value": {
+         "Ref": "LedgerEventsFA32F47B"
+        }
+       },
+       {
+        "Name": "SQS_LEDGER_COMMANDS_QUEUE_URL",
+        "Value": {
+         "Ref": "LedgerCommands3998913B"
+        }
+       },
+       {
+        "Name": "LEDGER_ASYNC_COMMANDS_ENABLED",
+        "Value": "false"
+       }
+      ],
+      "Essential": true,
+      "Image": {
+       "Fn::Sub": "653502182456.dkr.ecr.eu-west-2.${AWS::URLSuffix}/cdk-hnb659fds-container-assets-653502182456-eu-west-2:29c99603c37668df01a406d6c97757b1b8d732b299623ac88befbdadfda65b49"
+      },
+      "LogConfiguration": {
+       "LogDriver": "awslogs",
+       "Options": {
+        "awslogs-group": {
+         "Ref": "authserviceLogs9D762449"
+        },
+        "awslogs-stream-prefix": "auth-service",
+        "awslogs-region": "eu-west-2"
+       }
+      },
+      "Name": "auth-service",
+      "PortMappings": [
+       {
+        "ContainerPort": 3001,
+        "Protocol": "tcp"
+       }
+      ],
+      "Secrets": [
+       {
+        "Name": "JWT_SECRET",
+        "ValueFrom": {
+         "Ref": "JwtSecretB8834B39"
+        }
+       },
+       {
+        "Name": "INTERNAL_SERVICE_JWT_SECRET",
+        "ValueFrom": {
+         "Ref": "InternalJwtSecretF22A2718"
+        }
+       },
+       {
+        "Name": "DATABASE_SECRET",
+        "ValueFrom": {
+         "Ref": "DatabaseSecret86DBB7B3"
+        }
+       }
+      ]
+     }
+    ],
+    "Cpu": "256",
+    "ExecutionRoleArn": {
+     "Fn::GetAtt": [
+      "authserviceTaskExecutionRole48D7CFF8",
+      "Arn"
+     ]
+    },
+    "Family": "EagleBankStackauthserviceTaskF06A6C46",
+    "Memory": "512",
+    "NetworkMode": "awsvpc",
+    "RequiresCompatibilities": [
+     "FARGATE"
+    ],
+    "TaskRoleArn": {
+     "Fn::GetAtt": [
+      "authserviceTaskTaskRoleD1F6B291",
+      "Arn"
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/auth-serviceTask/Resource"
+   }
+  },
+  "authserviceTaskExecutionRole48D7CFF8": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/auth-serviceTask/ExecutionRole/Resource"
+   }
+  },
+  "authserviceTaskExecutionRoleDefaultPolicy40B7CDF8": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:BatchGetImage"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          "arn:",
+          {
+           "Ref": "AWS::Partition"
+          },
+          ":ecr:eu-west-2:653502182456:repository/cdk-hnb659fds-container-assets-653502182456-eu-west-2"
+         ]
+        ]
+       }
+      },
+      {
+       "Action": "ecr:GetAuthorizationToken",
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "authserviceLogs9D762449",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Ref": "JwtSecretB8834B39"
+       }
+      },
+      {
+       "Action": [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Ref": "InternalJwtSecretF22A2718"
+       }
+      },
+      {
+       "Action": [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Ref": "DatabaseSecret86DBB7B3"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "authserviceTaskExecutionRoleDefaultPolicy40B7CDF8",
+    "Roles": [
+     {
+      "Ref": "authserviceTaskExecutionRole48D7CFF8"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/auth-serviceTask/ExecutionRole/DefaultPolicy/Resource"
+   }
+  },
+  "authserviceLogs9D762449": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "RetentionInDays": 30
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/auth-serviceLogs/Resource"
+   }
+  },
+  "ledgerserviceTaskTaskRoleEE98D0BF": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/ledger-serviceTask/TaskRole/Resource"
+   }
+  },
+  "ledgerserviceTaskTaskRoleDefaultPolicy05B7D518": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Ref": "DatabaseSecret86DBB7B3"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "ledgerserviceTaskTaskRoleDefaultPolicy05B7D518",
+    "Roles": [
+     {
+      "Ref": "ledgerserviceTaskTaskRoleEE98D0BF"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/ledger-serviceTask/TaskRole/DefaultPolicy/Resource"
+   }
+  },
+  "ledgerserviceTaskD3A8C9C9": {
+   "Type": "AWS::ECS::TaskDefinition",
+   "Properties": {
+    "ContainerDefinitions": [
+     {
+      "Command": [
+       "node",
+       "dist/src/services/ledger-server.js"
+      ],
+      "Environment": [
+       {
+        "Name": "NODE_ENV",
+        "Value": "prod"
+       },
+       {
+        "Name": "AWS_REGION",
+        "Value": "eu-west-2"
+       },
+       {
+        "Name": "DATABASE_HOST",
+        "Value": {
+         "Fn::GetAtt": [
+          "DatabaseB269D8BB",
+          "Endpoint.Address"
+         ]
+        }
+       },
+       {
+        "Name": "DATABASE_PORT",
+        "Value": {
+         "Fn::GetAtt": [
+          "DatabaseB269D8BB",
+          "Endpoint.Port"
+         ]
+        }
+       },
+       {
+        "Name": "DYNAMODB_AUTH_SESSIONS_TABLE",
+        "Value": {
+         "Ref": "AuthSessions6F3F594E"
+        }
+       },
+       {
+        "Name": "SQS_LEDGER_EVENTS_QUEUE_URL",
+        "Value": {
+         "Ref": "LedgerEventsFA32F47B"
+        }
+       },
+       {
+        "Name": "SQS_LEDGER_COMMANDS_QUEUE_URL",
+        "Value": {
+         "Ref": "LedgerCommands3998913B"
+        }
+       },
+       {
+        "Name": "LEDGER_ASYNC_COMMANDS_ENABLED",
+        "Value": "false"
+       }
+      ],
+      "Essential": true,
+      "Image": {
+       "Fn::Sub": "653502182456.dkr.ecr.eu-west-2.${AWS::URLSuffix}/cdk-hnb659fds-container-assets-653502182456-eu-west-2:29c99603c37668df01a406d6c97757b1b8d732b299623ac88befbdadfda65b49"
+      },
+      "LogConfiguration": {
+       "LogDriver": "awslogs",
+       "Options": {
+        "awslogs-group": {
+         "Ref": "ledgerserviceLogs24721A01"
+        },
+        "awslogs-stream-prefix": "ledger-service",
+        "awslogs-region": "eu-west-2"
+       }
+      },
+      "Name": "ledger-service",
+      "PortMappings": [
+       {
+        "ContainerPort": 3002,
+        "Protocol": "tcp"
+       }
+      ],
+      "Secrets": [
+       {
+        "Name": "JWT_SECRET",
+        "ValueFrom": {
+         "Ref": "JwtSecretB8834B39"
+        }
+       },
+       {
+        "Name": "INTERNAL_SERVICE_JWT_SECRET",
+        "ValueFrom": {
+         "Ref": "InternalJwtSecretF22A2718"
+        }
+       },
+       {
+        "Name": "DATABASE_SECRET",
+        "ValueFrom": {
+         "Ref": "DatabaseSecret86DBB7B3"
+        }
+       }
+      ]
+     }
+    ],
+    "Cpu": "256",
+    "ExecutionRoleArn": {
+     "Fn::GetAtt": [
+      "ledgerserviceTaskExecutionRoleDFC53E2F",
+      "Arn"
+     ]
+    },
+    "Family": "EagleBankStackledgerserviceTaskE8375C30",
+    "Memory": "512",
+    "NetworkMode": "awsvpc",
+    "RequiresCompatibilities": [
+     "FARGATE"
+    ],
+    "TaskRoleArn": {
+     "Fn::GetAtt": [
+      "ledgerserviceTaskTaskRoleEE98D0BF",
+      "Arn"
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/ledger-serviceTask/Resource"
+   }
+  },
+  "ledgerserviceTaskExecutionRoleDFC53E2F": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/ledger-serviceTask/ExecutionRole/Resource"
+   }
+  },
+  "ledgerserviceTaskExecutionRoleDefaultPolicy30E45670": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:BatchGetImage"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          "arn:",
+          {
+           "Ref": "AWS::Partition"
+          },
+          ":ecr:eu-west-2:653502182456:repository/cdk-hnb659fds-container-assets-653502182456-eu-west-2"
+         ]
+        ]
+       }
+      },
+      {
+       "Action": "ecr:GetAuthorizationToken",
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "ledgerserviceLogs24721A01",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Ref": "JwtSecretB8834B39"
+       }
+      },
+      {
+       "Action": [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Ref": "InternalJwtSecretF22A2718"
+       }
+      },
+      {
+       "Action": [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Ref": "DatabaseSecret86DBB7B3"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "ledgerserviceTaskExecutionRoleDefaultPolicy30E45670",
+    "Roles": [
+     {
+      "Ref": "ledgerserviceTaskExecutionRoleDFC53E2F"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/ledger-serviceTask/ExecutionRole/DefaultPolicy/Resource"
+   }
+  },
+  "ledgerserviceLogs24721A01": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "RetentionInDays": 30
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/ledger-serviceLogs/Resource"
+   }
+  },
+  "ledgerworkerTaskTaskRole8E96408D": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/ledger-workerTask/TaskRole/Resource"
+   }
+  },
+  "ledgerworkerTaskTaskRoleDefaultPolicy3CAE3A10": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "sqs:ReceiveMessage",
+        "sqs:ChangeMessageVisibility",
+        "sqs:GetQueueUrl",
+        "sqs:DeleteMessage",
+        "sqs:GetQueueAttributes"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "LedgerCommands3998913B",
+         "Arn"
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "ledgerworkerTaskTaskRoleDefaultPolicy3CAE3A10",
+    "Roles": [
+     {
+      "Ref": "ledgerworkerTaskTaskRole8E96408D"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/ledger-workerTask/TaskRole/DefaultPolicy/Resource"
+   }
+  },
+  "ledgerworkerTask32E880EB": {
+   "Type": "AWS::ECS::TaskDefinition",
+   "Properties": {
+    "ContainerDefinitions": [
+     {
+      "Command": [
+       "node",
+       "dist/src/services/ledger-worker.js"
+      ],
+      "Environment": [
+       {
+        "Name": "NODE_ENV",
+        "Value": "prod"
+       },
+       {
+        "Name": "AWS_REGION",
+        "Value": "eu-west-2"
+       },
+       {
+        "Name": "DATABASE_HOST",
+        "Value": {
+         "Fn::GetAtt": [
+          "DatabaseB269D8BB",
+          "Endpoint.Address"
+         ]
+        }
+       },
+       {
+        "Name": "DATABASE_PORT",
+        "Value": {
+         "Fn::GetAtt": [
+          "DatabaseB269D8BB",
+          "Endpoint.Port"
+         ]
+        }
+       },
+       {
+        "Name": "DYNAMODB_AUTH_SESSIONS_TABLE",
+        "Value": {
+         "Ref": "AuthSessions6F3F594E"
+        }
+       },
+       {
+        "Name": "SQS_LEDGER_EVENTS_QUEUE_URL",
+        "Value": {
+         "Ref": "LedgerEventsFA32F47B"
+        }
+       },
+       {
+        "Name": "SQS_LEDGER_COMMANDS_QUEUE_URL",
+        "Value": {
+         "Ref": "LedgerCommands3998913B"
+        }
+       },
+       {
+        "Name": "LEDGER_ASYNC_COMMANDS_ENABLED",
+        "Value": "false"
+       }
+      ],
+      "Essential": true,
+      "Image": {
+       "Fn::Sub": "653502182456.dkr.ecr.eu-west-2.${AWS::URLSuffix}/cdk-hnb659fds-container-assets-653502182456-eu-west-2:29c99603c37668df01a406d6c97757b1b8d732b299623ac88befbdadfda65b49"
+      },
+      "LogConfiguration": {
+       "LogDriver": "awslogs",
+       "Options": {
+        "awslogs-group": {
+         "Ref": "ledgerworkerLogs0630664D"
+        },
+        "awslogs-stream-prefix": "ledger-worker",
+        "awslogs-region": "eu-west-2"
+       }
+      },
+      "Name": "ledger-worker",
+      "Secrets": [
+       {
+        "Name": "JWT_SECRET",
+        "ValueFrom": {
+         "Ref": "JwtSecretB8834B39"
+        }
+       },
+       {
+        "Name": "INTERNAL_SERVICE_JWT_SECRET",
+        "ValueFrom": {
+         "Ref": "InternalJwtSecretF22A2718"
+        }
+       },
+       {
+        "Name": "DATABASE_SECRET",
+        "ValueFrom": {
+         "Ref": "DatabaseSecret86DBB7B3"
+        }
+       }
+      ]
+     }
+    ],
+    "Cpu": "256",
+    "ExecutionRoleArn": {
+     "Fn::GetAtt": [
+      "ledgerworkerTaskExecutionRole9A50B027",
+      "Arn"
+     ]
+    },
+    "Family": "EagleBankStackledgerworkerTask7C14086B",
+    "Memory": "512",
+    "NetworkMode": "awsvpc",
+    "RequiresCompatibilities": [
+     "FARGATE"
+    ],
+    "TaskRoleArn": {
+     "Fn::GetAtt": [
+      "ledgerworkerTaskTaskRole8E96408D",
+      "Arn"
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/ledger-workerTask/Resource"
+   }
+  },
+  "ledgerworkerTaskExecutionRole9A50B027": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/ledger-workerTask/ExecutionRole/Resource"
+   }
+  },
+  "ledgerworkerTaskExecutionRoleDefaultPolicy84CA9DF2": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:BatchGetImage"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          "arn:",
+          {
+           "Ref": "AWS::Partition"
+          },
+          ":ecr:eu-west-2:653502182456:repository/cdk-hnb659fds-container-assets-653502182456-eu-west-2"
+         ]
+        ]
+       }
+      },
+      {
+       "Action": "ecr:GetAuthorizationToken",
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "ledgerworkerLogs0630664D",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Ref": "JwtSecretB8834B39"
+       }
+      },
+      {
+       "Action": [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Ref": "InternalJwtSecretF22A2718"
+       }
+      },
+      {
+       "Action": [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Ref": "DatabaseSecret86DBB7B3"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "ledgerworkerTaskExecutionRoleDefaultPolicy84CA9DF2",
+    "Roles": [
+     {
+      "Ref": "ledgerworkerTaskExecutionRole9A50B027"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/ledger-workerTask/ExecutionRole/DefaultPolicy/Resource"
+   }
+  },
+  "ledgerworkerLogs0630664D": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "RetentionInDays": 30
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/ledger-workerLogs/Resource"
+   }
+  },
+  "ledgereventpublisherTaskTaskRole1405840F": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/ledger-event-publisherTask/TaskRole/Resource"
+   }
+  },
+  "ledgereventpublisherTaskTaskRoleDefaultPolicy77BFC4D8": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "sqs:SendMessage",
+        "sqs:GetQueueAttributes",
+        "sqs:GetQueueUrl"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "LedgerEventsFA32F47B",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Ref": "DatabaseSecret86DBB7B3"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "ledgereventpublisherTaskTaskRoleDefaultPolicy77BFC4D8",
+    "Roles": [
+     {
+      "Ref": "ledgereventpublisherTaskTaskRole1405840F"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/ledger-event-publisherTask/TaskRole/DefaultPolicy/Resource"
+   }
+  },
+  "ledgereventpublisherTask05FA370B": {
+   "Type": "AWS::ECS::TaskDefinition",
+   "Properties": {
+    "ContainerDefinitions": [
+     {
+      "Command": [
+       "node",
+       "dist/src/services/ledger-event-publisher.js"
+      ],
+      "Environment": [
+       {
+        "Name": "NODE_ENV",
+        "Value": "prod"
+       },
+       {
+        "Name": "AWS_REGION",
+        "Value": "eu-west-2"
+       },
+       {
+        "Name": "DATABASE_HOST",
+        "Value": {
+         "Fn::GetAtt": [
+          "DatabaseB269D8BB",
+          "Endpoint.Address"
+         ]
+        }
+       },
+       {
+        "Name": "DATABASE_PORT",
+        "Value": {
+         "Fn::GetAtt": [
+          "DatabaseB269D8BB",
+          "Endpoint.Port"
+         ]
+        }
+       },
+       {
+        "Name": "DYNAMODB_AUTH_SESSIONS_TABLE",
+        "Value": {
+         "Ref": "AuthSessions6F3F594E"
+        }
+       },
+       {
+        "Name": "SQS_LEDGER_EVENTS_QUEUE_URL",
+        "Value": {
+         "Ref": "LedgerEventsFA32F47B"
+        }
+       },
+       {
+        "Name": "SQS_LEDGER_COMMANDS_QUEUE_URL",
+        "Value": {
+         "Ref": "LedgerCommands3998913B"
+        }
+       },
+       {
+        "Name": "LEDGER_ASYNC_COMMANDS_ENABLED",
+        "Value": "false"
+       }
+      ],
+      "Essential": true,
+      "Image": {
+       "Fn::Sub": "653502182456.dkr.ecr.eu-west-2.${AWS::URLSuffix}/cdk-hnb659fds-container-assets-653502182456-eu-west-2:29c99603c37668df01a406d6c97757b1b8d732b299623ac88befbdadfda65b49"
+      },
+      "LogConfiguration": {
+       "LogDriver": "awslogs",
+       "Options": {
+        "awslogs-group": {
+         "Ref": "ledgereventpublisherLogsE6C5F0E7"
+        },
+        "awslogs-stream-prefix": "ledger-event-publisher",
+        "awslogs-region": "eu-west-2"
+       }
+      },
+      "Name": "ledger-event-publisher",
+      "Secrets": [
+       {
+        "Name": "JWT_SECRET",
+        "ValueFrom": {
+         "Ref": "JwtSecretB8834B39"
+        }
+       },
+       {
+        "Name": "INTERNAL_SERVICE_JWT_SECRET",
+        "ValueFrom": {
+         "Ref": "InternalJwtSecretF22A2718"
+        }
+       },
+       {
+        "Name": "DATABASE_SECRET",
+        "ValueFrom": {
+         "Ref": "DatabaseSecret86DBB7B3"
+        }
+       }
+      ]
+     }
+    ],
+    "Cpu": "256",
+    "ExecutionRoleArn": {
+     "Fn::GetAtt": [
+      "ledgereventpublisherTaskExecutionRole17CC5140",
+      "Arn"
+     ]
+    },
+    "Family": "EagleBankStackledgereventpublisherTask614EACBF",
+    "Memory": "512",
+    "NetworkMode": "awsvpc",
+    "RequiresCompatibilities": [
+     "FARGATE"
+    ],
+    "TaskRoleArn": {
+     "Fn::GetAtt": [
+      "ledgereventpublisherTaskTaskRole1405840F",
+      "Arn"
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/ledger-event-publisherTask/Resource"
+   }
+  },
+  "ledgereventpublisherTaskExecutionRole17CC5140": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/ledger-event-publisherTask/ExecutionRole/Resource"
+   }
+  },
+  "ledgereventpublisherTaskExecutionRoleDefaultPolicyCAEDD246": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:BatchGetImage"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          "arn:",
+          {
+           "Ref": "AWS::Partition"
+          },
+          ":ecr:eu-west-2:653502182456:repository/cdk-hnb659fds-container-assets-653502182456-eu-west-2"
+         ]
+        ]
+       }
+      },
+      {
+       "Action": "ecr:GetAuthorizationToken",
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "ledgereventpublisherLogsE6C5F0E7",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Ref": "JwtSecretB8834B39"
+       }
+      },
+      {
+       "Action": [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Ref": "InternalJwtSecretF22A2718"
+       }
+      },
+      {
+       "Action": [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Ref": "DatabaseSecret86DBB7B3"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "ledgereventpublisherTaskExecutionRoleDefaultPolicyCAEDD246",
+    "Roles": [
+     {
+      "Ref": "ledgereventpublisherTaskExecutionRole17CC5140"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/ledger-event-publisherTask/ExecutionRole/DefaultPolicy/Resource"
+   }
+  },
+  "ledgereventpublisherLogsE6C5F0E7": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "RetentionInDays": 30
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/ledger-event-publisherLogs/Resource"
+   }
+  },
+  "migrationTaskTaskRole38CB3069": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/migrationTask/TaskRole/Resource"
+   }
+  },
+  "migrationTaskD97490C8": {
+   "Type": "AWS::ECS::TaskDefinition",
+   "Properties": {
+    "ContainerDefinitions": [
+     {
+      "Command": [
+       "pnpm",
+       "prisma",
+       "migrate",
+       "deploy"
+      ],
+      "Environment": [
+       {
+        "Name": "NODE_ENV",
+        "Value": "prod"
+       },
+       {
+        "Name": "AWS_REGION",
+        "Value": "eu-west-2"
+       },
+       {
+        "Name": "DATABASE_HOST",
+        "Value": {
+         "Fn::GetAtt": [
+          "DatabaseB269D8BB",
+          "Endpoint.Address"
+         ]
+        }
+       },
+       {
+        "Name": "DATABASE_PORT",
+        "Value": {
+         "Fn::GetAtt": [
+          "DatabaseB269D8BB",
+          "Endpoint.Port"
+         ]
+        }
+       },
+       {
+        "Name": "DYNAMODB_AUTH_SESSIONS_TABLE",
+        "Value": {
+         "Ref": "AuthSessions6F3F594E"
+        }
+       },
+       {
+        "Name": "SQS_LEDGER_EVENTS_QUEUE_URL",
+        "Value": {
+         "Ref": "LedgerEventsFA32F47B"
+        }
+       },
+       {
+        "Name": "SQS_LEDGER_COMMANDS_QUEUE_URL",
+        "Value": {
+         "Ref": "LedgerCommands3998913B"
+        }
+       },
+       {
+        "Name": "LEDGER_ASYNC_COMMANDS_ENABLED",
+        "Value": "false"
+       }
+      ],
+      "Essential": true,
+      "Image": {
+       "Fn::Sub": "653502182456.dkr.ecr.eu-west-2.${AWS::URLSuffix}/cdk-hnb659fds-container-assets-653502182456-eu-west-2:29c99603c37668df01a406d6c97757b1b8d732b299623ac88befbdadfda65b49"
+      },
+      "LogConfiguration": {
+       "LogDriver": "awslogs",
+       "Options": {
+        "awslogs-group": {
+         "Ref": "migrationLogs47067290"
+        },
+        "awslogs-stream-prefix": "migration",
+        "awslogs-region": "eu-west-2"
+       }
+      },
+      "Name": "migration",
+      "Secrets": [
+       {
+        "Name": "JWT_SECRET",
+        "ValueFrom": {
+         "Ref": "JwtSecretB8834B39"
+        }
+       },
+       {
+        "Name": "INTERNAL_SERVICE_JWT_SECRET",
+        "ValueFrom": {
+         "Ref": "InternalJwtSecretF22A2718"
+        }
+       },
+       {
+        "Name": "DATABASE_SECRET",
+        "ValueFrom": {
+         "Ref": "DatabaseSecret86DBB7B3"
+        }
+       }
+      ]
+     }
+    ],
+    "Cpu": "256",
+    "ExecutionRoleArn": {
+     "Fn::GetAtt": [
+      "migrationTaskExecutionRole62BB75B4",
+      "Arn"
+     ]
+    },
+    "Family": "EagleBankStackmigrationTask7910A101",
+    "Memory": "512",
+    "NetworkMode": "awsvpc",
+    "RequiresCompatibilities": [
+     "FARGATE"
+    ],
+    "TaskRoleArn": {
+     "Fn::GetAtt": [
+      "migrationTaskTaskRole38CB3069",
+      "Arn"
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/migrationTask/Resource"
+   }
+  },
+  "migrationTaskExecutionRole62BB75B4": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/migrationTask/ExecutionRole/Resource"
+   }
+  },
+  "migrationTaskExecutionRoleDefaultPolicy0CBA669C": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:BatchGetImage"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          "arn:",
+          {
+           "Ref": "AWS::Partition"
+          },
+          ":ecr:eu-west-2:653502182456:repository/cdk-hnb659fds-container-assets-653502182456-eu-west-2"
+         ]
+        ]
+       }
+      },
+      {
+       "Action": "ecr:GetAuthorizationToken",
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "migrationLogs47067290",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Ref": "JwtSecretB8834B39"
+       }
+      },
+      {
+       "Action": [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Ref": "InternalJwtSecretF22A2718"
+       }
+      },
+      {
+       "Action": [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Ref": "DatabaseSecret86DBB7B3"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "migrationTaskExecutionRoleDefaultPolicy0CBA669C",
+    "Roles": [
+     {
+      "Ref": "migrationTaskExecutionRole62BB75B4"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/migrationTask/ExecutionRole/DefaultPolicy/Resource"
+   }
+  },
+  "migrationLogs47067290": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "RetentionInDays": 30
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/migrationLogs/Resource"
+   }
+  },
+  "ApiServiceC9037CF0": {
+   "Type": "AWS::ECS::Service",
+   "Properties": {
+    "Cluster": {
+     "Ref": "ClusterEB0386A7"
+    },
+    "DeploymentConfiguration": {
+     "Alarms": {
+      "AlarmNames": [],
+      "Enable": false,
+      "Rollback": false
+     },
+     "MaximumPercent": 200,
+     "MinimumHealthyPercent": 50
+    },
+    "DesiredCount": 1,
+    "EnableECSManagedTags": false,
+    "HealthCheckGracePeriodSeconds": 60,
+    "LaunchType": "FARGATE",
+    "LoadBalancers": [
+     {
+      "ContainerName": "api",
+      "ContainerPort": 3000,
+      "TargetGroupArn": {
+       "Ref": "AlbHttpApiRoutesGroup9E9D3723"
+      }
+     }
+    ],
+    "NetworkConfiguration": {
+     "AwsvpcConfiguration": {
+      "AssignPublicIp": "DISABLED",
+      "SecurityGroups": [
+       {
+        "Fn::GetAtt": [
+         "ServiceSecurityGroup61DE1A49",
+         "GroupId"
+        ]
+       }
+      ],
+      "Subnets": [
+       {
+        "Ref": "VpcservicesSubnet1Subnet0A6944DC"
+       },
+       {
+        "Ref": "VpcservicesSubnet2SubnetBE6AFE4D"
+       }
+      ]
+     }
+    },
+    "TaskDefinition": {
+     "Ref": "apiTask2CF13C0A"
+    }
+   },
+   "DependsOn": [
+    "AlbHttpApiRoutesRuleA2AAC707",
+    "apiTaskTaskRoleDefaultPolicy770F6D5B",
+    "apiTaskTaskRole9C931702"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/ApiService/Service"
+   }
+  },
+  "AuthService3C2B741A": {
+   "Type": "AWS::ECS::Service",
+   "Properties": {
+    "Cluster": {
+     "Ref": "ClusterEB0386A7"
+    },
+    "DeploymentConfiguration": {
+     "Alarms": {
+      "AlarmNames": [],
+      "Enable": false,
+      "Rollback": false
+     },
+     "MaximumPercent": 200,
+     "MinimumHealthyPercent": 50
+    },
+    "DesiredCount": 1,
+    "EnableECSManagedTags": false,
+    "HealthCheckGracePeriodSeconds": 60,
+    "LaunchType": "FARGATE",
+    "LoadBalancers": [
+     {
+      "ContainerName": "auth-service",
+      "ContainerPort": 3001,
+      "TargetGroupArn": {
+       "Ref": "AlbHttpAuthRoutesGroup63D031FF"
+      }
+     }
+    ],
+    "NetworkConfiguration": {
+     "AwsvpcConfiguration": {
+      "AssignPublicIp": "DISABLED",
+      "SecurityGroups": [
+       {
+        "Fn::GetAtt": [
+         "ServiceSecurityGroup61DE1A49",
+         "GroupId"
+        ]
+       }
+      ],
+      "Subnets": [
+       {
+        "Ref": "VpcservicesSubnet1Subnet0A6944DC"
+       },
+       {
+        "Ref": "VpcservicesSubnet2SubnetBE6AFE4D"
+       }
+      ]
+     }
+    },
+    "TaskDefinition": {
+     "Ref": "authserviceTask30F43778"
+    }
+   },
+   "DependsOn": [
+    "AlbHttpAuthRoutesRule623E57DE",
+    "authserviceTaskTaskRoleDefaultPolicy00A54A4C",
+    "authserviceTaskTaskRoleD1F6B291"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/AuthService/Service"
+   }
+  },
+  "LedgerService4B131B90": {
+   "Type": "AWS::ECS::Service",
+   "Properties": {
+    "Cluster": {
+     "Ref": "ClusterEB0386A7"
+    },
+    "DeploymentConfiguration": {
+     "Alarms": {
+      "AlarmNames": [],
+      "Enable": false,
+      "Rollback": false
+     },
+     "MaximumPercent": 200,
+     "MinimumHealthyPercent": 50
+    },
+    "DesiredCount": 1,
+    "EnableECSManagedTags": false,
+    "LaunchType": "FARGATE",
+    "NetworkConfiguration": {
+     "AwsvpcConfiguration": {
+      "AssignPublicIp": "DISABLED",
+      "SecurityGroups": [
+       {
+        "Fn::GetAtt": [
+         "ServiceSecurityGroup61DE1A49",
+         "GroupId"
+        ]
+       }
+      ],
+      "Subnets": [
+       {
+        "Ref": "VpcservicesSubnet1Subnet0A6944DC"
+       },
+       {
+        "Ref": "VpcservicesSubnet2SubnetBE6AFE4D"
+       }
+      ]
+     }
+    },
+    "TaskDefinition": {
+     "Ref": "ledgerserviceTaskD3A8C9C9"
+    }
+   },
+   "DependsOn": [
+    "ledgerserviceTaskTaskRoleDefaultPolicy05B7D518",
+    "ledgerserviceTaskTaskRoleEE98D0BF"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/LedgerService/Service"
+   }
+  },
+  "LedgerWorkerServiceCC2275AC": {
+   "Type": "AWS::ECS::Service",
+   "Properties": {
+    "Cluster": {
+     "Ref": "ClusterEB0386A7"
+    },
+    "DeploymentConfiguration": {
+     "Alarms": {
+      "AlarmNames": [],
+      "Enable": false,
+      "Rollback": false
+     },
+     "MaximumPercent": 200,
+     "MinimumHealthyPercent": 50
+    },
+    "DesiredCount": 1,
+    "EnableECSManagedTags": false,
+    "LaunchType": "FARGATE",
+    "NetworkConfiguration": {
+     "AwsvpcConfiguration": {
+      "AssignPublicIp": "DISABLED",
+      "SecurityGroups": [
+       {
+        "Fn::GetAtt": [
+         "ServiceSecurityGroup61DE1A49",
+         "GroupId"
+        ]
+       }
+      ],
+      "Subnets": [
+       {
+        "Ref": "VpcservicesSubnet1Subnet0A6944DC"
+       },
+       {
+        "Ref": "VpcservicesSubnet2SubnetBE6AFE4D"
+       }
+      ]
+     }
+    },
+    "TaskDefinition": {
+     "Ref": "ledgerworkerTask32E880EB"
+    }
+   },
+   "DependsOn": [
+    "ledgerworkerTaskTaskRoleDefaultPolicy3CAE3A10",
+    "ledgerworkerTaskTaskRole8E96408D"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/LedgerWorkerService/Service"
+   }
+  },
+  "LedgerEventPublisherService73F91A91": {
+   "Type": "AWS::ECS::Service",
+   "Properties": {
+    "Cluster": {
+     "Ref": "ClusterEB0386A7"
+    },
+    "DeploymentConfiguration": {
+     "Alarms": {
+      "AlarmNames": [],
+      "Enable": false,
+      "Rollback": false
+     },
+     "MaximumPercent": 200,
+     "MinimumHealthyPercent": 50
+    },
+    "DesiredCount": 1,
+    "EnableECSManagedTags": false,
+    "LaunchType": "FARGATE",
+    "NetworkConfiguration": {
+     "AwsvpcConfiguration": {
+      "AssignPublicIp": "DISABLED",
+      "SecurityGroups": [
+       {
+        "Fn::GetAtt": [
+         "ServiceSecurityGroup61DE1A49",
+         "GroupId"
+        ]
+       }
+      ],
+      "Subnets": [
+       {
+        "Ref": "VpcservicesSubnet1Subnet0A6944DC"
+       },
+       {
+        "Ref": "VpcservicesSubnet2SubnetBE6AFE4D"
+       }
+      ]
+     }
+    },
+    "TaskDefinition": {
+     "Ref": "ledgereventpublisherTask05FA370B"
+    }
+   },
+   "DependsOn": [
+    "ledgereventpublisherTaskTaskRoleDefaultPolicy77BFC4D8",
+    "ledgereventpublisherTaskTaskRole1405840F"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/LedgerEventPublisherService/Service"
+   }
+  },
+  "AlbSecurityGroup86A59E99": {
+   "Type": "AWS::EC2::SecurityGroup",
+   "Properties": {
+    "GroupDescription": "EagleBankStack/AlbSecurityGroup",
+    "SecurityGroupEgress": [
+     {
+      "CidrIp": "0.0.0.0/0",
+      "Description": "Allow all outbound traffic by default",
+      "IpProtocol": "-1"
+     }
+    ],
+    "SecurityGroupIngress": [
+     {
+      "CidrIp": "0.0.0.0/0",
+      "Description": "from 0.0.0.0/0:80",
+      "FromPort": 80,
+      "IpProtocol": "tcp",
+      "ToPort": 80
+     }
+    ],
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/AlbSecurityGroup/Resource"
+   }
+  },
+  "Alb16C2F182": {
+   "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+   "Properties": {
+    "LoadBalancerAttributes": [
+     {
+      "Key": "deletion_protection.enabled",
+      "Value": "false"
+     }
+    ],
+    "Scheme": "internet-facing",
+    "SecurityGroups": [
+     {
+      "Fn::GetAtt": [
+       "AlbSecurityGroup86A59E99",
+       "GroupId"
+      ]
+     }
+    ],
+    "Subnets": [
+     {
+      "Ref": "VpcpublicSubnet1Subnet2BB74ED7"
+     },
+     {
+      "Ref": "VpcpublicSubnet2SubnetE34B022A"
+     }
+    ],
+    "Type": "application"
+   },
+   "DependsOn": [
+    "VpcpublicSubnet1DefaultRouteB88F9E93",
+    "VpcpublicSubnet1RouteTableAssociation4E83B6E4",
+    "VpcpublicSubnet2DefaultRoute732F0BEB",
+    "VpcpublicSubnet2RouteTableAssociationCCE257FF"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/Alb/Resource"
+   }
+  },
+  "AlbHttp7966E42E": {
+   "Type": "AWS::ElasticLoadBalancingV2::Listener",
+   "Properties": {
+    "DefaultActions": [
+     {
+      "FixedResponseConfig": {
+       "StatusCode": "404"
+      },
+      "Type": "fixed-response"
+     }
+    ],
+    "LoadBalancerArn": {
+     "Ref": "Alb16C2F182"
+    },
+    "Port": 80,
+    "Protocol": "HTTP"
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/Alb/Http/Resource"
+   }
+  },
+  "AlbHttpApiRoutesGroup9E9D3723": {
+   "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+   "Properties": {
+    "HealthCheckPath": "/health",
+    "Port": 3000,
+    "Protocol": "HTTP",
+    "TargetGroupAttributes": [
+     {
+      "Key": "stickiness.enabled",
+      "Value": "false"
+     }
+    ],
+    "TargetType": "ip",
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/Alb/Http/ApiRoutesGroup/Resource"
+   }
+  },
+  "AlbHttpApiRoutesRuleA2AAC707": {
+   "Type": "AWS::ElasticLoadBalancingV2::ListenerRule",
+   "Properties": {
+    "Actions": [
+     {
+      "TargetGroupArn": {
+       "Ref": "AlbHttpApiRoutesGroup9E9D3723"
+      },
+      "Type": "forward"
+     }
+    ],
+    "Conditions": [
+     {
+      "Field": "path-pattern",
+      "PathPatternConfig": {
+       "Values": [
+        "/health",
+        "/ready",
+        "/v1/*"
+       ]
+      }
+     }
+    ],
+    "ListenerArn": {
+     "Ref": "AlbHttp7966E42E"
+    },
+    "Priority": 20
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/Alb/Http/ApiRoutesRule/Resource"
+   }
+  },
+  "AlbHttpAuthRoutesGroup63D031FF": {
+   "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+   "Properties": {
+    "HealthCheckPath": "/health",
+    "Port": 3001,
+    "Protocol": "HTTP",
+    "TargetGroupAttributes": [
+     {
+      "Key": "stickiness.enabled",
+      "Value": "false"
+     }
+    ],
+    "TargetType": "ip",
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/Alb/Http/AuthRoutesGroup/Resource"
+   }
+  },
+  "AlbHttpAuthRoutesRule623E57DE": {
+   "Type": "AWS::ElasticLoadBalancingV2::ListenerRule",
+   "Properties": {
+    "Actions": [
+     {
+      "TargetGroupArn": {
+       "Ref": "AlbHttpAuthRoutesGroup63D031FF"
+      },
+      "Type": "forward"
+     }
+    ],
+    "Conditions": [
+     {
+      "Field": "path-pattern",
+      "PathPatternConfig": {
+       "Values": [
+        "/v1/auth/*"
+       ]
+      }
+     }
+    ],
+    "ListenerArn": {
+     "Ref": "AlbHttp7966E42E"
+    },
+    "Priority": 10
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/Alb/Http/AuthRoutesRule/Resource"
+   }
+  },
+  "WebAcl": {
+   "Type": "AWS::WAFv2::WebACL",
+   "Properties": {
+    "DefaultAction": {
+     "Allow": {}
+    },
+    "Rules": [
+     {
+      "Name": "aws-managed-common",
+      "OverrideAction": {
+       "None": {}
+      },
+      "Priority": 1,
+      "Statement": {
+       "ManagedRuleGroupStatement": {
+        "Name": "AWSManagedRulesCommonRuleSet",
+        "VendorName": "AWS"
+       }
+      },
+      "VisibilityConfig": {
+       "CloudWatchMetricsEnabled": true,
+       "MetricName": "common-rules",
+       "SampledRequestsEnabled": true
+      }
+     },
+     {
+      "Action": {
+       "Block": {}
+      },
+      "Name": "rate-limit",
+      "Priority": 2,
+      "Statement": {
+       "RateBasedStatement": {
+        "AggregateKeyType": "IP",
+        "Limit": 1000
+       }
+      },
+      "VisibilityConfig": {
+       "CloudWatchMetricsEnabled": true,
+       "MetricName": "rate-limit",
+       "SampledRequestsEnabled": true
+      }
+     }
+    ],
+    "Scope": "REGIONAL",
+    "VisibilityConfig": {
+     "CloudWatchMetricsEnabled": true,
+     "MetricName": "eagle-bank-waf",
+     "SampledRequestsEnabled": true
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/WebAcl"
+   }
+  },
+  "WebAclAssociation": {
+   "Type": "AWS::WAFv2::WebACLAssociation",
+   "Properties": {
+    "ResourceArn": {
+     "Ref": "Alb16C2F182"
+    },
+    "WebACLArn": {
+     "Fn::GetAtt": [
+      "WebAcl",
+      "Arn"
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/WebAclAssociation"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/31TTW/bMAz9Lb0rWhd0hx7zsRUBgsGzi+5Y0DLjqrElT6QSBIL++2Ardrx12ImPj8/EIykv5fLLo7y/gzMtVHVcNLqUoWBQRwFneg2oljK8dEpsDuYl24jMl41WhS8Ncs/dUG494zOUDd74G7ciskoDa2smcQ++7rI+fAd+AsYzXETm9AkYb413htEZnATJyTVbMYN6a9GwKFB5p/ny5KzvBg//JXamdkgUBSqSYdN4YnS9aoTfwNXQ26fjFg/a6NH834w1DNqgm3HXbwt0J63SQhKMwlUkwxYYSiAsUDlkMaY7QwxGoUjTT8a36w/EKI2Chh7UgoEanQxp0L5tCs/gauTZoibBh0qio6guBlpblTJMBx1AFPSLZPjh0Q/kAKLQ0MqQ2yQcYmYbrYZTJdRv2b0CETLJrVVHdLsW6v5ZIPc1mWNnSbN1lzUQisbWJMPe1tPII44CGyDWqrFQldCAUdrUp6UMq65rtBre2N5CtR5q6aZ/5HOdJkZz1Yx4Vk8bmjzM0390yX1awTyP4gyH3t3mYH5iudrsxYRmP0WMIkey3ikUw1IKhlqbOgpjK5Tv9Om0vJefH+XD3TtpvXDesG5R5in+BtURfUbHAwAA"
+   },
+   "Metadata": {
+    "aws:cdk:path": "EagleBankStack/CDKMetadata/Default"
+   }
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}
