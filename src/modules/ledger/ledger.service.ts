@@ -3,10 +3,9 @@ import { constants as httpConstants } from 'node:http2';
 import {
   LedgerAccountStatus,
   LedgerEntryDirection,
-  Prisma,
   type LedgerAccount,
   type LedgerTransaction,
-} from '@prisma/client';
+} from '../../generated/prisma/client.js';
 import type { FastifyBaseLogger } from 'fastify';
 import pino from 'pino';
 import { AppError } from '../../common/errors/AppError.js';
@@ -32,8 +31,13 @@ import {
   LedgerRepository,
   type LedgerUnitOfWork,
 } from './ledger.repository.js';
+import {
+  formatTransactionApiId,
+  parseTransactionApiId,
+} from '../transactions/transaction-id.js';
+import { formatUserApiId, parseUserApiId } from '../users/user-id.js';
 
-const MAX_ACCOUNT_BALANCE = '10000.00';
+const MAX_ACCOUNT_BALANCE = 10000;
 const IDEMPOTENCY_RETENTION_HOURS = 24;
 const LEDGER_TRANSACTION_ATTEMPTS = 3;
 const IDEMPOTENCY_RETENTION_MS =
@@ -43,12 +47,12 @@ function mapTransaction(
   transaction: LedgerTransaction,
 ): LedgerTransactionResponse {
   return {
-    id: transaction.transactionId,
+    id: formatTransactionApiId(transaction.id),
     amount: Number(transaction.amount.toFixed(MONEY_DECIMAL_PLACES)),
     currency: Currency.GBP,
     type: transaction.type,
     ...(transaction.reference ? { reference: transaction.reference } : {}),
-    userId: transaction.userId,
+    userId: formatUserApiId(transaction.userId),
     createdTimestamp: transaction.createdAt.toISOString(),
   };
 }
@@ -57,7 +61,7 @@ function mapAccount(account: LedgerAccount): LedgerAccountResponse {
   return {
     accountId: account.accountId,
     accountNumber: account.accountNumber,
-    userId: account.userId,
+    userId: formatUserApiId(account.userId),
     currency: Currency.GBP,
     availableBalance: Number(
       account.availableBalance.toFixed(MONEY_DECIMAL_PLACES),
@@ -86,17 +90,26 @@ export class LedgerService implements LedgerGateway {
   constructor(
     private readonly ledger: LedgerRepository,
     private readonly logger: FastifyBaseLogger = pino({ enabled: false }),
-    private readonly maxBalance = new Prisma.Decimal(MAX_ACCOUNT_BALANCE),
+    private readonly maxBalance = toDecimal(MAX_ACCOUNT_BALANCE),
   ) {}
 
   async createAccount(
     command: LedgerAccountCommand,
   ): Promise<LedgerAccountResponse> {
+    const userId = parseUserApiId(command.userId);
+    if (userId === undefined) {
+      this.reject(
+        httpConstants.HTTP_STATUS_NOT_FOUND,
+        ErrorCode.NOT_FOUND,
+        'Bank account was not found',
+        { accountNumber: command.accountNumber, userId: command.userId },
+      );
+    }
     const existing = await this.ledger.findAccount(command.accountNumber);
     if (existing) {
       if (
         existing.accountId === command.accountId &&
-        existing.userId === command.userId &&
+        existing.userId === userId &&
         existing.currency === command.currency
       ) {
         return mapAccount(existing);
@@ -109,7 +122,7 @@ export class LedgerService implements LedgerGateway {
       );
     }
 
-    return mapAccount(await this.ledger.createAccount(command));
+    return mapAccount(await this.ledger.createAccount({ ...command, userId }));
   }
 
   async getBalance(accountNumber: string): Promise<number> {
@@ -157,9 +170,18 @@ export class LedgerService implements LedgerGateway {
     command: PostLedgerTransactionCommand,
   ): Promise<LedgerTransactionResponse> {
     const hash = requestHash(command);
+    const userId = parseUserApiId(command.userId);
+    if (userId === undefined) {
+      this.reject(
+        httpConstants.HTTP_STATUS_NOT_FOUND,
+        ErrorCode.NOT_FOUND,
+        'Bank account was not found',
+        { accountNumber: command.accountNumber, userId: command.userId },
+      );
+    }
     if (command.idempotencyKey) {
       const previous = await this.ledger.findIdempotency(
-        command.userId,
+        userId,
         command.accountNumber,
         command.idempotencyKey,
       );
@@ -189,7 +211,7 @@ export class LedgerService implements LedgerGateway {
     for (let attempt = 1; ; attempt += 1) {
       try {
         return await this.ledger.runInTransaction((unitOfWork) =>
-          this.postTransactionInUnitOfWork(unitOfWork, command, hash),
+          this.postTransactionInUnitOfWork(unitOfWork, command, userId, hash),
         );
       } catch (error) {
         if (
@@ -230,14 +252,30 @@ export class LedgerService implements LedgerGateway {
   private async postTransactionInUnitOfWork(
     unitOfWork: LedgerUnitOfWork,
     command: PostLedgerTransactionCommand,
+    userId: bigint,
     hash: string,
   ): Promise<LedgerTransactionResponse> {
     const account = await unitOfWork.findAccount(command.accountNumber);
-    if (!account || account.status !== LedgerAccountStatus.ACTIVE) {
+    if (
+      !account ||
+      account.status !== LedgerAccountStatus.ACTIVE ||
+      account.userId !== userId
+    ) {
       this.reject(
         httpConstants.HTTP_STATUS_NOT_FOUND,
         ErrorCode.NOT_FOUND,
         'Bank account was not found',
+        {
+          accountNumber: command.accountNumber,
+          userId: command.userId,
+        },
+      );
+    }
+    if (account.currency !== command.currency) {
+      this.reject(
+        httpConstants.HTTP_STATUS_CONFLICT,
+        ErrorCode.CONFLICT,
+        'Ledger account currency does not match the transaction',
         {
           accountNumber: command.accountNumber,
           userId: command.userId,
@@ -284,20 +322,18 @@ export class LedgerService implements LedgerGateway {
       // the race between concurrent requests using the same key.
       await unitOfWork.createIdempotency({
         idempotencyKey: command.idempotencyKey,
-        userId: command.userId,
+        userId,
         accountNumber: command.accountNumber,
         requestHash: hash,
         expiresAt: new Date(Date.now() + IDEMPOTENCY_RETENTION_MS),
       });
     }
 
-    const transactionId = `tan-${randomUUID().replaceAll('-', '')}`;
     const transaction = await unitOfWork.createTransaction({
-      transactionId,
       ledgerAccountId: account.id,
       accountId: account.accountId,
       accountNumber: account.accountNumber,
-      userId: command.userId,
+      userId,
       type: command.type,
       amount,
       currency: command.currency,
@@ -324,6 +360,7 @@ export class LedgerService implements LedgerGateway {
     // Commit the event with the ledger mutation. SQS delivery can then be
     // retried independently without losing an already committed event.
     const response = mapTransaction(transaction);
+    const transactionId = response.id;
     const eventId = randomUUID();
     await unitOfWork.createOutboxEvent({
       eventId,
@@ -349,7 +386,7 @@ export class LedgerService implements LedgerGateway {
     if (command.idempotencyKey) {
       // Persist the exact response so later retries remain stable.
       await unitOfWork.completeIdempotency(
-        command.userId,
+        userId,
         command.accountNumber,
         command.idempotencyKey,
         response,
@@ -372,7 +409,11 @@ export class LedgerService implements LedgerGateway {
     transactionId: string,
   ): Promise<LedgerTransactionResponse> {
     const account = await this.activeAccount(accountNumber);
-    const transaction = await this.ledger.findTransaction(transactionId);
+    const databaseTransactionId = parseTransactionApiId(transactionId);
+    const transaction =
+      databaseTransactionId === undefined
+        ? null
+        : await this.ledger.findTransaction(databaseTransactionId);
     if (!transaction || transaction.ledgerAccountId !== account.id) {
       this.reject(
         httpConstants.HTTP_STATUS_NOT_FOUND,

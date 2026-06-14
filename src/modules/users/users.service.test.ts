@@ -1,11 +1,11 @@
-import type { User } from '@prisma/client';
+import type { User } from '../../generated/prisma/client.js';
 import { describe, expect, it, vi } from 'vitest';
 import { AppError } from '../../common/errors/AppError.js';
 import type { UsersRepository } from './users.repository.js';
 import { UsersService } from './users.service.js';
 
 const user: User = {
-  id: 'usr-owner',
+  id: 1n,
   name: 'Owner',
   addressLine1: '1 Test Road',
   addressLine2: null,
@@ -54,12 +54,11 @@ describe('UsersService', () => {
     const { service, repository } = setup();
 
     await expect(service.create(createInput)).resolves.toMatchObject({
-      id: user.id,
+      id: 'usr-1',
       email: user.email,
     });
     expect(repository.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        id: expect.stringMatching(/^usr-[A-Za-z0-9]+$/),
         passwordHash: expect.not.stringMatching(/^Password123!$/),
         addressLine2: null,
         addressLine3: null,
@@ -79,10 +78,12 @@ describe('UsersService', () => {
   });
 
   it('returns 404 before checking ownership when the user is missing', async () => {
-    const { service } = setup({ findById: vi.fn().mockResolvedValue(null) });
+    const { service } = setup({
+      findById: vi.fn().mockResolvedValue(null),
+    });
 
     await expect(
-      service.getAuthorized('usr-missing', 'usr-owner'),
+      service.getAuthorized('usr-999999', 'usr-1'),
     ).rejects.toMatchObject({
       statusCode: 404,
     } satisfies Partial<AppError>);
@@ -91,17 +92,17 @@ describe('UsersService', () => {
   it('returns 403 for an existing user owned by someone else', async () => {
     const { service } = setup();
 
-    await expect(
-      service.getAuthorized(user.id, 'usr-other'),
-    ).rejects.toMatchObject({
-      statusCode: 403,
-    } satisfies Partial<AppError>);
+    await expect(service.getAuthorized('usr-1', 'usr-2')).rejects.toMatchObject(
+      {
+        statusCode: 403,
+      } satisfies Partial<AppError>,
+    );
   });
 
   it('maps an authorized user', async () => {
     const { service } = setup();
-    await expect(service.get(user.id, user.id)).resolves.toMatchObject({
-      id: user.id,
+    await expect(service.get('usr-1', 'usr-1')).resolves.toMatchObject({
+      id: 'usr-1',
       email: user.email,
     });
   });
@@ -117,7 +118,7 @@ describe('UsersService', () => {
       postcode: 'BS1 1AA',
     };
 
-    await service.update(user.id, user.id, {
+    await service.update('usr-1', 'usr-1', {
       name: 'Updated',
       email: 'updated@example.com',
       phoneNumber: '+447700900002',
@@ -140,7 +141,7 @@ describe('UsersService', () => {
   it('updates one field without overwriting omitted fields', async () => {
     const { service, repository } = setup();
 
-    await service.update(user.id, user.id, { name: 'Updated' });
+    await service.update('usr-1', 'usr-1', { name: 'Updated' });
 
     expect(repository.update).toHaveBeenCalledWith(user.id, {
       name: 'Updated',
@@ -149,7 +150,7 @@ describe('UsersService', () => {
 
   it('clears omitted optional address lines in an address replacement', async () => {
     const { service, repository } = setup();
-    await service.update(user.id, user.id, {
+    await service.update('usr-1', 'usr-1', {
       address: {
         line1: '2 Updated Road',
         town: 'Bristol',
@@ -168,7 +169,7 @@ describe('UsersService', () => {
       countAccounts: vi.fn().mockResolvedValue(1),
     });
 
-    await expect(service.delete(user.id, user.id)).rejects.toMatchObject({
+    await expect(service.delete('usr-1', 'usr-1')).rejects.toMatchObject({
       statusCode: 409,
     } satisfies Partial<AppError>);
     expect(repository.delete).not.toHaveBeenCalled();
@@ -177,7 +178,7 @@ describe('UsersService', () => {
   it('deletes an authorized user without accounts', async () => {
     const { service, repository } = setup();
 
-    await service.delete(user.id, user.id);
+    await service.delete('usr-1', 'usr-1');
 
     expect(repository.delete).toHaveBeenCalledWith(user.id);
   });

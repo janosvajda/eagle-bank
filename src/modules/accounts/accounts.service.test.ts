@@ -1,13 +1,14 @@
-import { Prisma, type BankAccount } from '@prisma/client';
+import { Prisma } from '../../generated/prisma/client.js';
 import { describe, expect, it, vi } from 'vitest';
 import { AppError } from '../../common/errors/AppError.js';
 import { PrismaErrorCode } from '../../common/errors/prisma-error-codes.js';
 import type { AccountsRepository } from './accounts.repository.js';
+import type { BankAccountWithOwner } from './accounts.repository.js';
 import { AccountsService } from './accounts.service.js';
 import type { LedgerGateway } from '../ledger/ledger.contracts.js';
 
-const ownerId = 'usr-owner';
-const account: BankAccount & { userId: string } = {
+const ownerId = 'usr-1';
+const account: BankAccountWithOwner = {
   id: '00000000-0000-4000-8000-000000000001',
   accountNumber: '01234567',
   sortCode: '10-10-10',
@@ -15,7 +16,8 @@ const account: BankAccount & { userId: string } = {
   accountType: 'personal',
   balance: new Prisma.Decimal('0.00'),
   currency: 'GBP',
-  userId: ownerId,
+  userId: 1n,
+  user: { id: 1n },
   status: 'ACTIVE',
   deletedAt: null,
   reconciliationCorrelationId: null,
@@ -23,7 +25,7 @@ const account: BankAccount & { userId: string } = {
   updatedAt: new Date('2026-01-01T00:00:00.000Z'),
 };
 
-function setup(found: BankAccount | null = account) {
+function setup(found: BankAccountWithOwner | null = account) {
   const repository = {
     create: vi.fn().mockResolvedValue(account),
     listByUser: vi.fn().mockResolvedValue([account]),
@@ -70,6 +72,18 @@ function setupWithLedger() {
 }
 
 describe('AccountsService', () => {
+  it('rejects an invalid authenticated user ID', async () => {
+    const { service, repository } = setup();
+
+    await expect(
+      service.create('usr-invalid', {
+        name: 'Personal',
+        accountType: 'personal',
+      }),
+    ).rejects.toMatchObject({ statusCode: 401 } satisfies Partial<AppError>);
+    expect(repository.create).not.toHaveBeenCalled();
+  });
+
   it('creates and maps an account', async () => {
     const { service, repository } = setup();
     await expect(
@@ -79,9 +93,9 @@ describe('AccountsService', () => {
       }),
     ).resolves.toMatchObject({ accountNumber: account.accountNumber });
     expect(repository.create).toHaveBeenCalledWith(
+      1n,
       expect.objectContaining({
         accountNumber: expect.stringMatching(/^01\d{6}$/),
-        userId: ownerId,
       }),
     );
   });
@@ -137,7 +151,7 @@ describe('AccountsService', () => {
     const { service } = setup(null);
 
     await expect(
-      service.getAuthorized('01999999', 'usr-owner'),
+      service.getAuthorized('01999999', 'usr-1'),
     ).rejects.toMatchObject({ statusCode: 404 } satisfies Partial<AppError>);
   });
 
@@ -145,7 +159,7 @@ describe('AccountsService', () => {
     const { service } = setup();
 
     await expect(
-      service.getAuthorized(account.accountNumber, 'usr-other'),
+      service.getAuthorized(account.accountNumber, 'usr-2'),
     ).rejects.toMatchObject({ statusCode: 403 } satisfies Partial<AppError>);
   });
 

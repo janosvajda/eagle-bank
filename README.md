@@ -1,21 +1,24 @@
 # Eagle Bank
 
 A production-shaped TypeScript implementation of the Eagle Bank take-home
-assessment. It implements every public endpoint in `openapi.yaml`, all
+assessment. It implements every public endpoint in
+[`openapi/v1/openapi.yaml`](openapi/v1/openapi.yaml), all
 assessment scenarios, strict bearer-session enforcement, Ledger-owned money
 movement, and a no-AWS-account local runtime.
 
-## Quick Start
+The original-scenario traceability matrix is available in
+[`ASSESSMENT_COMPLIANCE.md`](ASSESSMENT_COMPLIANCE.md).
+
+## Test Locally With Docker
 
 Prerequisites: Docker and Docker Compose only.
 
-Use separate terminals so requests and live service logs are visible at the
-same time.
+After checking out the repository, open a terminal in the repository root and
+run the following steps in order. Do not run `npm install` for this workflow.
 
-**Terminal 1 - start the application**
+### 1. Start the application
 
-From the repository root, start the complete stack and wait for its health
-checks to pass:
+Build and start the complete local stack:
 
 ```bash
 docker compose up --build -d --wait
@@ -24,9 +27,32 @@ docker compose up --build -d --wait
 When the command returns successfully, the application is ready at
 `http://localhost:3000`.
 
-**Terminal 2 - follow live logs**
+### 2. Run the automated tests
 
-Keep this command running while testing the application:
+Run linting, formatting checks, unit tests, integration tests, and
+infrastructure tests inside Docker:
+
+```bash
+docker compose run --build --rm test-suite
+```
+
+This command uses the isolated `integration-test-db`. It does not modify the
+application database and requires no host installation of Node.js or npm.
+
+### 3. Run the API smoke test
+
+With the application stack still running:
+
+```bash
+./scripts/smoke-test.sh
+```
+
+The smoke test verifies health, user registration and login, account creation,
+deposit, withdrawal, reads, account closure, and user deletion.
+
+### 4. View logs when needed
+
+Run this in another terminal to follow application logs:
 
 ```bash
 docker compose logs --follow api auth-service ledger-service
@@ -35,19 +61,7 @@ docker compose logs --follow api auth-service ledger-service
 Pressing `Ctrl+C` stops only the log stream. The application continues running
 in Docker.
 
-**Terminal 3 - test the application**
-
-Run the automated end-to-end check:
-
-```bash
-./scripts/smoke-test.sh
-```
-
-The smoke test runs inside the API container, so it requires no host Node.js,
-pnpm, `curl`, or `jq` installation. The manual requests in
-[Example Requests](#example-requests) are also run from Terminal 3.
-
-**Terminal 1 - stop the application**
+### 5. Stop the application
 
 After testing, stop all services:
 
@@ -65,47 +79,53 @@ Compose waits for PostgreSQL and the local AWS emulators, applies only
 unapplied Prisma migrations, creates the DynamoDB table and SQS queues
 idempotently, then starts the application services.
 
-## Development And Tests
+The manual API walkthrough in [Example Requests](#example-requests) additionally
+requires host `curl` and `jq`.
 
-Host development requires Node.js 24+ and pnpm 10.12.1. Install dependencies
-and generate the Prisma client once:
+## Test Locally With Node.js
 
-```bash
-corepack enable
-pnpm install
-pnpm db:generate
-```
-
-Run static checks, colocated unit tests, and offline infrastructure tests:
+Use this alternative when Node.js 24 and npm are already installed. npm is
+included with Node.js. Confirm the installed versions:
 
 ```bash
-pnpm typecheck
-pnpm test:unit
-pnpm infra:test
-pnpm infra:synth
+node --version
+npm --version
 ```
 
-Unit tests are colocated with executable source. Integration tests use the
-separate `postgres-test` service and must never target the development
-database. Start that database, apply migrations to it, and then run the
-integration suite:
+The Node.js version must start with `v24`, and the npm version must be `11` or
+newer. The required versions are also declared in `package.json`. From the
+repository root, install the locked dependencies and run every automated check:
 
 ```bash
-docker compose up -d postgres-test
-TEST_DATABASE_URL='postgresql://eagle:eagle@localhost:5433/eagle_bank_test?schema=public' \
-DATABASE_URL="$TEST_DATABASE_URL" pnpm db:deploy
-TEST_DATABASE_URL='postgresql://eagle:eagle@localhost:5433/eagle_bank_test?schema=public' \
-DATABASE_URL="$TEST_DATABASE_URL" pnpm test:integration
+npm ci
+npm run verify
 ```
 
-Other scripts include `api:dev`, `auth:dev`, `ledger:dev`,
-`ledger-worker:dev`, `ledger-event-publisher:dev`, `test:coverage`, `lint`,
-`format`, `docker:up`, and `docker:down`.
+`npm ci` runs `prisma generate` automatically. Run `npm run db:generate`
+again after changing `prisma/schema.prisma`.
+
+`npm run verify` runs linting, TypeScript checks, formatting checks, unit tests,
+integration tests, and infrastructure tests. Docker must be running because
+the integration tests start an isolated PostgreSQL container automatically.
+
+Individual checks are also available:
+
+```bash
+npm run lint
+npm run format
+npm run test:unit
+npm run test:integration
+npm run infra:test
+npm run infra:synth
+```
+
+The generated Prisma client is written to `src/generated/prisma` and excluded
+from source control.
 
 ## Example Requests
 
 This section is a manual, sequential API walkthrough. Use the three-terminal
-setup from [Quick Start](#quick-start).
+setup from [Test Locally With Docker](#test-locally-with-docker).
 
 **Terminal 1 - start the stack**
 
@@ -121,7 +141,7 @@ docker compose logs --follow api auth-service ledger-service
 
 **Terminal 3 - run the requests**
 
-Open the repository root, ensure `curl` and `jq` are installed, and run every
+From the repository root, ensure `curl` and `jq` are installed, and run every
 code block below in order in this same shell.
 
 Later commands use shell variables created by earlier commands, including
@@ -304,6 +324,25 @@ curl --fail-with-body --silent --show-error \
     "reference": "Initial funding"
   }' \
   "$BASE_URL/v1/accounts/$ACCOUNT_NUMBER/transactions" | jq
+```
+
+Reusing that key with a different request is rejected with HTTP `409` and
+`Idempotency key was reused for a different transaction`:
+
+```bash
+curl --silent --show-error \
+  --request POST \
+  --header "Authorization: Bearer $ACCESS_TOKEN" \
+  --header "Idempotency-Key: $DEPOSIT_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "amount": 101.00,
+    "currency": "GBP",
+    "type": "deposit",
+    "reference": "Conflicting replay"
+  }' \
+  --write-out '\nHTTP %{http_code}\n' \
+  "$BASE_URL/v1/accounts/$ACCOUNT_NUMBER/transactions"
 ```
 
 ### Withdraw money
@@ -506,17 +545,17 @@ A syntactically valid but unknown user ID returns HTTP `404` with
 ```bash
 show_response GET \
   --header "Authorization: Bearer $ACCESS_TOKEN" \
-  "$BASE_URL/v1/users/usr-missing"
+  "$BASE_URL/v1/users/usr-999999"
 
 show_response PATCH \
   --header "Authorization: Bearer $ACCESS_TOKEN" \
   --header "Content-Type: application/json" \
   --data '{"name":"Missing user"}' \
-  "$BASE_URL/v1/users/usr-missing"
+  "$BASE_URL/v1/users/usr-999999"
 
 show_response DELETE \
   --header "Authorization: Bearer $ACCESS_TOKEN" \
-  "$BASE_URL/v1/users/usr-missing"
+  "$BASE_URL/v1/users/usr-999999"
 ```
 
 #### User deletion conflict: HTTP 409
@@ -642,7 +681,7 @@ show_response GET \
 
 show_response GET \
   --header "Authorization: Bearer $ACCESS_TOKEN" \
-  "$BASE_URL/v1/accounts/$ACCOUNT_NUMBER/transactions/tan-missing"
+  "$BASE_URL/v1/accounts/$ACCOUNT_NUMBER/transactions/tan-999999"
 
 show_response GET \
   --header "Authorization: Bearer $ACCESS_TOKEN" \
@@ -693,8 +732,9 @@ curl --fail-with-body --silent --show-error \
   "$BASE_URL/v1/users/$OTHER_USER_ID"
 ```
 
-The same endpoint collection is available in IDE HTTP-client format at
-[`examples/requests.http`](examples/requests.http).
+The successful core flow and insufficient-funds example are also available in
+IDE HTTP-client format at [`examples/requests.http`](examples/requests.http).
+The README remains the complete cross-owner and missing-resource walkthrough.
 
 The manual walkthrough is now complete. Stop the local stack when finished:
 
@@ -703,7 +743,8 @@ docker compose down
 ```
 
 For a shorter automated verification, start the stack using
-[Quick Start](#quick-start) and run `./scripts/smoke-test.sh`. It verifies
+[Test Locally With Docker](#test-locally-with-docker) and run
+`./scripts/smoke-test.sh`. It verifies
 health, user creation/login, account creation, deposit, withdrawal,
 account/transaction reads, account closure, and user deletion.
 
@@ -715,7 +756,7 @@ balance limit `422`, and unavailable dependencies `503`.
 ## Architecture
 
 The public system design diagram is available on the
-[Eagle Bank Miro board](https://miro.com/app/board/uXjVHGNA2To=/?share_link_id=415580388985).
+[Eagle Bank Miro board](https://miro.com/app/board/uXjVHGNA2To=/?moveToWidget=3458764675429521615&cot=14).
 
 ```text
 Client
@@ -723,22 +764,27 @@ Client
   v
 API :3000 ---- signed 60s JWT ----> Auth service :3001
   |                                  |          |
-  |                                  |          +-> PostgreSQL users
-  |                                  +------------> DynamoDB Local sessions
+  |                                  |          +-> Shared application database
+  |                                  +------------> Auth session database
   |
   +----------- signed 60s JWT ----> Ledger service :3002
                                       |
-                                      +-> PostgreSQL Ledger + outbox
-                                                   |
-                                                   v
-                                      Ledger Event Publisher -> LocalStack SQS
+                                      +-> Shared application database
+                                                |
+                                                +-> Ledger + outbox
+                                                          |
+                                                          v
+                                                Ledger Event Publisher
+                                                          |
+                                                          v
+                                                    LocalStack SQS
 
 Ledger Worker -> SQS FIFO command queue (modeled, disabled locally)
 ```
 
 Runtime services are `api`, `auth-service`, `ledger-service`,
-`ledger-worker`, `ledger-event-publisher`, `postgres`, `postgres-test`,
-`dynamodb-local`, and `localstack`.
+`ledger-worker`, `ledger-event-publisher`, `shared-application-db`,
+`integration-test-db`, `auth-session-db`, and `localstack`.
 
 The public API service implements the OpenAPI contract but does not own the
 banking Ledger. Deposits, withdrawals, immutable transaction records,
@@ -748,9 +794,34 @@ The Ledger Event Publisher publishes committed Ledger events from the Ledger
 outbox table to the Ledger events queue. It is named after its business
 responsibility rather than the underlying outbox implementation pattern.
 
-These are separately deployed services using a shared PostgreSQL database as a
-take-home simplification. A stricter production design would split databases
-and coordinate through events and sagas.
+`shared-application-db` is PostgreSQL database `eagle_bank`, used by API, Auth,
+and Ledger as a take-home simplification. `integration-test-db` is the isolated
+PostgreSQL database `eagle_bank_test`. `auth-session-db` is an in-memory
+DynamoDB emulator containing the `eagle-bank-auth-sessions` table. In AWS it is
+replaced by the CDK-managed DynamoDB table.
+
+A stricter production design would give each service its own datastore and
+coordinate cross-service workflows through events and sagas.
+
+## Security
+
+- Passwords use explicitly configured Argon2id (`m=19456`, `t=2`, `p=1`) with
+  per-password salts. Unknown-user login performs a dummy Argon2 verification
+  to reduce email-enumeration timing differences.
+- User JWTs pin `HS256`, `typ=JWT`, issuer, and audience. Internal Auth and
+  Ledger tokens are audience-bound and expire after at most 60 seconds. Their
+  separate signing secrets are injected from SSM `SecureString` parameters.
+- Account and transaction endpoints require a live JWT-backed DynamoDB session
+  and enforce resource ownership. Ledger repeats ownership, currency, and
+  path/body integrity checks before changing a balance.
+- Activated public AWS services require TLS, use a TLS 1.3-capable ALB policy,
+  HSTS, defensive response headers, WAF managed protections, and dedicated
+  login/registration throttles.
+- RDS, DynamoDB, and SQS are encrypted at rest. RDS forces TLS and application
+  connections request SSL. The image runs as a non-root user; ECS tasks also
+  drop all Linux capabilities.
+- Logger redaction covers authorization headers, cookies, passwords, access
+  tokens, database URLs, and named application secrets.
 
 ## Service Ownership
 
@@ -773,12 +844,18 @@ Financial posts are not blindly retried; clients should supply
 
 ## Contract First
 
-`openapi.yaml` is executable, not documentation-only:
+[`openapi/v1/openapi.yaml`](openapi/v1/openapi.yaml) is the executable
+version 1 contract, not documentation-only:
 
 - every matched request is validated before route handling;
 - every matched response body and status is validated before sending;
 - contract-invalid requests return `400`;
 - an implementation response that violates the contract becomes `500`.
+
+The URI version is centralized as `v1` in the application. Contract tests
+verify that all public resource paths use `/v1`, protected operations declare
+bearer authentication, and every OpenAPI operation is registered by Fastify.
+Operational `/health` and `/ready` endpoints remain deliberately unversioned.
 
 Corrections to the supplied contract include login, bearer security, password
 input, health/readiness, `accountNumber` path naming, identifier regexes,
@@ -811,11 +888,25 @@ intentionally does not use the general error envelope.
 
 ## Data And Consistency
 
+Users and transactions use PostgreSQL `BIGINT` identity primary keys. Public
+OpenAPI identifiers are derived at the application boundary by rendering the
+numeric key in decimal and adding the required prefix:
+
+- user database ID `123` becomes `usr-123`;
+- transaction database ID `456` becomes `tan-456`.
+
+The conversion is centralized in small domain-owned formatter/parser functions
+rather than repeated in routes or services. No redundant public-ID columns or
+indexes are stored.
+`BankAccount.userId` is a nullable `BIGINT` foreign key to `User.id`; it becomes
+null only when a user is deleted after all their accounts have been closed.
+
 Money is PostgreSQL `DECIMAL(12,2)` and the only currency is GBP. A Ledger
 transaction:
 
 1. resolves the account by its unique account number;
-2. locks the Ledger account row with `SELECT ... FOR UPDATE`;
+2. runs at PostgreSQL serializable isolation and reserves the balance with a
+   versioned compare-and-swap update;
 3. enforces non-negative balance and the `10000.00` maximum;
 4. writes the immutable transaction and entry;
 5. updates the balance/version;
@@ -840,13 +931,14 @@ bookkeeping with independently balanced debit and credit accounts.
 The migration includes the query-driven indexes required by the system:
 
 - `users(email)` unique: normalized login and duplicate prevention.
+- user and transaction primary keys: direct detail lookup after decoding the
+  prefixed API identifier.
 - `bank_accounts(accountNumber)` unique: public lookup.
 - `bank_accounts(userId,status,createdAt)`: account lists and deletion checks.
 - `bank_accounts(status,updatedAt)`: reconciliation scans.
 - `ledger_accounts(accountId)` and `(accountNumber)` unique: ownership and
   public-to-internal resolution.
-- `ledger_transactions(ledgerAccountId,createdAt,id)`: stable account history.
-- `ledger_transactions(transactionId)` unique: detail lookup.
+- `ledger_transactions(accountId,createdAt,id)`: stable account history.
 - Ledger-entry foreign-key/history indexes.
 - idempotency unique key plus expiry index.
 - outbox due-event and lease-recovery indexes, including partial indexes.
@@ -878,7 +970,7 @@ Local PostgreSQL        -> Amazon RDS for PostgreSQL
 DynamoDB Local          -> Amazon DynamoDB
 LocalStack SQS          -> Amazon SQS
 Docker Compose services -> ECS Fargate services/tasks
-Docker env/secrets      -> Secrets Manager and ECS task configuration
+Docker env/secrets      -> SSM Parameter Store and ECS secret injection
 localhost routing       -> AWS WAF and Application Load Balancer
 local logs              -> CloudWatch Logs
 ```
@@ -891,39 +983,78 @@ task roles and native AWS service endpoints are used.
 
 The offline-synthesizable CDK stack models a two-AZ VPC, public ALB, private
 Fargate services, isolated RDS PostgreSQL, DynamoDB TTL, Ledger event and FIFO
-command queues with DLQs, Secrets Manager, CloudWatch logs, security groups,
+command queues with DLQs, SSM Parameter Store, CloudWatch logs, security groups,
 least-privilege task grants, a migration task, and WAF managed/rate rules.
 
 ALB routing is `/health` and `/ready` to API, `/v1/auth/*` to Auth, `/v1/*` to
 API, and fixed `404` otherwise. Ledger runtimes are private.
 
 ```bash
-pnpm infra:test
-pnpm infra:synth
+npm run infra:test
+npm run infra:synth
 ```
 
-Those commands require no AWS account. `pnpm infra:diff`,
-`pnpm infra:deploy`, `pnpm infra:destroy`, and `cdk bootstrap` are optional AWS
-operations and require configured credentials.
+Those commands require no AWS account. `npm run infra:diff`,
+`npm run infra:deploy`, `npm run infra:destroy`, and `npm exec -- cdk bootstrap` are
+optional AWS operations and require configured credentials.
 
-AWS deployment uses an explicit stage and a two-phase migration gate:
+Before the first deployment of a stage, create four `SecureString` parameters.
+The stack deliberately references existing parameters so secret values never
+enter source control, CDK context, or the generated CloudFormation template:
+
+```text
+/eagle-bank-<stage>/secrets/database-password
+/eagle-bank-<stage>/secrets/user-jwt
+/eagle-bank-<stage>/secrets/auth-service-jwt
+/eagle-bank-<stage>/secrets/ledger-service-jwt
+```
+
+For example, provision a value without placing it directly in shell history:
 
 ```bash
-DEPLOYMENT_STAGE=preprod ACTIVATE_SERVICES=false pnpm infra:deploy
-# Run the emitted migration task using the emitted cluster, private subnet,
-# and migration security-group outputs. Wait for exit code 0.
-DEPLOYMENT_STAGE=preprod ACTIVATE_SERVICES=true pnpm infra:deploy
+read -s SECRET_VALUE
+aws ssm put-parameter \
+  --name /eagle-bank-preprod/secrets/database-password \
+  --type SecureString \
+  --value "$SECRET_VALUE" \
+  --overwrite
+unset SECRET_VALUE
 ```
 
-`prod` additionally requires `ALB_CERTIFICATE_ARN`; synthesis rejects a
-production deployment without TLS. Stage configuration controls capacity,
-WAF rate limits, RDS protection and backups, log retention, and removal
-policy.
+Repeat that command for `user-jwt`, `auth-service-jwt`, and
+`ledger-service-jwt`, using different cryptographically random values of at
+least 32 characters. Audience-specific keys prevent one compromised service
+from authenticating to another service. ECS injects only the parameters needed
+by each task; AWS deployments do not use LocalStack endpoints or placeholder
+AWS credentials.
+
+Deployment then uses an explicit stage and a two-phase migration gate:
+
+```bash
+DEPLOYMENT_STAGE=preprod ACTIVATE_SERVICES=false npm run infra:deploy
+# Run the emitted migration task using the emitted cluster, private subnet,
+# and migration security-group outputs. Wait for exit code 0.
+DEPLOYMENT_STAGE=preprod ACTIVATE_SERVICES=true npm run infra:deploy
+```
+
+Both `preprod` and `prod` require `ALB_CERTIFICATE_ARN`; synthesis rejects
+either deployable environment without TLS. Stage configuration controls
+capacity, WAF rate limits, RDS protection and backups, log retention, and
+removal policy.
 
 ## Trade-offs
 
 - Shared PostgreSQL reduces reviewer setup but weakens physical service
   ownership; AWS production should split stores.
+- Private service HTTP is security-group isolated and signed, but not mTLS.
+  A real banking deployment should enable Service Connect TLS/mTLS with AWS
+  Private CA and certificate rotation.
+- JWTs use symmetric `HS256` secrets for assessment simplicity. A larger
+  deployment should prefer asymmetric signing, managed key rotation, and
+  verification through a published JWKS so verifiers do not hold signing keys.
+- Customer PII currently relies on RDS encryption at rest. Regulatory threat
+  models may also require application-level envelope encryption with KMS and
+  searchable tokenization for selected fields.
 - Account create/delete use explicit lifecycle states and reconciliation-ready
   metadata rather than pretending distributed calls are atomic.
 - Async Ledger commands are modeled but disabled to keep the public API
@@ -933,3 +1064,109 @@ policy.
 - Pagination, refresh-token endpoints, administrative session revocation, and
   a continuously scheduled account reconciler are logical next production
   additions.
+
+
+## System diagram high level description:
+
+Create a simple left-to-right system architecture diagram for Eagle Bank.
+
+Use two boundaries:
+
+PUBLIC
+- Client
+- AWS WAF
+- Application Load Balancer
+
+PRIVATE
+- API Service
+- Auth Service
+- Ledger Service
+- Ledger Event Publisher Service
+- Ledger Worker Service
+- Shared PostgreSQL Database
+- DynamoDB Auth Sessions
+- SQS Ledger Events Queue
+- SQS Ledger Commands Queue
+
+Arrange the main request flow horizontally:
+
+Client
+→ AWS WAF
+→ Application Load Balancer
+→ API Service
+→ Ledger Service
+
+Place Auth Service above API Service.
+
+Place the data store used by each service directly below that service:
+
+API Service
+↓
+Shared PostgreSQL Database
+Label: users and account metadata
+
+Auth Service
+↓
+Shared PostgreSQL Database
+Label: credentials
+
+Auth Service
+↓
+DynamoDB Auth Sessions
+Label: authentication sessions
+
+Ledger Service
+↓
+Shared PostgreSQL Database
+Label: balances, transactions and outbox records
+
+Draw service relationships:
+
+Application Load Balancer
+→ API Service
+Label: public banking API
+
+Application Load Balancer
+→ Auth Service
+Label: public login API
+
+API Service
+→ Auth Service
+Label: validate active session
+
+API Service
+→ Ledger Service
+Label: balances and transactions
+
+Show the event flow as a separate horizontal flow below the main request flow:
+
+Ledger Service
+→ Shared PostgreSQL Database
+Label: commit transaction and outbox event
+
+Ledger Event Publisher Service
+→ Shared PostgreSQL Database
+Label: poll unpublished outbox events
+
+Ledger Event Publisher Service
+→ SQS Ledger Events Queue
+Label: publish Ledger events
+
+The Ledger Event Publisher is a private background service that reads PostgreSQL and publishes to SQS. Do not draw PostgreSQL as calling the service.
+
+Show the optional command flow separately:
+
+SQS Ledger Commands Queue
+→ Ledger Worker Service
+Label: consume asynchronous commands
+
+Important rules:
+
+- Only WAF and Application Load Balancer are public infrastructure.
+- API and Auth are reachable only through the load balancer.
+- Ledger Service, Event Publisher Service, Worker Service, databases and queues are private.
+- Auth Service is the only service connected to DynamoDB.
+- Use one shared PostgreSQL box with labelled API, Auth and Ledger ownership sections.
+- Use direct arrows with labels.
+- Do not merge services with databases.
+- Do not add components or relationships not listed here.

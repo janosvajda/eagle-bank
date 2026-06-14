@@ -4,6 +4,7 @@ import { createTestApp } from '../helpers/app.js';
 import { authorization, tokenFor } from '../helpers/auth.js';
 import { resetDatabase, testPrisma } from '../helpers/database.js';
 import { createAccount, createUser } from '../helpers/factories.js';
+import { formatUserApiId } from '../../src/modules/users/user-id.js';
 
 describe('accounts', () => {
   let app: FastifyInstance;
@@ -18,7 +19,7 @@ describe('accounts', () => {
 
   it('creates an account and validates required fields', async () => {
     const user = await createUser();
-    const headers = authorization(tokenFor(app, user.id));
+    const headers = authorization(tokenFor(app, user.publicId));
     const response = await app.inject({
       method: 'POST',
       url: '/v1/accounts',
@@ -27,6 +28,12 @@ describe('accounts', () => {
     });
     expect(response.statusCode).toBe(201);
     expect(response.json().accountNumber).toMatch(/^01\d{6}$/);
+    const persisted = await testPrisma.bankAccount.findUniqueOrThrow({
+      where: { accountNumber: response.json().accountNumber as string },
+      include: { user: true },
+    });
+    expect(typeof persisted.userId).toBe('bigint');
+    expect(formatUserApiId(persisted.user!.id)).toBe(user.publicId);
     expect(
       (
         await app.inject({
@@ -45,13 +52,13 @@ describe('accounts', () => {
       email: 'other@example.com',
       phoneNumber: '+447700900002',
     });
-    await createAccount(own.id, '01111111');
-    await createAccount(other.id, '01222222');
+    await createAccount(own.publicId, '01111111');
+    await createAccount(other.publicId, '01222222');
 
     const response = await app.inject({
       method: 'GET',
       url: '/v1/accounts',
-      headers: authorization(tokenFor(app, own.id)),
+      headers: authorization(tokenFor(app, own.publicId)),
     });
     expect(response.statusCode).toBe(200);
     expect(response.json().accounts).toHaveLength(1);
@@ -64,9 +71,9 @@ describe('accounts', () => {
       email: 'other@example.com',
       phoneNumber: '+447700900002',
     });
-    await createAccount(own.id, '01111111');
-    await createAccount(other.id, '01222222');
-    const headers = authorization(tokenFor(app, own.id));
+    await createAccount(own.publicId, '01111111');
+    await createAccount(other.publicId, '01222222');
+    const headers = authorization(tokenFor(app, own.publicId));
 
     expect(
       (
@@ -132,9 +139,9 @@ describe('accounts', () => {
       email: 'other@example.com',
       phoneNumber: '+447700900002',
     });
-    await createAccount(own.id, '01111111');
-    await createAccount(other.id, '01222222');
-    const headers = authorization(tokenFor(app, own.id));
+    await createAccount(own.publicId, '01111111');
+    await createAccount(other.publicId, '01222222');
+    const headers = authorization(tokenFor(app, own.publicId));
 
     expect(
       (
@@ -154,14 +161,29 @@ describe('accounts', () => {
         })
       ).statusCode,
     ).toBe(404);
+    const deleted = await app.inject({
+      method: 'DELETE',
+      url: '/v1/accounts/01111111',
+      headers,
+    });
+    expect(deleted.statusCode).toBe(204);
     expect(
       (
         await app.inject({
-          method: 'DELETE',
+          method: 'GET',
           url: '/v1/accounts/01111111',
           headers,
         })
       ).statusCode,
-    ).toBe(204);
+    ).toBe(404);
+    expect(
+      (
+        await app.inject({
+          method: 'GET',
+          url: '/v1/accounts',
+          headers,
+        })
+      ).json().accounts,
+    ).toEqual([]);
   });
 });

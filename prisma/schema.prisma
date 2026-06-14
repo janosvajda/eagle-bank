@@ -1,5 +1,9 @@
 generator client {
-  provider = "prisma-client-js"
+  provider               = "prisma-client"
+  output                 = "../src/generated/prisma"
+  moduleFormat           = "esm"
+  generatedFileExtension = "ts"
+  importFileExtension    = "js"
 }
 
 datasource db {
@@ -53,7 +57,7 @@ enum OutboxStatus {
 }
 
 model User {
-  id           String        @id @db.VarChar(36)
+  id           BigInt        @id @default(autoincrement())
   name         String
   addressLine1 String
   addressLine2 String?
@@ -77,7 +81,7 @@ model BankAccount {
   accountType                 AccountType
   balance                     Decimal        @default(0) @db.Decimal(12, 2)
   currency                    String         @default("GBP")
-  userId                      String?        @db.VarChar(36)
+  userId                      BigInt?
   status                      AccountStatus  @default(PENDING_LEDGER_CREATION)
   deletedAt                   DateTime?
   reconciliationCorrelationId String?
@@ -92,12 +96,12 @@ model BankAccount {
 }
 
 model Transaction {
-  id        String          @id
+  id        BigInt          @id @default(autoincrement())
   amount    Decimal         @db.Decimal(12, 2)
   currency  String
   type      TransactionType
   reference String?
-  userId    String          @db.VarChar(36)
+  userId    BigInt
   accountId String          @db.Uuid
   account   BankAccount     @relation(fields: [accountId], references: [id], onDelete: Restrict)
   createdAt DateTime        @default(now())
@@ -109,7 +113,7 @@ model LedgerAccount {
   id               String              @id @default(uuid()) @db.Uuid
   accountId        String              @unique @db.Uuid
   accountNumber    String              @unique
-  userId           String              @db.VarChar(36)
+  userId           BigInt
   currency         String              @default("GBP")
   availableBalance Decimal             @default(0) @db.Decimal(12, 2)
   status           LedgerAccountStatus @default(ACTIVE)
@@ -122,12 +126,11 @@ model LedgerAccount {
 }
 
 model LedgerTransaction {
-  id              String             @id @default(uuid()) @db.Uuid
-  transactionId   String             @unique
+  id              BigInt             @id @default(autoincrement())
   ledgerAccountId String             @db.Uuid
   accountId       String             @db.Uuid
   accountNumber   String
-  userId          String             @db.VarChar(36)
+  userId          BigInt
   type            TransactionType
   amount          Decimal            @db.Decimal(12, 2)
   currency        String
@@ -144,7 +147,7 @@ model LedgerTransaction {
 
 model LedgerEntry {
   id                  String               @id @default(uuid()) @db.Uuid
-  ledgerTransactionId String               @db.Uuid
+  ledgerTransactionId BigInt
   ledgerAccountId     String               @db.Uuid
   accountId           String               @db.Uuid
   direction           LedgerEntryDirection
@@ -163,7 +166,7 @@ model LedgerEntry {
 model LedgerIdempotencyKey {
   id              String            @id @default(uuid()) @db.Uuid
   idempotencyKey  String
-  userId          String            @db.VarChar(36)
+  userId          BigInt
   accountNumber   String
   requestHash     String
   status          IdempotencyStatus @default(PROCESSING)

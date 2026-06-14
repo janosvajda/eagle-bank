@@ -1,5 +1,5 @@
 services:
-  postgres:
+  shared-application-db:
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: eagle
@@ -15,7 +15,7 @@ services:
       timeout: 3s
       retries: 20
 
-  postgres-test:
+  integration-test-db:
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: eagle
@@ -29,7 +29,19 @@ services:
       timeout: 3s
       retries: 20
 
-  dynamodb-local:
+  test-suite:
+    profiles: ['test']
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    environment:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://eagle:eagle@integration-test-db:5432/eagle_bank_test?schema=public
+    depends_on:
+      integration-test-db:
+        condition: service_healthy
+
+  auth-session-db:
     image: amazon/dynamodb-local:2.6.1
     command: -jar DynamoDBLocal.jar -sharedDb -inMemory
     ports:
@@ -54,14 +66,14 @@ services:
 
   migrate:
     build: .
-    command: ['pnpm', 'prisma', 'migrate', 'deploy']
+    command: ['node_modules/.bin/prisma', 'migrate', 'deploy']
     environment:
-      DATABASE_URL: postgresql://eagle:eagle@postgres:5432/eagle_bank?schema=public
+      DATABASE_URL: postgresql://eagle:eagle@shared-application-db:5432/eagle_bank?schema=public
     depends_on:
-      postgres:
+      shared-application-db:
         condition: service_healthy
 
-  dynamodb-init:
+  auth-session-db-init:
     image: amazon/aws-cli:2.27.22
     entrypoint: ['/bin/sh', '/init/init-dynamodb.sh']
     environment: &aws-local
@@ -73,7 +85,7 @@ services:
     volumes:
       - ./docker:/init:ro
     depends_on:
-      dynamodb-local:
+      auth-session-db:
         condition: service_started
 
   localstack-init:
@@ -91,21 +103,20 @@ services:
     command: ['node', 'dist/src/services/auth-server.js']
     environment:
       NODE_ENV: local
-      AUTH_SERVICE_PORT: 3001
       PORT: 3001
       SERVICE_NAME: auth-service
-      DATABASE_URL: postgresql://eagle:eagle@postgres:5432/eagle_bank?schema=public
+      DATABASE_URL: postgresql://eagle:eagle@shared-application-db:5432/eagle_bank?schema=public
       JWT_SECRET: local-user-jwt-secret-at-least-32-characters
       JWT_EXPIRES_IN: 1h
       AUTH_SESSION_TTL_SECONDS: 3600
-      INTERNAL_SERVICE_JWT_SECRET: local-internal-jwt-secret-at-least-32-characters
-      DYNAMODB_ENDPOINT: http://dynamodb-local:8000
+      AUTH_SERVICE_JWT_SECRET: local-auth-service-jwt-secret-at-least-32-characters
+      DYNAMODB_ENDPOINT: http://auth-session-db:8000
       DYNAMODB_AUTH_SESSIONS_TABLE: eagle-bank-auth-sessions
       <<: *aws-local
     depends_on:
       migrate:
         condition: service_completed_successfully
-      dynamodb-init:
+      auth-session-db-init:
         condition: service_completed_successfully
     healthcheck:
       test: ['CMD-SHELL', 'curl -fsS http://localhost:3001/ready']
@@ -116,14 +127,12 @@ services:
   ledger-service:
     build: .
     command: ['node', 'dist/src/services/ledger-server.js']
-    environment: &ledger-env
+    environment:
       NODE_ENV: local
       PORT: 3002
-      LEDGER_SERVICE_PORT: 3002
       SERVICE_NAME: ledger-service
-      DATABASE_URL: postgresql://eagle:eagle@postgres:5432/eagle_bank?schema=public
-      JWT_SECRET: local-user-jwt-secret-at-least-32-characters
-      INTERNAL_SERVICE_JWT_SECRET: local-internal-jwt-secret-at-least-32-characters
+      DATABASE_URL: postgresql://eagle:eagle@shared-application-db:5432/eagle_bank?schema=public
+      LEDGER_SERVICE_JWT_SECRET: local-ledger-service-jwt-secret-at-least-32-characters
       AWS_REGION: eu-west-2
     depends_on:
       migrate:
@@ -140,10 +149,11 @@ services:
       NODE_ENV: local
       PORT: 3000
       SERVICE_NAME: api
-      DATABASE_URL: postgresql://eagle:eagle@postgres:5432/eagle_bank?schema=public
+      DATABASE_URL: postgresql://eagle:eagle@shared-application-db:5432/eagle_bank?schema=public
       JWT_SECRET: local-user-jwt-secret-at-least-32-characters
       JWT_EXPIRES_IN: 1h
-      INTERNAL_SERVICE_JWT_SECRET: local-internal-jwt-secret-at-least-32-characters
+      AUTH_SERVICE_JWT_SECRET: local-auth-service-jwt-secret-at-least-32-characters
+      LEDGER_SERVICE_JWT_SECRET: local-ledger-service-jwt-secret-at-least-32-characters
       AUTH_SERVICE_BASE_URL: http://auth-service:3001
       LEDGER_SERVICE_BASE_URL: http://ledger-service:3002
       AWS_REGION: eu-west-2
@@ -164,7 +174,10 @@ services:
     build: .
     command: ['node', 'dist/src/services/ledger-event-publisher.js']
     environment:
-      <<: [*ledger-env, *aws-local]
+      <<: *aws-local
+      NODE_ENV: local
+      SERVICE_NAME: ledger-event-publisher
+      DATABASE_URL: postgresql://eagle:eagle@shared-application-db:5432/eagle_bank?schema=public
       SQS_ENDPOINT: http://localstack:4566
       SQS_LEDGER_EVENTS_QUEUE_URL: http://localstack:4566/000000000000/eagle-bank-ledger-events
       LEDGER_EVENT_PUBLISHER_POLL_INTERVAL_MS: 1000
@@ -183,9 +196,9 @@ services:
     build: .
     command: ['node', 'dist/src/services/ledger-worker.js']
     environment:
-      <<: [*ledger-env, *aws-local]
+      NODE_ENV: local
+      SERVICE_NAME: ledger-worker
       LEDGER_ASYNC_COMMANDS_ENABLED: 'false'
-      SQS_ENDPOINT: http://localstack:4566
     depends_on:
       localstack-init:
         condition: service_completed_successfully

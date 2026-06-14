@@ -1,5 +1,5 @@
-import { PrismaClient } from '@prisma/client';
-import argon2 from 'argon2';
+import { PrismaClient } from '../src/generated/prisma/client.js';
+import { hashPassword } from '../src/common/password/password.js';
 
 const prisma = new PrismaClient();
 
@@ -8,7 +8,6 @@ try {
     where: { email: 'demo@eaglebank.test' },
     update: {},
     create: {
-      id: 'usr-demo',
       name: 'Demo User',
       addressLine1: '1 Eagle Street',
       town: 'London',
@@ -16,7 +15,7 @@ try {
       postcode: 'SW1A 1AA',
       phoneNumber: '+447700900001',
       email: 'demo@eaglebank.test',
-      passwordHash: await argon2.hash('DemoPassword123!'),
+      passwordHash: await hashPassword('DemoPassword123!'),
     },
   });
 } finally {

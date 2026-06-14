@@ -1,15 +1,16 @@
-import { loadConfig } from '../config/env.js';
+import { loadLedgerServiceConfig } from '../config/env.js';
 import { prisma } from '../db/prisma.js';
 import { buildLedgerApp } from './ledger-app.js';
 
-const config = loadConfig();
+const config = loadLedgerServiceConfig();
 const app = await buildLedgerApp({
   prisma,
-  internalSecret: process.env.INTERNAL_SERVICE_JWT_SECRET ?? config.JWT_SECRET,
+  internalSecret: config.LEDGER_SERVICE_JWT_SECRET,
+  environment: config.NODE_ENV,
   logger: true,
 });
 
 await app.listen({
   host: '0.0.0.0',
-  port: Number(process.env.LEDGER_SERVICE_PORT ?? config.PORT),
+  port: config.PORT,
 });

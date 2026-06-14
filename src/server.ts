@@ -1,8 +1,8 @@
 import { buildApp } from './app.js';
-import { loadConfig } from './config/env.js';
+import { loadApiConfig } from './config/env.js';
 import { prisma } from './db/prisma.js';
 
-const config = loadConfig();
+const config = loadApiConfig();
 const app = await buildApp({ prisma, config, logger: true });
 
 const shutdown = async (): Promise<void> => {

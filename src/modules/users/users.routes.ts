@@ -1,5 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { constants as httpConstants } from 'node:http2';
+import { PUBLIC_API_PREFIX } from '../../common/http/api-version.js';
 import { authenticate } from '../../common/middleware/authenticate.js';
 import type { UsersService } from './users.service.js';
 import {
@@ -10,14 +11,14 @@ import {
 
 export function usersRoutes(service: UsersService): FastifyPluginAsync {
   return async (app) => {
-    app.post('/v1/users', async (request, reply) => {
+    app.post(`${PUBLIC_API_PREFIX}/users`, async (request, reply) => {
       const result = await service.create(createUserSchema.parse(request.body));
       request.log.info({ userId: result.id }, 'User created');
       return reply.status(httpConstants.HTTP_STATUS_CREATED).send(result);
     });
 
     app.get(
-      '/v1/users/:userId',
+      `${PUBLIC_API_PREFIX}/users/:userId`,
       { preHandler: authenticate },
       async (request) => {
         const { userId } = userParamsSchema.parse(request.params);
@@ -26,7 +27,7 @@ export function usersRoutes(service: UsersService): FastifyPluginAsync {
     );
 
     app.patch(
-      '/v1/users/:userId',
+      `${PUBLIC_API_PREFIX}/users/:userId`,
       { preHandler: authenticate },
       async (request) => {
         const { userId } = userParamsSchema.parse(request.params);
@@ -41,7 +42,7 @@ export function usersRoutes(service: UsersService): FastifyPluginAsync {
     );
 
     app.delete(
-      '/v1/users/:userId',
+      `${PUBLIC_API_PREFIX}/users/:userId`,
       { preHandler: authenticate },
       async (request, reply) => {
         const { userId } = userParamsSchema.parse(request.params);

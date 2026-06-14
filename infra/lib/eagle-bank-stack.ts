@@ -1,6 +1,7 @@
 import {
   CfnOutput,
   Duration,
+  SecretValue,
   Stack,
   type StackProps,
   aws_certificatemanager as acm,
@@ -11,7 +12,7 @@ import {
   aws_elasticloadbalancingv2 as elbv2,
   aws_logs as logs,
   aws_rds as rds,
-  aws_secretsmanager as secretsmanager,
+  aws_ssm as ssm,
   aws_sqs as sqs,
   aws_wafv2 as wafv2,
 } from 'aws-cdk-lib';
@@ -21,6 +22,7 @@ import {
   DeploymentStage,
   type DeploymentStage as DeploymentStageType,
 } from './deployment-config.js';
+import { PUBLIC_API_PREFIX } from '../../src/common/http/api-version.js';
 
 const DATABASE_NAME = 'eagle_bank';
 const DATABASE_USERNAME = 'eagle';
@@ -70,7 +72,9 @@ const WAF_COMMON_RULE_PRIORITY = 1;
 const WAF_KNOWN_BAD_INPUTS_RULE_PRIORITY = 2;
 const WAF_SQLI_RULE_PRIORITY = 3;
 const WAF_IP_REPUTATION_RULE_PRIORITY = 4;
-const WAF_RATE_LIMIT_RULE_PRIORITY = 5;
+const WAF_LOGIN_RATE_LIMIT_RULE_PRIORITY = 5;
+const WAF_REGISTRATION_RATE_LIMIT_RULE_PRIORITY = 6;
+const WAF_RATE_LIMIT_RULE_PRIORITY = 7;
 const PINO_ERROR_LEVEL = 50;
 const DASHBOARD_METRIC_PERIOD_MINUTES = 5;
 const DASHBOARD_WIDTH = 24;
@@ -86,7 +90,7 @@ interface RuntimeDefinition {
 
 interface TaskOptions {
   environment?: Record<string, string>;
-  includeApplicationSecrets?: boolean;
+  applicationSecrets?: Record<string, ecs.Secret>;
   includeDatabase?: boolean;
 }
 
@@ -101,8 +105,12 @@ export class EagleBankStack extends Stack {
     super(scope, id, props);
 
     const config = deploymentConfig(props.stage);
-    if (config.stage === DeploymentStage.PROD && !props.certificateArn) {
-      throw new Error('certificateArn is required for the prod stage');
+    const tlsRequired =
+      config.stage !== DeploymentStage.TEST || props.activateServices;
+    if (tlsRequired && !props.certificateArn) {
+      throw new Error(
+        `certificateArn is required for active ${config.stage} services`,
+      );
     }
 
     // Public subnets contain only the ALB/NAT gateways. Application tasks use
@@ -138,23 +146,63 @@ export class EagleBankStack extends Stack {
       },
     });
 
-    // ECS receives secret values at task startup. No secret value is embedded
-    // in the synthesized CloudFormation template.
-    const databaseSecret = new rds.DatabaseSecret(this, 'DatabaseSecret', {
-      secretName: `${config.resourcePrefix}/database`,
-      username: DATABASE_USERNAME,
-    });
-    const jwtSecret = new secretsmanager.Secret(this, 'JwtSecret', {
-      secretName: `${config.resourcePrefix}/jwt`,
-    });
-    const internalJwtSecret = new secretsmanager.Secret(
-      this,
-      'InternalJwtSecret',
-      { secretName: `${config.resourcePrefix}/internal-jwt` },
+    // SecureString parameters are provisioned before deployment. CDK references
+    // their paths, while ECS resolves values directly into container secrets.
+    const parameterPrefix = `/${config.resourcePrefix}/secrets`;
+    const databasePasswordParameterName = `${parameterPrefix}/database-password`;
+    const userJwtParameterName = `${parameterPrefix}/user-jwt`;
+    const authServiceJwtParameterName = `${parameterPrefix}/auth-service-jwt`;
+    const ledgerServiceJwtParameterName = `${parameterPrefix}/ledger-service-jwt`;
+    const databasePasswordParameter =
+      ssm.StringParameter.fromSecureStringParameterAttributes(
+        this,
+        'DatabasePasswordParameter',
+        { parameterName: databasePasswordParameterName },
+      );
+    const userJwtParameter =
+      ssm.StringParameter.fromSecureStringParameterAttributes(
+        this,
+        'UserJwtParameter',
+        { parameterName: userJwtParameterName },
+      );
+    const authServiceJwtParameter =
+      ssm.StringParameter.fromSecureStringParameterAttributes(
+        this,
+        'AuthServiceJwtParameter',
+        { parameterName: authServiceJwtParameterName },
+      );
+    const ledgerServiceJwtParameter =
+      ssm.StringParameter.fromSecureStringParameterAttributes(
+        this,
+        'LedgerServiceJwtParameter',
+        { parameterName: ledgerServiceJwtParameterName },
+      );
+    const databaseCredentials = rds.Credentials.fromPassword(
+      DATABASE_USERNAME,
+      SecretValue.ssmSecure(databasePasswordParameterName),
     );
-    databaseSecret.applyRemovalPolicy(config.removalPolicy);
-    jwtSecret.applyRemovalPolicy(config.removalPolicy);
-    internalJwtSecret.applyRemovalPolicy(config.removalPolicy);
+    const databaseSecrets = {
+      DATABASE_PASSWORD: ecs.Secret.fromSsmParameter(databasePasswordParameter),
+    };
+    const userJwtSecret = ecs.Secret.fromSsmParameter(userJwtParameter);
+    const authServiceJwtSecret = ecs.Secret.fromSsmParameter(
+      authServiceJwtParameter,
+    );
+    const ledgerServiceJwtSecret = ecs.Secret.fromSsmParameter(
+      ledgerServiceJwtParameter,
+    );
+    const apiSecrets = {
+      JWT_SECRET: userJwtSecret,
+      AUTH_SERVICE_JWT_SECRET: authServiceJwtSecret,
+      LEDGER_SERVICE_JWT_SECRET: ledgerServiceJwtSecret,
+    };
+    const authSecrets = {
+      JWT_SECRET: userJwtSecret,
+      AUTH_SERVICE_JWT_SECRET: authServiceJwtSecret,
+    };
+    const ledgerSecrets = {
+      LEDGER_SERVICE_JWT_SECRET: ledgerServiceJwtSecret,
+    };
 
     const databaseSecurityGroup = new ec2.SecurityGroup(
       this,
@@ -203,6 +251,18 @@ export class EagleBankStack extends Stack {
 
     // RDS is the durable source for users, accounts, ledger records, and outbox
     // events. Stage configuration controls availability and deletion safeguards.
+    const databaseParameterGroup = new rds.ParameterGroup(
+      this,
+      'DatabaseParameterGroup',
+      {
+        engine: rds.DatabaseInstanceEngine.postgres({
+          version: rds.PostgresEngineVersion.VER_16,
+        }),
+        parameters: {
+          'rds.force_ssl': '1',
+        },
+      },
+    );
     const database = new rds.DatabaseInstance(this, 'Database', {
       databaseName: DATABASE_NAME,
       vpc,
@@ -211,7 +271,8 @@ export class EagleBankStack extends Stack {
       engine: rds.DatabaseInstanceEngine.postgres({
         version: rds.PostgresEngineVersion.VER_16,
       }),
-      credentials: rds.Credentials.fromSecret(databaseSecret),
+      parameterGroup: databaseParameterGroup,
+      credentials: databaseCredentials,
       instanceType: config.databaseInstanceType,
       allocatedStorage: config.databaseAllocatedStorageGiB,
       maxAllocatedStorage: config.databaseMaxAllocatedStorageGiB,
@@ -289,27 +350,13 @@ export class EagleBankStack extends Stack {
       DATABASE_HOST: database.dbInstanceEndpointAddress,
       DATABASE_PORT: database.dbInstanceEndpointPort,
       DATABASE_NAME,
+      DATABASE_USERNAME,
       DYNAMODB_AUTH_SESSIONS_TABLE: sessions.tableName,
       SQS_LEDGER_EVENTS_QUEUE_URL: events.queueUrl,
       SQS_LEDGER_EVENTS_DLQ_URL: eventsDlq.queueUrl,
       SQS_LEDGER_COMMANDS_QUEUE_URL: commands.queueUrl,
       SQS_LEDGER_COMMANDS_DLQ_URL: commandsDlq.queueUrl,
       LEDGER_ASYNC_COMMANDS_ENABLED: 'false',
-    };
-    const databaseSecrets = {
-      DATABASE_USERNAME: ecs.Secret.fromSecretsManager(
-        databaseSecret,
-        'username',
-      ),
-      DATABASE_PASSWORD: ecs.Secret.fromSecretsManager(
-        databaseSecret,
-        'password',
-      ),
-    };
-    const applicationSecrets = {
-      JWT_SECRET: ecs.Secret.fromSecretsManager(jwtSecret),
-      INTERNAL_SERVICE_JWT_SECRET:
-        ecs.Secret.fromSecretsManager(internalJwtSecret),
     };
     const image = ecs.ContainerImage.fromAsset('.');
 
@@ -319,8 +366,6 @@ export class EagleBankStack extends Stack {
       definition: RuntimeDefinition,
       options: TaskOptions = {},
     ) => {
-      const includeApplicationSecrets =
-        options.includeApplicationSecrets ?? true;
       const includeDatabase = options.includeDatabase ?? true;
       const task = new ecs.FargateTaskDefinition(this, `${definition.id}Task`, {
         cpu: config.serviceCpu,
@@ -331,6 +376,12 @@ export class EagleBankStack extends Stack {
         retention: config.logRetention,
         removalPolicy: config.removalPolicy,
       });
+      const linuxParameters = new ecs.LinuxParameters(
+        this,
+        `${definition.id}LinuxParameters`,
+        { initProcessEnabled: true },
+      );
+      linuxParameters.dropCapabilities(ecs.Capability.ALL);
       const container = task.addContainer(definition.serviceName, {
         image,
         command: includeDatabase
@@ -341,13 +392,15 @@ export class EagleBankStack extends Stack {
           logGroup,
           streamPrefix: definition.serviceName,
         }),
+        linuxParameters,
+        user: '1000:1000',
         environment: {
           ...commonEnvironment,
           SERVICE_NAME: definition.serviceName,
           ...options.environment,
         },
         secrets: {
-          ...(includeApplicationSecrets ? applicationSecrets : {}),
+          ...options.applicationSecrets,
           ...(includeDatabase ? databaseSecrets : {}),
         },
       });
@@ -375,6 +428,7 @@ export class EagleBankStack extends Stack {
           AUTH_SERVICE_BASE_URL: `http://${AUTH_SERVICE_DNS_NAME}:${AUTH_PORT}`,
           LEDGER_SERVICE_BASE_URL: `http://${LEDGER_SERVICE_DNS_NAME}:${LEDGER_PORT}`,
         },
+        applicationSecrets: apiSecrets,
       },
     );
     const authTask = makeTask(
@@ -387,10 +441,10 @@ export class EagleBankStack extends Stack {
       {
         environment: {
           PORT: String(AUTH_PORT),
-          AUTH_SERVICE_PORT: String(AUTH_PORT),
           JWT_EXPIRES_IN: DEFAULT_JWT_EXPIRY,
           AUTH_SESSION_TTL_SECONDS,
         },
+        applicationSecrets: authSecrets,
       },
     );
     const ledgerTask = makeTask(
@@ -403,8 +457,8 @@ export class EagleBankStack extends Stack {
       {
         environment: {
           PORT: String(LEDGER_PORT),
-          LEDGER_SERVICE_PORT: String(LEDGER_PORT),
         },
+        applicationSecrets: ledgerSecrets,
       },
     );
     const workerTask = makeTask(
@@ -414,7 +468,6 @@ export class EagleBankStack extends Stack {
         command: ['node', 'dist/src/services/ledger-worker.js'],
       },
       {
-        includeApplicationSecrets: false,
         includeDatabase: false,
       },
     );
@@ -423,14 +476,11 @@ export class EagleBankStack extends Stack {
       serviceName: 'ledger-event-publisher',
       command: ['node', 'dist/src/services/ledger-event-publisher.js'],
     });
-    const migrationTask = makeTask(
-      {
-        id: 'Migration',
-        serviceName: 'migration',
-        command: ['pnpm', 'prisma', 'migrate', 'deploy'],
-      },
-      { includeApplicationSecrets: false },
-    );
+    const migrationTask = makeTask({
+      id: 'Migration',
+      serviceName: 'migration',
+      command: ['node_modules/.bin/prisma', 'migrate', 'deploy'],
+    });
 
     const runtimeTasks = [
       apiTask,
@@ -603,8 +653,8 @@ export class EagleBankStack extends Stack {
       deletionProtection: config.databaseDeletionProtection,
     });
 
-    // Test/preprod may synthesize plain HTTP for offline review. Production is
-    // rejected without an ACM certificate and redirects HTTP to HTTPS.
+    // Test may synthesize plain HTTP for offline review. Every deployable
+    // environment requires an ACM certificate and redirects HTTP to HTTPS.
     const certificate = props.certificateArn
       ? acm.Certificate.fromCertificateArn(
           this,
@@ -639,7 +689,11 @@ export class EagleBankStack extends Stack {
     listener.addTargets('ApiRoutes', {
       priority: API_ROUTE_PRIORITY,
       conditions: [
-        elbv2.ListenerCondition.pathPatterns(['/health', '/ready', '/v1/*']),
+        elbv2.ListenerCondition.pathPatterns([
+          '/health',
+          '/ready',
+          `${PUBLIC_API_PREFIX}/*`,
+        ]),
       ],
       port: API_PORT,
       protocol: elbv2.ApplicationProtocol.HTTP,
@@ -648,7 +702,9 @@ export class EagleBankStack extends Stack {
     });
     listener.addTargets('AuthRoutes', {
       priority: AUTH_ROUTE_PRIORITY,
-      conditions: [elbv2.ListenerCondition.pathPatterns(['/v1/auth/*'])],
+      conditions: [
+        elbv2.ListenerCondition.pathPatterns([`${PUBLIC_API_PREFIX}/auth/*`]),
+      ],
       port: AUTH_PORT,
       protocol: elbv2.ApplicationProtocol.HTTP,
       targets: [auth],
@@ -682,6 +738,18 @@ export class EagleBankStack extends Stack {
           'aws-managed-ip-reputation',
           WAF_IP_REPUTATION_RULE_PRIORITY,
           'AWSManagedRulesAmazonIpReputationList',
+        ),
+        this.pathRateLimitRule(
+          'login-rate-limit',
+          WAF_LOGIN_RATE_LIMIT_RULE_PRIORITY,
+          config.wafLoginRateLimit,
+          `${PUBLIC_API_PREFIX}/auth/login`,
+        ),
+        this.pathRateLimitRule(
+          'registration-rate-limit',
+          WAF_REGISTRATION_RATE_LIMIT_RULE_PRIORITY,
+          config.wafRegistrationRateLimit,
+          `${PUBLIC_API_PREFIX}/users`,
         ),
         {
           name: 'rate-limit',
@@ -727,6 +795,18 @@ export class EagleBankStack extends Stack {
     new CfnOutput(this, 'OperationsDashboardName', {
       value: dashboard.dashboardName,
     });
+    new CfnOutput(this, 'DatabasePasswordParameterName', {
+      value: databasePasswordParameterName,
+    });
+    new CfnOutput(this, 'UserJwtParameterName', {
+      value: userJwtParameterName,
+    });
+    new CfnOutput(this, 'AuthServiceJwtParameterName', {
+      value: authServiceJwtParameterName,
+    });
+    new CfnOutput(this, 'LedgerServiceJwtParameterName', {
+      value: ledgerServiceJwtParameterName,
+    });
   }
 
   private serviceSecurityGroup(vpc: ec2.IVpc, id: string): ec2.SecurityGroup {
@@ -749,7 +829,8 @@ export class EagleBankStack extends Stack {
     const executable = command.map((part) => JSON.stringify(part)).join(' ');
     const databaseUrl =
       'postgresql://${DATABASE_USERNAME}:${DATABASE_PASSWORD}' +
-      '@${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}?schema=public';
+      '@${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}' +
+      '?schema=public&sslmode=require';
 
     // Prisma requires one DATABASE_URL. The username/password arrive as ECS
     // secrets, so the shell assembles the URL only inside the running container.
@@ -781,6 +862,34 @@ export class EagleBankStack extends Stack {
         managedRuleGroupStatement: {
           vendorName: 'AWS',
           name: managedRuleName,
+        },
+      },
+      visibilityConfig: this.wafVisibility(name),
+    };
+  }
+
+  private pathRateLimitRule(
+    name: string,
+    priority: number,
+    limit: number,
+    path: string,
+  ): wafv2.CfnWebACL.RuleProperty {
+    return {
+      name,
+      priority,
+      action: { block: {} },
+      statement: {
+        rateBasedStatement: {
+          aggregateKeyType: 'IP',
+          limit,
+          scopeDownStatement: {
+            byteMatchStatement: {
+              fieldToMatch: { uriPath: {} },
+              positionalConstraint: 'EXACTLY',
+              searchString: path,
+              textTransformations: [{ priority: 0, type: 'NONE' }],
+            },
+          },
         },
       },
       visibilityConfig: this.wafVisibility(name),

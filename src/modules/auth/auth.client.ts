@@ -26,6 +26,7 @@ import {
 import type { FastifyBaseLogger } from 'fastify';
 import pino from 'pino';
 import type { JsonValue } from '../../common/http/json.types.js';
+import { PUBLIC_API_PREFIX } from '../../common/http/api-version.js';
 
 const AUTH_INTROSPECTION_TIMEOUT_MS = 300;
 const AUTH_REQUEST_TIMEOUT_MS = 1000;
@@ -48,7 +49,7 @@ export class AuthHttpClient implements PasswordHasher {
 
   login(input: LoginInput): Promise<LoginResult> {
     return this.request(
-      '/v1/auth/login',
+      `${PUBLIC_API_PREFIX}/auth/login`,
       {
         method: HttpMethod.POST,
         body: JSON.stringify(input),

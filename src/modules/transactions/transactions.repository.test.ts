@@ -16,9 +16,9 @@ describe('TransactionsRepository', () => {
       where: { accountId: 'account-id' },
       orderBy: { createdAt: 'asc' },
     });
-    await repository.findByIdAndAccount('tan-1', 'account-id');
+    await repository.findByIdAndAccount(1n, 'account-id');
     expect(db.transaction.findFirst).toHaveBeenCalledWith({
-      where: { id: 'tan-1', accountId: 'account-id' },
+      where: { id: 1n, accountId: 'account-id' },
     });
   });
 });

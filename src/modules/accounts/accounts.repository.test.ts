@@ -1,5 +1,13 @@
+import type { Prisma } from '../../generated/prisma/client.js';
 import { describe, expect, it, vi } from 'vitest';
 import { AccountsRepository } from './accounts.repository.js';
+
+// This assignment is intentionally compile-time checked. It prevents a stale
+// Prisma client with the former string user ID from passing CI unnoticed.
+const bigintUserId = 1n;
+const bigintUserIdentifier: Prisma.UserWhereUniqueInput = {
+  id: bigintUserId,
+};
 
 describe('AccountsRepository', () => {
   it('delegates account persistence operations to Prisma', async () => {
@@ -13,19 +21,29 @@ describe('AccountsRepository', () => {
       },
     };
     const repository = new AccountsRepository(db as never);
-    const createData = { accountNumber: '01234567' } as never;
+    const createData = { accountNumber: '01234567' };
     const updateData = { name: 'Updated' };
 
-    await repository.create(createData);
-    expect(db.bankAccount.create).toHaveBeenCalledWith({ data: createData });
-    await repository.listByUser('usr-1');
+    expect(bigintUserIdentifier.id).toBe(bigintUserId);
+    await repository.create(bigintUserId, createData as never);
+    expect(db.bankAccount.create).toHaveBeenCalledWith({
+      data: {
+        ...createData,
+        user: { connect: { id: 1n } },
+      },
+    });
+    await repository.listByUser(1n);
     expect(db.bankAccount.findMany).toHaveBeenCalledWith({
-      where: { userId: 'usr-1', status: 'ACTIVE' },
+      where: {
+        userId: 1n,
+        status: 'ACTIVE',
+      },
       orderBy: { createdAt: 'asc' },
     });
     await repository.findByNumber('01234567');
     expect(db.bankAccount.findUnique).toHaveBeenCalledWith({
       where: { accountNumber: '01234567' },
+      include: { user: { select: { id: true } } },
     });
     await repository.update('01234567', updateData);
     expect(db.bankAccount.update).toHaveBeenCalledWith({

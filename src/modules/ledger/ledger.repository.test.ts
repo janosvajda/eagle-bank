@@ -1,4 +1,4 @@
-import { Prisma } from '@prisma/client';
+import { Prisma } from '../../generated/prisma/client.js';
 import { describe, expect, it, vi } from 'vitest';
 import type { LedgerTransactionResponse } from './ledger.contracts.js';
 import { LedgerRepository } from './ledger.repository.js';
@@ -7,7 +7,7 @@ const account = {
   id: '00000000-0000-4000-8000-000000000001',
   accountId: '00000000-0000-4000-8000-000000000002',
   accountNumber: '01234567',
-  userId: 'usr-owner',
+  userId: 1n,
   currency: 'GBP',
   availableBalance: new Prisma.Decimal('10.00'),
   status: 'ACTIVE',
@@ -27,7 +27,7 @@ function setup(updateCount = 1) {
       update: vi.fn().mockResolvedValue({}),
     },
     ledgerTransaction: {
-      create: vi.fn().mockResolvedValue({ transactionId: 'tan-1' }),
+      create: vi.fn().mockResolvedValue({ id: 1n }),
     },
     ledgerEntry: { create: vi.fn().mockResolvedValue({}) },
     ledgerOutboxEvent: { create: vi.fn().mockResolvedValue({}) },
@@ -88,7 +88,7 @@ describe('LedgerRepository', () => {
       'request-key',
     );
     await repository.listTransactions(account.accountId);
-    await repository.findTransaction('tan-1');
+    await repository.findTransaction(1n);
 
     expect(database.ledgerAccount.findMany).toHaveBeenCalledOnce();
     expect(database.ledgerIdempotencyKey.findUnique).toHaveBeenCalledOnce();
@@ -107,7 +107,7 @@ describe('LedgerRepository', () => {
         amount: 1,
         currency: 'GBP',
         type: 'deposit',
-        userId: account.userId,
+        userId: 'usr-1',
         createdTimestamp: '2026-01-01T00:00:00.000Z',
       };
 
@@ -124,7 +124,6 @@ describe('LedgerRepository', () => {
           expiresAt: new Date('2026-01-02T00:00:00.000Z'),
         });
         const created = await unitOfWork.createTransaction({
-          transactionId: 'tan-1',
           ledgerAccountId: account.id,
           accountId: account.accountId,
           accountNumber: account.accountNumber,
@@ -134,7 +133,7 @@ describe('LedgerRepository', () => {
           currency: 'GBP',
         });
         await unitOfWork.createEntry({
-          ledgerTransactionId: '00000000-0000-4000-8000-000000000003',
+          ledgerTransactionId: 1n,
           ledgerAccountId: account.id,
           accountId: account.accountId,
           direction: 'CREDIT',
@@ -154,7 +153,7 @@ describe('LedgerRepository', () => {
           'request-key',
           response,
         );
-        return { ...response, id: created.transactionId };
+        return { ...response, id: `tan-${created.id.toString()}` };
       });
 
       expect(database.$transaction).toHaveBeenCalledWith(expect.any(Function), {

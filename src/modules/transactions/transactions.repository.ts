@@ -1,4 +1,4 @@
-import { Prisma, type PrismaClient } from '@prisma/client';
+import { Prisma, type PrismaClient } from '../../generated/prisma/client.js';
 
 export class TransactionsRepository {
   constructor(readonly db: PrismaClient) {}
@@ -10,7 +10,7 @@ export class TransactionsRepository {
     });
   }
 
-  findByIdAndAccount(transactionId: string, accountId: string) {
+  findByIdAndAccount(transactionId: bigint, accountId: string) {
     return this.db.transaction.findFirst({
       where: { id: transactionId, accountId },
     });

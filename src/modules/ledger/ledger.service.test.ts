@@ -2,7 +2,7 @@ import {
   Prisma,
   type LedgerAccount,
   type LedgerTransaction,
-} from '@prisma/client';
+} from '../../generated/prisma/client.js';
 import { describe, expect, it, vi } from 'vitest';
 import type { PostLedgerTransactionCommand } from './ledger.contracts.js';
 import { LedgerRepository } from './ledger.repository.js';
@@ -15,7 +15,7 @@ function account(overrides: Partial<LedgerAccount> = {}): LedgerAccount {
     id: '00000000-0000-4000-8000-000000000001',
     accountId: '00000000-0000-4000-8000-000000000002',
     accountNumber: '01234567',
-    userId: 'usr-1',
+    userId: 1n,
     currency: 'GBP',
     availableBalance: new Prisma.Decimal('100.00'),
     status: 'ACTIVE',
@@ -30,12 +30,11 @@ function transaction(
   overrides: Partial<LedgerTransaction> = {},
 ): LedgerTransaction {
   return {
-    id: '00000000-0000-4000-8000-000000000003',
-    transactionId: 'tan-12345678901234567890123456789012',
+    id: 3n,
     ledgerAccountId: account().id,
     accountId: account().accountId,
     accountNumber: account().accountNumber,
-    userId: 'usr-1',
+    userId: 1n,
     type: 'deposit',
     amount: new Prisma.Decimal('25.50'),
     currency: 'GBP',
@@ -116,6 +115,19 @@ function database(
 }
 
 describe('LedgerService account lifecycle', () => {
+  it('rejects account creation with an invalid user API ID', async () => {
+    const { service } = database({ foundAccount: null });
+
+    await expect(
+      service.createAccount({
+        accountId: account().accountId,
+        accountNumber: account().accountNumber,
+        userId: 'usr-invalid',
+        currency: 'GBP',
+      }),
+    ).rejects.toMatchObject({ statusCode: 404 });
+  });
+
   it('creates a new ledger account', async () => {
     const { db, service } = database({ foundAccount: null });
     const input = {
@@ -125,7 +137,9 @@ describe('LedgerService account lifecycle', () => {
       currency: 'GBP' as const,
     };
     await service.createAccount(input);
-    expect(db.ledgerAccount.create).toHaveBeenCalledWith({ data: input });
+    expect(db.ledgerAccount.create).toHaveBeenCalledWith({
+      data: { ...input, userId: 1n },
+    });
   });
 
   it('returns an identical existing account idempotently', async () => {
@@ -135,13 +149,13 @@ describe('LedgerService account lifecycle', () => {
       service.createAccount({
         accountId: existing.accountId,
         accountNumber: existing.accountNumber,
-        userId: existing.userId,
+        userId: 'usr-1',
         currency: 'GBP',
       }),
     ).resolves.toEqual({
       accountId: existing.accountId,
       accountNumber: existing.accountNumber,
-      userId: existing.userId,
+      userId: 'usr-1',
       currency: 'GBP',
       availableBalance: 100,
     });
@@ -150,7 +164,7 @@ describe('LedgerService account lifecycle', () => {
 
   it.each([
     { accountId: '00000000-0000-4000-8000-000000000099' },
-    { userId: 'usr-other' },
+    { userId: 2n },
     { currency: 'USD' },
   ])('rejects conflicting existing account data: %o', async (change) => {
     const existing = account(change as Partial<LedgerAccount>);
@@ -159,7 +173,7 @@ describe('LedgerService account lifecycle', () => {
       service.createAccount({
         accountId: account().accountId,
         accountNumber: account().accountNumber,
-        userId: account().userId,
+        userId: 'usr-1',
         currency: 'GBP',
       }),
     ).rejects.toMatchObject({ statusCode: 409 });
@@ -217,6 +231,14 @@ describe('LedgerService account lifecycle', () => {
 });
 
 describe('LedgerService transactions', () => {
+  it('rejects transaction creation with an invalid user API ID', async () => {
+    const { service } = database();
+
+    await expect(
+      service.postTransaction(command({ userId: 'usr-invalid' })),
+    ).rejects.toMatchObject({ statusCode: 404 });
+  });
+
   it('posts a deposit with ledger entry, balance update, and outbox event', async () => {
     const posted = transaction();
     const { db, tx, service } = database({ createdTransaction: posted });
@@ -229,7 +251,7 @@ describe('LedgerService transactions', () => {
     );
 
     expect(result).toEqual({
-      id: posted.transactionId,
+      id: 'tan-3',
       amount: 25.5,
       currency: 'GBP',
       type: 'deposit',
@@ -382,6 +404,16 @@ describe('LedgerService transactions', () => {
         foundAccount: account({ status: 'CLOSED' }),
       }).service.postTransaction(command()),
     ).rejects.toMatchObject({ statusCode: 404 });
+    await expect(
+      database({
+        foundAccount: account({ userId: 2n }),
+      }).service.postTransaction(command()),
+    ).rejects.toMatchObject({ statusCode: 404 });
+    await expect(
+      database({
+        foundAccount: account({ currency: 'USD' }),
+      }).service.postTransaction(command()),
+    ).rejects.toMatchObject({ statusCode: 409 });
   });
 
   it('enforces insufficient-funds and maximum-balance limits', async () => {
@@ -410,7 +442,7 @@ describe('LedgerService transactions', () => {
       .mockResolvedValueOnce({ count: 1 });
 
     await expect(service.postTransaction(command())).resolves.toMatchObject({
-      id: transaction().transactionId,
+      id: 'tan-3',
     });
     expect(db.$transaction).toHaveBeenCalledTimes(2);
   });
@@ -441,8 +473,7 @@ describe('LedgerService transactions', () => {
     db.ledgerTransaction.findMany.mockResolvedValue([
       transaction(),
       transaction({
-        id: '00000000-0000-4000-8000-000000000004',
-        transactionId: 'tan-22345678901234567890123456789012',
+        id: 4n,
         reference: null,
       }),
     ]);
@@ -459,13 +490,13 @@ describe('LedgerService transactions', () => {
   it('gets only transactions belonging to the requested account', async () => {
     const valid = database();
     await expect(
-      valid.service.getTransaction('01234567', transaction().transactionId),
-    ).resolves.toMatchObject({ id: transaction().transactionId });
+      valid.service.getTransaction('01234567', 'tan-3'),
+    ).resolves.toMatchObject({ id: 'tan-3' });
 
     const missing = database();
     missing.db.ledgerTransaction.findUnique.mockResolvedValue(null);
     await expect(
-      missing.service.getTransaction('01234567', 'tan-missing'),
+      missing.service.getTransaction('01234567', 'tan-999'),
     ).rejects.toMatchObject({ statusCode: 404 });
 
     const foreign = database({
@@ -474,7 +505,7 @@ describe('LedgerService transactions', () => {
       }),
     });
     await expect(
-      foreign.service.getTransaction('01234567', transaction().transactionId),
+      foreign.service.getTransaction('01234567', 'tan-3'),
     ).rejects.toMatchObject({ statusCode: 404 });
   });
 });

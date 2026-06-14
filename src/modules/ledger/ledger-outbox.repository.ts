@@ -3,7 +3,7 @@ import {
   Prisma,
   type LedgerOutboxEvent,
   type PrismaClient,
-} from '@prisma/client';
+} from '../../generated/prisma/client.js';
 
 export interface ClaimOutboxEventsOptions {
   batchSize: number;

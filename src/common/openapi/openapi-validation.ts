@@ -14,6 +14,7 @@ import {
 import { parse } from 'yaml';
 import { AppError, type ErrorDetail } from '../errors/AppError.js';
 import { ErrorCode } from '../errors/error-codes.js';
+import { OPENAPI_DOCUMENT_PATH } from './openapi.constants.js';
 
 type ApiOperation = Operation<Document>;
 type OpenApiValidationError = NonNullable<ValidationResult['errors']>[number];
@@ -72,7 +73,7 @@ function validateResponse(
       statusCode,
       validationErrors: result.errors,
     },
-    'Response does not conform to openapi.yaml',
+    'Response does not conform to the versioned OpenAPI contract',
   );
   throw new AppError(
     httpConstants.HTTP_STATUS_INTERNAL_SERVER_ERROR,
@@ -90,7 +91,7 @@ export async function registerOpenApiValidation(
   options: OpenApiValidationOptions = {},
 ): Promise<void> {
   const definition =
-    options.definition ?? resolve(process.cwd(), 'openapi.yaml');
+    options.definition ?? resolve(process.cwd(), OPENAPI_DOCUMENT_PATH);
   const parsed = parse(await readFile(definition, 'utf8')) as Document;
 
   // Resolve shared component references once during startup so runtime

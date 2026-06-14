@@ -1,4 +1,8 @@
-import { AccountStatus, type Prisma, type PrismaClient } from '@prisma/client';
+import {
+  AccountStatus,
+  type Prisma,
+  type PrismaClient,
+} from '../../generated/prisma/client.js';
 
 export class UsersRepository {
   constructor(private readonly db: PrismaClient) {}
@@ -7,7 +11,7 @@ export class UsersRepository {
     return this.db.user.create({ data });
   }
 
-  findById(id: string) {
+  findById(id: bigint) {
     return this.db.user.findUnique({ where: { id } });
   }
 
@@ -15,15 +19,15 @@ export class UsersRepository {
     return this.db.user.findUnique({ where: { email } });
   }
 
-  update(id: string, data: Prisma.UserUpdateInput) {
+  update(id: bigint, data: Prisma.UserUpdateInput) {
     return this.db.user.update({ where: { id }, data });
   }
 
-  delete(id: string) {
+  delete(id: bigint) {
     return this.db.user.delete({ where: { id } });
   }
 
-  countAccounts(id: string) {
+  countAccounts(id: bigint) {
     return this.db.bankAccount.count({
       where: { userId: id, status: { not: AccountStatus.CLOSED } },
     });

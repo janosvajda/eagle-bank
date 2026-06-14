@@ -16,9 +16,9 @@ const address = {
 
 describe('user schemas', () => {
   it('validates IDs and route parameters', () => {
-    expect(userIdSchema.parse('usr-abc123')).toBe('usr-abc123');
-    expect(userParamsSchema.parse({ userId: 'usr-abc123' })).toEqual({
-      userId: 'usr-abc123',
+    expect(userIdSchema.parse('usr-123')).toBe('usr-123');
+    expect(userParamsSchema.parse({ userId: 'usr-123' })).toEqual({
+      userId: 'usr-123',
     });
     expect(() => userIdSchema.parse('abc123')).toThrow();
   });

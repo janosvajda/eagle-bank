@@ -1,6 +1,4 @@
-import { randomUUID } from 'node:crypto';
 import { constants as httpConstants } from 'node:http2';
-import argon2 from 'argon2';
 import type { FastifyBaseLogger } from 'fastify';
 import pino from 'pino';
 import { AppError } from '../../common/errors/AppError.js';
@@ -9,12 +7,14 @@ import { mapUser } from './users.mapper.js';
 import type { UsersRepository } from './users.repository.js';
 import type { CreateUserInput, UpdateUserInput } from './users.schemas.js';
 import type { PasswordHasher } from './users.ports.js';
+import { hashPassword } from '../../common/password/password.js';
+import { parseUserApiId } from './user-id.js';
 
 export class UsersService {
   constructor(
     private readonly users: UsersRepository,
     private readonly passwordHasher: PasswordHasher = {
-      hash: (password) => argon2.hash(password),
+      hash: hashPassword,
     },
     private readonly logger: FastifyBaseLogger = pino({ enabled: false }),
   ) {}
@@ -35,7 +35,6 @@ export class UsersService {
 
     const passwordHash = await this.passwordHasher.hash(input.password);
     const user = await this.users.create({
-      id: `usr-${randomUUID().replaceAll('-', '')}`,
       name: input.name,
       email,
       phoneNumber: input.phoneNumber,
@@ -51,7 +50,11 @@ export class UsersService {
   }
 
   async getAuthorized(targetId: string, authenticatedId: string) {
-    const user = await this.users.findById(targetId);
+    const targetDatabaseId = parseUserApiId(targetId);
+    const user =
+      targetDatabaseId === undefined
+        ? null
+        : await this.users.findById(targetDatabaseId);
     if (!user) {
       this.logger.warn({ targetId }, 'User lookup failed');
       throw new AppError(
@@ -60,7 +63,11 @@ export class UsersService {
         'User was not found',
       );
     }
-    if (user.id !== authenticatedId) {
+    const authenticatedDatabaseId = parseUserApiId(authenticatedId);
+    if (
+      authenticatedDatabaseId === undefined ||
+      user.id !== authenticatedDatabaseId
+    ) {
       this.logger.warn(
         { authenticatedId, targetId },
         'User access was forbidden',
@@ -83,9 +90,9 @@ export class UsersService {
     authenticatedId: string,
     input: UpdateUserInput,
   ) {
-    await this.getAuthorized(targetId, authenticatedId);
     const address = input.address;
-    const user = await this.users.update(targetId, {
+    const existing = await this.getAuthorized(targetId, authenticatedId);
+    const user = await this.users.update(existing.id, {
       ...(input.name !== undefined ? { name: input.name } : {}),
       ...(input.email !== undefined
         ? { email: input.email.toLowerCase() }
@@ -108,8 +115,8 @@ export class UsersService {
   }
 
   async delete(targetId: string, authenticatedId: string): Promise<void> {
-    await this.getAuthorized(targetId, authenticatedId);
-    if ((await this.users.countAccounts(targetId)) > 0) {
+    const user = await this.getAuthorized(targetId, authenticatedId);
+    if ((await this.users.countAccounts(user.id)) > 0) {
       this.logger.warn(
         { targetId },
         'User deletion rejected because active accounts remain',
@@ -120,6 +127,6 @@ export class UsersService {
         'A user cannot be deleted while associated with a bank account',
       );
     }
-    await this.users.delete(targetId);
+    await this.users.delete(user.id);
   }
 }

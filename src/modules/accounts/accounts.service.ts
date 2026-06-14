@@ -1,5 +1,5 @@
 import { randomInt } from 'node:crypto';
-import { AccountStatus, Prisma } from '@prisma/client';
+import { AccountStatus, Prisma } from '../../generated/prisma/client.js';
 import { constants as httpConstants } from 'node:http2';
 import { AppError } from '../../common/errors/AppError.js';
 import { ErrorCode } from '../../common/errors/error-codes.js';
@@ -14,6 +14,7 @@ import { PrismaErrorCode } from '../../common/errors/prisma-error-codes.js';
 import { Currency } from '../../common/domain/banking.js';
 import type { FastifyBaseLogger } from 'fastify';
 import pino from 'pino';
+import { parseUserApiId } from '../users/user-id.js';
 
 const ACCOUNT_NUMBER_RANGE = 1000000;
 const ACCOUNT_NUMBER_ALLOCATION_ATTEMPTS = 5;
@@ -33,7 +34,21 @@ export class AccountsService {
       .padStart(ACCOUNT_NUMBER_SUFFIX_LENGTH, '0')}`;
   }
 
+  private databaseUserId(userId: string): bigint {
+    const databaseId = parseUserApiId(userId);
+    if (databaseId === undefined) {
+      this.logger.warn({ userId }, 'Authenticated user ID was invalid');
+      throw new AppError(
+        httpConstants.HTTP_STATUS_UNAUTHORIZED,
+        ErrorCode.UNAUTHORIZED,
+        'Access token is missing or invalid',
+      );
+    }
+    return databaseId;
+  }
+
   async create(userId: string, input: CreateAccountInput) {
+    const databaseUserId = this.databaseUserId(userId);
     // Account numbers are random within the required 01xxxxxx range. A unique
     // database constraint resolves races; only that collision is retried.
     for (
@@ -42,11 +57,10 @@ export class AccountsService {
       attempt += 1
     ) {
       try {
-        const account = await this.accounts.create({
+        const account = await this.accounts.create(databaseUserId, {
           accountNumber: this.generateAccountNumber(),
           name: input.name,
           accountType: input.accountType,
-          userId,
           status: this.ledger
             ? AccountStatus.PENDING_LEDGER_CREATION
             : AccountStatus.ACTIVE,
@@ -117,6 +131,7 @@ export class AccountsService {
   }
 
   async getAuthorized(accountNumber: string, userId: string) {
+    const databaseUserId = this.databaseUserId(userId);
     const account = await this.accounts.findByNumber(accountNumber);
     if (!account || account.status !== AccountStatus.ACTIVE) {
       this.logger.warn({ accountNumber, userId }, 'Bank account lookup failed');
@@ -126,9 +141,9 @@ export class AccountsService {
         'Bank account was not found',
       );
     }
-    if (account.userId !== userId) {
+    if (account.user?.id !== databaseUserId) {
       this.logger.warn(
-        { accountNumber, ownerId: account.userId, userId },
+        { accountNumber, ownerId: account.user?.id, userId },
         'Bank account access was forbidden',
       );
       throw new AppError(
@@ -141,7 +156,9 @@ export class AccountsService {
   }
 
   async list(userId: string) {
-    const accounts = await this.accounts.listByUser(userId);
+    const accounts = await this.accounts.listByUser(
+      this.databaseUserId(userId),
+    );
     if (!this.ledger)
       return { accounts: accounts.map((account) => mapAccount(account)) };
     const balances = await this.ledger.getBalances(
