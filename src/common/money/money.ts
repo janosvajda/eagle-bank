@@ -1,4 +1,4 @@
-import { Prisma } from '@prisma/client';
+import { Prisma } from '../../generated/prisma/client.js';
 import { z } from 'zod';
 import { MONEY_DECIMAL_PLACES } from '../constants.js';
 

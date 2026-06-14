@@ -1,10 +1,10 @@
-import type { User } from '@prisma/client';
+import type { User } from '../../generated/prisma/client.js';
 import { describe, expect, it } from 'vitest';
 import { mapUser } from './users.mapper.js';
 
 function user(overrides: Partial<User> = {}): User {
   return {
-    id: 'usr-owner',
+    id: 1n,
     name: 'Owner',
     addressLine1: '1 Test Road',
     addressLine2: null,
@@ -24,7 +24,7 @@ function user(overrides: Partial<User> = {}): User {
 describe('mapUser', () => {
   it('maps required fields and excludes persistence secrets', () => {
     expect(mapUser(user())).toEqual({
-      id: 'usr-owner',
+      id: 'usr-1',
       name: 'Owner',
       address: {
         line1: '1 Test Road',

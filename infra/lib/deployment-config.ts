@@ -34,6 +34,8 @@ export interface DeploymentConfig {
   logRetention: logs.RetentionDays;
   removalPolicy: RemovalPolicy;
   wafRateLimit: number;
+  wafLoginRateLimit: number;
+  wafRegistrationRateLimit: number;
 }
 
 // Keep environment differences in one place so the stack describes topology,
@@ -60,6 +62,8 @@ const STAGE_SETTINGS: Record<
     logRetention: logs.RetentionDays.ONE_WEEK,
     removalPolicy: RemovalPolicy.DESTROY,
     wafRateLimit: 5000,
+    wafLoginRateLimit: 200,
+    wafRegistrationRateLimit: 100,
   },
   [DeploymentStage.PREPROD]: {
     availabilityZoneCount: 2,
@@ -81,6 +85,8 @@ const STAGE_SETTINGS: Record<
     logRetention: logs.RetentionDays.ONE_MONTH,
     removalPolicy: RemovalPolicy.RETAIN,
     wafRateLimit: 2000,
+    wafLoginRateLimit: 100,
+    wafRegistrationRateLimit: 50,
   },
   [DeploymentStage.PROD]: {
     availabilityZoneCount: 2,
@@ -100,6 +106,8 @@ const STAGE_SETTINGS: Record<
     logRetention: logs.RetentionDays.THREE_MONTHS,
     removalPolicy: RemovalPolicy.RETAIN,
     wafRateLimit: 1000,
+    wafLoginRateLimit: 100,
+    wafRegistrationRateLimit: 25,
   },
 };
 

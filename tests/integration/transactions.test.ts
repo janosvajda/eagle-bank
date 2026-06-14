@@ -4,6 +4,7 @@ import { createTestApp } from '../helpers/app.js';
 import { authorization, tokenFor } from '../helpers/auth.js';
 import { resetDatabase, testPrisma } from '../helpers/database.js';
 import { createAccount, createUser } from '../helpers/factories.js';
+import { parseTransactionApiId } from '../../src/modules/transactions/transaction-id.js';
 
 describe('transactions', () => {
   let app: FastifyInstance;
@@ -18,8 +19,8 @@ describe('transactions', () => {
 
   it('deposits and withdraws atomically', async () => {
     const user = await createUser();
-    await createAccount(user.id);
-    const headers = authorization(tokenFor(app, user.id));
+    await createAccount(user.publicId);
+    const headers = authorization(tokenFor(app, user.publicId));
 
     const deposit = await app.inject({
       method: 'POST',
@@ -28,6 +29,16 @@ describe('transactions', () => {
       payload: { amount: 100.5, currency: 'GBP', type: 'deposit' },
     });
     expect(deposit.statusCode).toBe(201);
+    const transactionId = parseTransactionApiId(deposit.json().id as string);
+    expect(transactionId).toBeDefined();
+    if (transactionId === undefined) {
+      throw new Error('Created transaction ID was invalid');
+    }
+    const persistedTransaction =
+      await testPrisma.ledgerTransaction.findUniqueOrThrow({
+        where: { id: transactionId },
+      });
+    expect(typeof persistedTransaction.id).toBe('bigint');
     expect(
       (
         await testPrisma.ledgerAccount.findUniqueOrThrow({
@@ -54,11 +65,11 @@ describe('transactions', () => {
 
   it('does not mutate state when funds are insufficient', async () => {
     const user = await createUser();
-    const account = await createAccount(user.id);
+    const account = await createAccount(user.publicId);
     const response = await app.inject({
       method: 'POST',
       url: '/v1/accounts/01234567/transactions',
-      headers: authorization(tokenFor(app, user.id)),
+      headers: authorization(tokenFor(app, user.publicId)),
       payload: { amount: 1, currency: 'GBP', type: 'withdrawal' },
     });
     expect(response.statusCode).toBe(422);
@@ -82,8 +93,8 @@ describe('transactions', () => {
       email: 'other@example.com',
       phoneNumber: '+447700900002',
     });
-    await createAccount(other.id);
-    const headers = authorization(tokenFor(app, own.id));
+    await createAccount(other.publicId);
+    const headers = authorization(tokenFor(app, own.publicId));
 
     expect(
       (
@@ -123,9 +134,9 @@ describe('transactions', () => {
       email: 'other@example.com',
       phoneNumber: '+447700900002',
     });
-    await createAccount(own.id, '01111111');
-    await createAccount(other.id, '01222222');
-    const ownHeaders = authorization(tokenFor(app, own.id));
+    await createAccount(own.publicId, '01111111');
+    await createAccount(other.publicId, '01222222');
+    const ownHeaders = authorization(tokenFor(app, own.publicId));
     const create = await app.inject({
       method: 'POST',
       url: '/v1/accounts/01111111/transactions',
@@ -191,13 +202,22 @@ describe('transactions', () => {
       (
         await app.inject({
           method: 'GET',
-          url: '/v1/accounts/01111111/transactions/tan-missing',
+          url: '/v1/accounts/01111111/transactions/tan-999999',
+          headers: ownHeaders,
+        })
+      ).statusCode,
+    ).toBe(404);
+    expect(
+      (
+        await app.inject({
+          method: 'GET',
+          url: '/v1/accounts/01111111/transactions/tan-abc123',
           headers: ownHeaders,
         })
       ).statusCode,
     ).toBe(404);
 
-    const otherHeaders = authorization(tokenFor(app, other.id));
+    const otherHeaders = authorization(tokenFor(app, other.publicId));
     const otherTransaction = await app.inject({
       method: 'POST',
       url: '/v1/accounts/01222222/transactions',

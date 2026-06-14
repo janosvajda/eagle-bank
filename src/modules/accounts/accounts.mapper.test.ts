@@ -1,4 +1,4 @@
-import { Prisma, type BankAccount } from '@prisma/client';
+import { Prisma, type BankAccount } from '../../generated/prisma/client.js';
 import { describe, expect, it } from 'vitest';
 import { mapAccount } from './accounts.mapper.js';
 
@@ -12,7 +12,7 @@ describe('mapAccount', () => {
       accountType: 'personal',
       balance: new Prisma.Decimal('10.50'),
       currency: 'GBP',
-      userId: 'usr-owner',
+      userId: 1n,
       status: 'ACTIVE',
       deletedAt: null,
       reconciliationCorrelationId: null,

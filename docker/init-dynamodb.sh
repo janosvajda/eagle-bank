@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-endpoint=http://dynamodb-local:8000
+endpoint=http://auth-session-db:8000
 table=eagle-bank-auth-sessions
 
 attempt=0

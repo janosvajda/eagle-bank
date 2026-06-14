@@ -50,6 +50,7 @@ describe('buildLedgerApp logging', () => {
     expect(response.statusCode).toBe(401);
     expect(warnLog).toHaveBeenCalledWith(
       {
+        authFailure: 'missing_bearer_token',
         method: 'POST',
         path: '/internal/ledger/accounts/01234567/close',
       },
@@ -116,6 +117,31 @@ describe('buildLedgerApp logging', () => {
       { accountNumber: '01234567' },
       'Ledger account closed',
     );
+    await app.close();
+  });
+
+  it('rejects a transaction when path and body accounts differ', async () => {
+    ledger.postTransaction.mockClear();
+    const app = await buildLedgerApp({
+      prisma: {} as never,
+      internalSecret,
+    });
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/internal/ledger/accounts/01234567/transactions',
+      headers: { authorization: authorization() },
+      payload: {
+        accountNumber: '01234568',
+        amount: 10,
+        currency: 'GBP',
+        type: 'deposit',
+        userId: 'usr-owner',
+      },
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(ledger.postTransaction).not.toHaveBeenCalled();
     await app.close();
   });
 });

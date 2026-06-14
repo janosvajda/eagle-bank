@@ -8,18 +8,18 @@ import {
 
 describe('transaction schemas', () => {
   it('validates transaction identifiers and params', () => {
-    expect(transactionIdSchema.parse('tan-abc123')).toBe('tan-abc123');
+    expect(transactionIdSchema.parse('tan-123')).toBe('tan-123');
     expect(
       transactionAccountParamsSchema.parse({ accountNumber: '01234567' }),
     ).toEqual({ accountNumber: '01234567' });
     expect(
       transactionParamsSchema.parse({
         accountNumber: '01234567',
-        transactionId: 'tan-abc123',
+        transactionId: 'tan-123',
       }),
     ).toEqual({
       accountNumber: '01234567',
-      transactionId: 'tan-abc123',
+      transactionId: 'tan-123',
     });
     expect(() => transactionIdSchema.parse('txn-abc')).toThrow();
   });

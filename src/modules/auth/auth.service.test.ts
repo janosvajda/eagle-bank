@@ -12,7 +12,7 @@ describe('AuthService', () => {
     passwordHash = await argon2.hash('Password123!');
   });
 
-  function service(user: { id: string; passwordHash: string } | null) {
+  function service(user: { id: bigint; passwordHash: string } | null) {
     const users = { findByEmail: vi.fn().mockResolvedValue(user) };
     const sign = vi.fn().mockReturnValue('signed-token');
     const info = vi.fn();
@@ -40,7 +40,10 @@ describe('AuthService', () => {
   }
 
   it('signs a JWT for valid credentials', async () => {
-    const { auth, sign, info } = service({ id: 'usr-owner', passwordHash });
+    const { auth, sign, info } = service({
+      id: 1n,
+      passwordHash,
+    });
     await expect(
       auth.login({ email: 'owner@example.com', password: 'Password123!' }),
     ).resolves.toEqual({
@@ -49,17 +52,20 @@ describe('AuthService', () => {
       expiresIn: 3600,
     });
     expect(sign).toHaveBeenCalledWith(
-      { sub: 'usr-owner', sid: 'session-id', jti: 'token-id' },
+      { sub: 'usr-1', sid: 'session-id', jti: 'token-id' },
       { expiresIn: '1h' },
     );
     expect(info).toHaveBeenCalledWith(
-      { sessionId: 'session-id', userId: 'usr-owner' },
+      { sessionId: 'session-id', userId: 'usr-1' },
       'Authentication session created',
     );
   });
 
   it('rejects a wrong password', async () => {
-    const { auth, sign } = service({ id: 'usr-owner', passwordHash });
+    const { auth, sign } = service({
+      id: 1n,
+      passwordHash,
+    });
     await expect(
       auth.login({ email: 'owner@example.com', password: 'wrong' }),
     ).rejects.toMatchObject({ statusCode: 401 });

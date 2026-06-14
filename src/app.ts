@@ -1,6 +1,6 @@
 import fastify, { type FastifyInstance } from 'fastify';
 import fastifyJwt from '@fastify/jwt';
-import type { PrismaClient } from '@prisma/client';
+import type { PrismaClient } from './generated/prisma/client.js';
 import type { AppConfig } from './config/env.js';
 import { registerErrorHandler } from './common/errors/error-handler.js';
 import { UsersRepository } from './modules/users/users.repository.js';
@@ -29,23 +29,17 @@ import {
   AuthHttpClient,
   RemoteAuthSessionStore,
 } from './modules/auth/auth.client.js';
-import { SECONDS_PER_HOUR } from './common/constants.js';
 import { Environment } from './common/config/runtime.constants.js';
+import { userJwtOptions } from './common/auth/user-jwt.js';
+import {
+  HTTP_BODY_LIMIT_BYTES,
+  registerHttpSecurity,
+} from './common/security/http-security.js';
+import { secureLoggerOptions } from './common/logging/logger-options.js';
 
 export interface BuildAppOptions {
   prisma: PrismaClient;
-  config: Omit<
-    AppConfig,
-    'AUTH_SESSION_TTL_SECONDS' | 'AWS_REGION' | 'DYNAMODB_AUTH_SESSIONS_TABLE'
-  > &
-    Partial<
-      Pick<
-        AppConfig,
-        | 'AUTH_SESSION_TTL_SECONDS'
-        | 'AWS_REGION'
-        | 'DYNAMODB_AUTH_SESSIONS_TABLE'
-      >
-    >;
+  config: AppConfig;
   logger?: boolean;
   authSessions?: AuthSessionStore;
 }
@@ -53,16 +47,20 @@ export interface BuildAppOptions {
 export async function buildApp(
   options: BuildAppOptions,
 ): Promise<FastifyInstance> {
-  const app = fastify({ logger: options.logger ?? false });
+  const app = fastify({
+    bodyLimit: HTTP_BODY_LIMIT_BYTES,
+    logger: secureLoggerOptions(options.logger ?? false),
+  });
 
-  await app.register(fastifyJwt, { secret: options.config.JWT_SECRET });
+  registerHttpSecurity(app, options.config.NODE_ENV);
+  await app.register(fastifyJwt, userJwtOptions(options.config.JWT_SECRET));
 
   // When a service URL is configured, the API acts as a façade and delegates
   // Auth ownership to the Auth service. Tests can omit it and run in-process.
   const remoteAuth = options.config.AUTH_SERVICE_BASE_URL
     ? new AuthHttpClient(
         options.config.AUTH_SERVICE_BASE_URL,
-        options.config.INTERNAL_SERVICE_JWT_SECRET ?? options.config.JWT_SECRET,
+        options.config.AUTH_SERVICE_JWT_SECRET,
         app.log,
       )
     : undefined;
@@ -76,7 +74,7 @@ export async function buildApp(
         : new DynamoDbAuthSessionStore(
             createDynamoDbClient({
               environment: options.config.NODE_ENV,
-              region: options.config.AWS_REGION ?? 'eu-west-2',
+              region: options.config.AWS_REGION,
               ...(options.config.DYNAMODB_ENDPOINT
                 ? { endpoint: options.config.DYNAMODB_ENDPOINT }
                 : {}),
@@ -87,8 +85,7 @@ export async function buildApp(
                 ? { secretAccessKey: options.config.AWS_SECRET_ACCESS_KEY }
                 : {}),
             }),
-            options.config.DYNAMODB_AUTH_SESSIONS_TABLE ??
-              'eagle-bank-auth-sessions',
+            options.config.DYNAMODB_AUTH_SESSIONS_TABLE,
           ));
 
   // Authentication middleware reads this abstraction without knowing whether
@@ -105,7 +102,7 @@ export async function buildApp(
   const ledgerService = options.config.LEDGER_SERVICE_BASE_URL
     ? new LedgerHttpClient(
         options.config.LEDGER_SERVICE_BASE_URL,
-        options.config.INTERNAL_SERVICE_JWT_SECRET ?? options.config.JWT_SECRET,
+        options.config.LEDGER_SERVICE_JWT_SECRET,
         app.log,
       )
     : new LedgerService(new LedgerRepository(options.prisma), app.log);
@@ -127,7 +124,7 @@ export async function buildApp(
       app,
       options.config.JWT_EXPIRES_IN,
       authSessions,
-      options.config.AUTH_SESSION_TTL_SECONDS ?? SECONDS_PER_HOUR,
+      options.config.AUTH_SESSION_TTL_SECONDS,
     );
 
   await app.register(usersRoutes(usersService));

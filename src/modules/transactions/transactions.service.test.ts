@@ -1,4 +1,8 @@
-import { Prisma, type BankAccount, type Transaction } from '@prisma/client';
+import {
+  Prisma,
+  type BankAccount,
+  type Transaction,
+} from '../../generated/prisma/client.js';
 import { describe, expect, it, vi } from 'vitest';
 import { AppError } from '../../common/errors/AppError.js';
 import type { AccountsService } from '../accounts/accounts.service.js';
@@ -6,8 +10,8 @@ import type { LedgerGateway } from '../ledger/ledger.contracts.js';
 import type { TransactionsRepository } from './transactions.repository.js';
 import { TransactionsService } from './transactions.service.js';
 
-const ownerId = 'usr-owner';
-const account: BankAccount & { userId: string } = {
+const ownerId = 'usr-1';
+const account: BankAccount & { userId: bigint } = {
   id: '00000000-0000-4000-8000-000000000001',
   accountNumber: '01234567',
   sortCode: '10-10-10',
@@ -15,7 +19,7 @@ const account: BankAccount & { userId: string } = {
   accountType: 'personal',
   balance: new Prisma.Decimal('100.00'),
   currency: 'GBP',
-  userId: ownerId,
+  userId: 1n,
   status: 'ACTIVE',
   deletedAt: null,
   reconciliationCorrelationId: null,
@@ -24,12 +28,12 @@ const account: BankAccount & { userId: string } = {
 };
 
 const transaction: Transaction = {
-  id: 'tan-abc123',
+  id: 123n,
   amount: new Prisma.Decimal('10.00'),
   currency: 'GBP',
   type: 'deposit',
   reference: null,
-  userId: ownerId,
+  userId: 1n,
   accountId: account.id,
   createdAt: new Date('2026-01-01T00:00:00.000Z'),
 };
@@ -70,6 +74,19 @@ function setup(withdrawalUpdateCount = 1) {
 }
 
 describe('TransactionsService', () => {
+  it('rejects an invalid authenticated user ID before persisting', async () => {
+    const { service, tx } = setup();
+
+    await expect(
+      service.create(account.accountNumber, 'usr-invalid', {
+        amount: 10,
+        currency: 'GBP',
+        type: 'deposit',
+      }),
+    ).rejects.toMatchObject({ statusCode: 401 } satisfies Partial<AppError>);
+    expect(tx.transaction.create).not.toHaveBeenCalled();
+  });
+
   it('increments balance and creates a deposit in one transaction', async () => {
     const { service, tx, repository } = setup();
 
@@ -127,7 +144,7 @@ describe('TransactionsService', () => {
     const { service, repository } = setup();
     await expect(service.list(account.accountNumber, ownerId)).resolves.toEqual(
       {
-        transactions: [expect.objectContaining({ id: transaction.id })],
+        transactions: [expect.objectContaining({ id: 'tan-123' })],
       },
     );
     expect(repository.listByAccount).toHaveBeenCalledWith(account.id);
@@ -136,10 +153,10 @@ describe('TransactionsService', () => {
   it('fetches a transaction scoped to its account', async () => {
     const { service, repository } = setup();
     await expect(
-      service.get(account.accountNumber, transaction.id, ownerId),
-    ).resolves.toMatchObject({ id: transaction.id });
+      service.get(account.accountNumber, 'tan-123', ownerId),
+    ).resolves.toMatchObject({ id: 'tan-123' });
     expect(repository.findByIdAndAccount).toHaveBeenCalledWith(
-      transaction.id,
+      123n,
       account.id,
     );
   });

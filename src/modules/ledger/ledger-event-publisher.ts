@@ -1,5 +1,8 @@
 import { randomUUID } from 'node:crypto';
-import { OutboxStatus, type LedgerOutboxEvent } from '@prisma/client';
+import {
+  OutboxStatus,
+  type LedgerOutboxEvent,
+} from '../../generated/prisma/client.js';
 import type { Logger } from 'pino';
 import type { LedgerOutboxRepository } from './ledger-outbox.repository.js';
 import type { LedgerEventSink } from './ledger-event-sink.js';

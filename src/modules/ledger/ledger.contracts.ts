@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { Currency, TransactionType } from '../../common/domain/banking.js';
 
-const accountNumberSchema = z.string().regex(/^01\d{6}$/);
+export const ledgerAccountNumberSchema = z.string().regex(/^01\d{6}$/);
 const userIdSchema = z.string().regex(/^usr-[A-Za-z0-9]+$/);
 const transactionTypeSchema = z.enum(TransactionType);
 const MINIMUM_IDEMPOTENCY_KEY_LENGTH = 8;
@@ -9,7 +9,7 @@ const MINIMUM_IDEMPOTENCY_KEY_LENGTH = 8;
 export const ledgerAccountCommandSchema = z
   .object({
     accountId: z.uuid(),
-    accountNumber: accountNumberSchema,
+    accountNumber: ledgerAccountNumberSchema,
     userId: userIdSchema,
     currency: z.literal(Currency.GBP),
   })
@@ -25,7 +25,7 @@ export type LedgerAccountResponse = z.infer<typeof ledgerAccountResponseSchema>;
 
 export const postLedgerTransactionCommandSchema = z
   .object({
-    accountNumber: accountNumberSchema,
+    accountNumber: ledgerAccountNumberSchema,
     userId: userIdSchema,
     type: transactionTypeSchema,
     amount: z.number().positive(),

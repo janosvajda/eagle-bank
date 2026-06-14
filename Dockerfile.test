@@ -1,0 +1,21 @@
+FROM node:24-bookworm-slim
+
+WORKDIR /app
+
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends openssl \
+  && rm -rf /var/lib/apt/lists/*
+
+COPY prisma ./prisma
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY .dockerignore .gitignore Dockerfile cdk.json eslint.config.js prettier.config.js tsconfig.json ./
+COPY vitest.config.ts vitest.infra.config.ts vitest.unit.config.ts ./
+COPY openapi ./openapi
+COPY infra ./infra
+COPY src ./src
+COPY tests ./tests
+COPY scripts ./scripts
+
+CMD ["sh", "scripts/run-test-suite.sh"]

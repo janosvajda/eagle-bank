@@ -1,6 +1,7 @@
 @baseUrl = http://localhost:3000
 @email = reviewer{{$timestamp}}@example.com
 @password = ReviewPassword123!
+@depositKey = reviewer-deposit-{{$timestamp}}
 
 ### Health - 200
 GET {{baseUrl}}/health
@@ -87,7 +88,7 @@ Content-Type: application/json
 # @name deposit
 POST {{baseUrl}}/v1/accounts/{{accountNumber}}/transactions
 Authorization: Bearer {{token}}
-Idempotency-Key: reviewer-deposit-{{$timestamp}}
+Idempotency-Key: {{depositKey}}
 Content-Type: application/json
 
 {
@@ -98,6 +99,32 @@ Content-Type: application/json
 }
 
 @transactionId = {{deposit.response.body.id}}
+
+### Replay deposit with the same key and payload - 201, same transaction
+POST {{baseUrl}}/v1/accounts/{{accountNumber}}/transactions
+Authorization: Bearer {{token}}
+Idempotency-Key: {{depositKey}}
+Content-Type: application/json
+
+{
+  "amount": 100.00,
+  "currency": "GBP",
+  "type": "deposit",
+  "reference": "Initial funding"
+}
+
+### Reuse deposit key with a different payload - 409
+POST {{baseUrl}}/v1/accounts/{{accountNumber}}/transactions
+Authorization: Bearer {{token}}
+Idempotency-Key: {{depositKey}}
+Content-Type: application/json
+
+{
+  "amount": 101.00,
+  "currency": "GBP",
+  "type": "deposit",
+  "reference": "Conflicting replay"
+}
 
 ### Withdraw - 201
 POST {{baseUrl}}/v1/accounts/{{accountNumber}}/transactions

@@ -8,18 +8,14 @@ import {
   type LedgerIdempotencyKey,
   type LedgerTransaction,
   type PrismaClient,
-} from '@prisma/client';
-import type {
-  LedgerAccountCommand,
-  LedgerTransactionResponse,
-} from './ledger.contracts.js';
+} from '../../generated/prisma/client.js';
+import type { LedgerTransactionResponse } from './ledger.contracts.js';
 
 export interface LedgerTransactionRecord {
-  transactionId: string;
   ledgerAccountId: string;
   accountId: string;
   accountNumber: string;
-  userId: string;
+  userId: bigint;
   type: TransactionType;
   amount: Prisma.Decimal;
   currency: string;
@@ -27,8 +23,15 @@ export interface LedgerTransactionRecord {
   idempotencyKey?: string;
 }
 
+export interface LedgerAccountRecord {
+  accountId: string;
+  accountNumber: string;
+  userId: bigint;
+  currency: string;
+}
+
 export interface LedgerEntryRecord {
-  ledgerTransactionId: string;
+  ledgerTransactionId: bigint;
   ledgerAccountId: string;
   accountId: string;
   direction: LedgerEntryDirection;
@@ -46,7 +49,7 @@ export interface LedgerOutboxRecord {
 
 export interface LedgerIdempotencyRecord {
   idempotencyKey: string;
-  userId: string;
+  userId: bigint;
   accountNumber: string;
   requestHash: string;
   expiresAt: Date;
@@ -65,7 +68,7 @@ export interface LedgerUnitOfWork {
   createEntry(record: LedgerEntryRecord): Promise<void>;
   createOutboxEvent(record: LedgerOutboxRecord): Promise<void>;
   completeIdempotency(
-    userId: string,
+    userId: bigint,
     accountNumber: string,
     idempotencyKey: string,
     response: LedgerTransactionResponse,
@@ -120,7 +123,7 @@ class PrismaLedgerUnitOfWork implements LedgerUnitOfWork {
   }
 
   async completeIdempotency(
-    userId: string,
+    userId: bigint,
     accountNumber: string,
     idempotencyKey: string,
     response: LedgerTransactionResponse,
@@ -159,8 +162,8 @@ export class LedgerRepository {
     });
   }
 
-  createAccount(command: LedgerAccountCommand): Promise<LedgerAccount> {
-    return this.database.ledgerAccount.create({ data: command });
+  createAccount(record: LedgerAccountRecord): Promise<LedgerAccount> {
+    return this.database.ledgerAccount.create({ data: record });
   }
 
   closeAccount(accountNumber: string): Promise<LedgerAccount> {
@@ -174,7 +177,7 @@ export class LedgerRepository {
   }
 
   findIdempotency(
-    userId: string,
+    userId: bigint,
     accountNumber: string,
     idempotencyKey: string,
   ): Promise<LedgerIdempotencyKey | null> {
@@ -199,9 +202,9 @@ export class LedgerRepository {
     });
   }
 
-  findTransaction(transactionId: string): Promise<LedgerTransaction | null> {
+  findTransaction(id: bigint): Promise<LedgerTransaction | null> {
     return this.database.ledgerTransaction.findUnique({
-      where: { transactionId },
+      where: { id },
     });
   }
 

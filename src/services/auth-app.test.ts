@@ -48,6 +48,7 @@ describe('buildAuthApp logging', () => {
     expect(response.statusCode).toBe(401);
     expect(warnLog).toHaveBeenCalledWith(
       {
+        authFailure: 'missing_bearer_token',
         method: 'POST',
         path: '/internal/auth/sessions/introspect',
       },

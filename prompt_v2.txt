@@ -29,7 +29,7 @@ Use exactly this stack:
 
 * TypeScript
 * Node.js 24+
-* pnpm 10.12.1
+* npm 11+
 * Turborepo
 * Fastify
 * Prisma
@@ -52,7 +52,7 @@ Use exactly this stack:
 * ECS Fargate
 * RDS PostgreSQL
 * DynamoDB
-* Secrets Manager
+* AWS Systems Manager Parameter Store
 * CloudWatch Logs
 
 Do not replace these technologies with alternatives.
@@ -61,7 +61,7 @@ Root `package.json` must include:
 
 ```json
 {
-  "packageManager": "pnpm@10.12.1",
+  "packageManager": "npm@11.9.0",
   "engines": {
     "node": ">=24"
   }
@@ -82,9 +82,9 @@ auth-service
 ledger-service
 ledger-worker
 ledger-event-publisher
-postgres
-postgres-test
-dynamodb-local
+shared-application-db
+integration-test-db
+auth-session-db
 localstack
 ```
 
@@ -753,9 +753,9 @@ auth-service
 ledger-service
 ledger-worker
 ledger-event-publisher
-postgres
-postgres-test
-dynamodb-local
+shared-application-db
+integration-test-db
+auth-session-db
 localstack
 ```
 
@@ -765,9 +765,9 @@ Do not define:
 outbox-worker
 ```
 
-`postgres` is used by local running services.
+`shared-application-db` is used by local running services.
 
-`postgres-test` is used only by automated tests.
+`integration-test-db` is used only by automated tests.
 
 Tests must never truncate, reset, or mutate the local development database.
 
@@ -811,7 +811,7 @@ AWS_EC2_METADATA_DISABLED=true
 Local AWS SDK clients must use explicit container-network endpoints:
 
 ```text
-DYNAMODB_ENDPOINT=http://dynamodb-local:8000
+DYNAMODB_ENDPOINT=http://auth-session-db:8000
 SQS_ENDPOINT=http://localstack:4566
 ```
 
@@ -1019,8 +1019,9 @@ canonical transaction-list key. Deterministic transaction listing must use:
 ledger_transactions(accountId, createdAt, id)
 ```
 
-Fetching by globally unique `transactionId` must use its unique index and then
-verify that the transaction belongs to the resolved Ledger account.
+Public `transactionId` values must be decoded to the internal numeric
+transaction primary key. Fetch by that primary key and then verify that the
+transaction belongs to the resolved Ledger account.
 
 The Ledger Event Publisher must use indexes that support:
 
@@ -1302,11 +1303,13 @@ All internal service-to-service HTTP calls must be authenticated.
 
 Use signed internal service JWTs.
 
-Each service has:
+The API receives both audience-specific signing keys. Auth receives only the
+Auth verification key, and Ledger receives only the Ledger verification key:
 
 ```text
 SERVICE_NAME
-INTERNAL_SERVICE_JWT_SECRET
+AUTH_SERVICE_JWT_SECRET
+LEDGER_SERVICE_JWT_SECRET
 ```
 
 Internal JWT claims:
@@ -1347,7 +1350,7 @@ AWS:
 
 * services run in private subnets
 * security groups restrict service-to-service traffic
-* internal JWT secret stored in Secrets Manager
+* internal JWT secret stored as a Parameter Store `SecureString`
 * IAM remains least privilege
 
 ---
@@ -2284,7 +2287,8 @@ Redact:
 * secret
 * DATABASE_URL
 * JWT_SECRET
-* INTERNAL_SERVICE_JWT_SECRET
+* AUTH_SERVICE_JWT_SECRET
+* LEDGER_SERVICE_JWT_SECRET
 
 Never log:
 
@@ -2929,7 +2933,7 @@ infra/
 
 Root files:
 - package.json
-- pnpm-workspace.yaml
+- package-lock.json
 - turbo.json
 - tsconfig.base.json
 - docker-compose.yml
@@ -3497,9 +3501,9 @@ auth-service
 ledger-service
 ledger-worker
 ledger-event-publisher
-postgres
-postgres-test
-dynamodb-local
+shared-application-db
+integration-test-db
+auth-session-db
 localstack
 ```
 
@@ -3552,7 +3556,7 @@ URL, health/readiness commands, log commands, clean shutdown, clean-volume
 restart, and troubleshooting steps.
 
 The Docker path must require no host installation of PostgreSQL, DynamoDB,
-LocalStack, pnpm, or application dependencies. Docker and Docker Compose are
+LocalStack, npm, or application dependencies. Docker and Docker Compose are
 the only mandatory runtime prerequisites for this path.
 
 ---
@@ -3581,7 +3585,7 @@ CDK must model:
 * SQS Ledger events DLQ
 * SQS Ledger command FIFO queue
 * SQS Ledger command DLQ
-* Secrets Manager secrets
+* Parameter Store `SecureString` parameters
 * CloudWatch log groups
 * least-privilege IAM roles
 * security groups
@@ -3621,7 +3625,7 @@ Local PostgreSQL       -> Amazon RDS for PostgreSQL
 DynamoDB Local         -> Amazon DynamoDB
 LocalStack SQS         -> Amazon SQS
 Docker Compose services -> ECS Fargate services/tasks
-Docker secrets/env     -> AWS Secrets Manager and ECS task configuration
+Docker secrets/env     -> SSM Parameter Store and ECS secret injection
 localhost routing      -> AWS WAF and Application Load Balancer
 local logs             -> CloudWatch Logs
 ```
@@ -3640,7 +3644,7 @@ AWS ECS task definitions must:
 * omit static `AWS_ACCESS_KEY_ID`
 * omit static `AWS_SECRET_ACCESS_KEY`
 * use task roles with least-privilege DynamoDB and SQS permissions
-* obtain application secrets from Secrets Manager
+* obtain application secrets from Parameter Store `SecureString` parameters
 * use private networking for RDS and private services
 
 CDK assertion tests must verify these properties.
@@ -3650,8 +3654,8 @@ CDK assertion tests must verify these properties.
 The following commands must work without AWS credentials or an AWS account:
 
 ```text
-pnpm infra:test
-pnpm infra:synth
+npm run infra:test
+npm run infra:synth
 ```
 
 Use deterministic CDK context/default account and region values for offline
@@ -3661,9 +3665,9 @@ deployment-time AWS lookups during tests or synthesis.
 Only these operations require an AWS account:
 
 ```text
-pnpm infra:diff
-pnpm infra:deploy
-pnpm infra:destroy
+npm run infra:diff
+npm run infra:deploy
+npm run infra:destroy
 cdk bootstrap
 ```
 
@@ -3775,7 +3779,8 @@ LOG_LEVEL
 DATABASE_URL
 JWT_SECRET
 JWT_EXPIRES_IN
-INTERNAL_SERVICE_JWT_SECRET
+AUTH_SERVICE_JWT_SECRET
+LEDGER_SERVICE_JWT_SECRET
 SERVICE_NAME
 ```
 
@@ -3790,7 +3795,6 @@ AUTH_INTROSPECTION_TIMEOUT_MS
 Auth:
 
 ```text
-AUTH_SERVICE_PORT
 DYNAMODB_AUTH_SESSIONS_TABLE
 AUTH_SESSION_TTL_SECONDS
 ```
@@ -3798,7 +3802,6 @@ AUTH_SESSION_TTL_SECONDS
 Ledger:
 
 ```text
-LEDGER_SERVICE_PORT
 LEDGER_MAX_BALANCE
 LEDGER_CURRENCY
 LEDGER_ASYNC_COMMANDS_ENABLED=false
@@ -3904,7 +3907,7 @@ README must include:
 3. OpenAPI contract-first approach
 4. OpenAPI corrections made
 5. Tech stack
-6. Node/pnpm versions
+6. Node/npm versions
 7. Why Turborepo
 8. Why separated services
 9. Shared PostgreSQL ownership model
@@ -4076,7 +4079,7 @@ tests.
 9. Ensure `/ready` 503 uses `ReadinessResponse`, not general error envelope.
 10. Confirm `accountNumber` public route parameter.
 11. Scaffold Turborepo.
-12. Add Node/pnpm constraints.
+12. Add Node/npm constraints.
 13. Add Docker Compose.
 14. Add PostgreSQL services.
 15. Add DynamoDB Local.
@@ -4157,7 +4160,7 @@ Before final response, confirm:
 * `/ready` 503 uses `ReadinessResponse`
 * `/ready` 503 does not use general error envelope
 * public routes use `accountNumber`
-* packageManager pinned to `pnpm@10.12.1`
+* packageManager pinned to `npm@11.9.0`
 * Auth service separate
 * users remain in PostgreSQL
 * Auth hashes passwords

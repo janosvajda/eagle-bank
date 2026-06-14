@@ -1,9 +1,10 @@
 openapi: 3.1.0
 info:
   title: Take home tech task
-  version: v1.0.0
+  version: 1.0.0
   description: |-
-    We want you to create a REST API for Eagle Bank which conforms to this OpenAPI specification which allows a user to create, fetch, update and delete a bank account and deposit or withdraw money from the account. These will be stored as transactions against a bank account which be retrieved but not modified or deleted.
+    Version 1 of the Eagle Bank REST API. Public resource endpoints are URI-versioned under /v1. Operational health and readiness endpoints are intentionally unversioned. The API allows a user to create, fetch, update and delete a bank account and deposit or withdraw money from the account. These are stored as immutable transactions against a bank account.
+x-api-version: v1
 tags:
   - name: account
     description: Manage a bank account

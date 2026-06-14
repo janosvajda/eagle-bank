@@ -6,3 +6,4 @@ cdk.out
 .git
 .DS_Store
 *.pdf
+src/generated/prisma

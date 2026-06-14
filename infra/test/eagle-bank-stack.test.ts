@@ -19,11 +19,14 @@ function template(
   activateServices = true,
 ): Template {
   const app = new App();
+  const effectiveCertificateArn =
+    certificateArn ??
+    (stage === 'test' && activateServices ? TEST_CERTIFICATE_ARN : undefined);
   return Template.fromStack(
     new EagleBankStack(app, `TestStack-${stage}`, {
       env: { account: TEST_ACCOUNT, region: TEST_REGION },
       stage,
-      certificateArn,
+      certificateArn: effectiveCertificateArn,
       activateServices,
     }),
   );
@@ -87,9 +90,11 @@ describe('EagleBankStack', () => {
     output.resourceCountIs('AWS::ECS::TaskDefinition', 6);
     output.resourceCountIs('AWS::SQS::Queue', 4);
     output.resourceCountIs('AWS::RDS::DBInstance', 1);
+    output.resourceCountIs('AWS::RDS::DBParameterGroup', 1);
     output.resourceCountIs('AWS::Logs::LogGroup', 6);
     output.resourceCountIs('AWS::Logs::MetricFilter', 6);
     output.resourceCountIs('AWS::CloudWatch::Dashboard', 1);
+    output.resourceCountIs('AWS::SecretsManager::Secret', 0);
 
     output.allResourcesProperties('AWS::ECS::Service', {
       NetworkConfiguration: {
@@ -104,6 +109,19 @@ describe('EagleBankStack', () => {
         },
         MinimumHealthyPercent: 100,
       }),
+    });
+    output.allResourcesProperties('AWS::ECS::TaskDefinition', {
+      ContainerDefinitions: Match.arrayWith([
+        Match.objectLike({
+          User: '1000:1000',
+          LinuxParameters: {
+            Capabilities: {
+              Drop: ['ALL'],
+            },
+            InitProcessEnabled: true,
+          },
+        }),
+      ]),
     });
     output.hasResourceProperties('AWS::ECS::Cluster', {
       ClusterSettings: [{ Name: 'containerInsights', Value: 'enabled' }],
@@ -170,19 +188,59 @@ describe('EagleBankStack', () => {
       'http://ledger-service:3002',
     );
     expect(apiEnvironment.DATABASE_NAME).toBe('eagle_bank');
+    expect(apiEnvironment.DATABASE_USERNAME).toBe('eagle');
     expect(apiEnvironment).not.toHaveProperty('DYNAMODB_ENDPOINT');
     expect(apiEnvironment).not.toHaveProperty('SQS_ENDPOINT');
     expect(JSON.stringify(api.Command)).toContain('export DATABASE_URL=');
     expect(JSON.stringify(auth.Command)).toContain('export DATABASE_URL=');
     expect(JSON.stringify(migration.Command)).toContain(
-      '\\"prisma\\" \\"migrate\\" \\"deploy\\"',
+      '\\"node_modules/.bin/prisma\\" \\"migrate\\" \\"deploy\\"',
     );
+    expect(JSON.stringify(api.Command)).toContain('sslmode=require');
 
     const migrationSecrets = migration.Secrets as Array<{ Name: string }>;
-    expect(migrationSecrets.map(({ Name }) => Name).sort()).toEqual([
+    expect(migrationSecrets.map(({ Name }) => Name)).toEqual([
       'DATABASE_PASSWORD',
-      'DATABASE_USERNAME',
     ]);
+    expect(JSON.stringify(migration.Secrets)).toContain(
+      '/eagle-bank-test/secrets/database-password',
+    );
+
+    const apiSecrets = api.Secrets as Array<{ Name: string }>;
+    expect(apiSecrets.map(({ Name }) => Name).sort()).toEqual([
+      'AUTH_SERVICE_JWT_SECRET',
+      'DATABASE_PASSWORD',
+      'JWT_SECRET',
+      'LEDGER_SERVICE_JWT_SECRET',
+    ]);
+    const authSecrets = auth.Secrets as Array<{ Name: string }>;
+    expect(authSecrets.map(({ Name }) => Name).sort()).toEqual([
+      'AUTH_SERVICE_JWT_SECRET',
+      'DATABASE_PASSWORD',
+      'JWT_SECRET',
+    ]);
+    const ledger = container(output, 'ledger-service');
+    const ledgerSecrets = ledger.Secrets as Array<{ Name: string }>;
+    expect(ledgerSecrets.map(({ Name }) => Name).sort()).toEqual([
+      'DATABASE_PASSWORD',
+      'LEDGER_SERVICE_JWT_SECRET',
+    ]);
+    const publisher = container(output, 'ledger-event-publisher');
+    const publisherSecrets = publisher.Secrets as Array<{ Name: string }>;
+    expect(publisherSecrets.map(({ Name }) => Name)).toEqual([
+      'DATABASE_PASSWORD',
+    ]);
+    expect(container(output, 'ledger-worker')).not.toHaveProperty('Secrets');
+
+    const serializedTemplate = JSON.stringify(output.toJSON());
+    expect(serializedTemplate).toContain('/eagle-bank-test/secrets/user-jwt');
+    expect(serializedTemplate).toContain(
+      '/eagle-bank-test/secrets/auth-service-jwt',
+    );
+    expect(serializedTemplate).toContain(
+      '/eagle-bank-test/secrets/ledger-service-jwt',
+    );
+    expect(serializedTemplate).toContain('ssm:GetParameters');
   });
 
   it('protects persistence and messaging resources', () => {
@@ -192,6 +250,11 @@ describe('EagleBankStack', () => {
       Engine: 'postgres',
       PubliclyAccessible: false,
       StorageEncrypted: true,
+    });
+    output.hasResourceProperties('AWS::RDS::DBParameterGroup', {
+      Parameters: {
+        'rds.force_ssl': '1',
+      },
     });
     output.hasResourceProperties('AWS::DynamoDB::Table', {
       BillingMode: 'PAY_PER_REQUEST',
@@ -296,6 +359,25 @@ describe('EagleBankStack', () => {
           },
         }),
         Match.objectLike({
+          Name: 'login-rate-limit',
+          Statement: {
+            RateBasedStatement: Match.objectLike({
+              AggregateKeyType: 'IP',
+              Limit: 200,
+            }),
+          },
+        }),
+        Match.objectLike({
+          Name: 'registration-rate-limit',
+          Statement: {
+            RateBasedStatement: Match.objectLike({
+              AggregateKeyType: 'IP',
+              Limit: 100,
+            }),
+          },
+        }),
+        Match.objectLike({
+          Name: 'rate-limit',
           Statement: {
             RateBasedStatement: {
               AggregateKeyType: 'IP',
@@ -346,7 +428,7 @@ describe('EagleBankStack', () => {
 
   it('requires TLS and stronger availability for production', () => {
     expect(() => template('prod')).toThrow(
-      'certificateArn is required for the prod stage',
+      'certificateArn is required for active prod services',
     );
 
     const output = template('prod', TEST_CERTIFICATE_ARN);
@@ -360,6 +442,7 @@ describe('EagleBankStack', () => {
     output.hasResourceProperties('AWS::ElasticLoadBalancingV2::Listener', {
       Port: 443,
       Protocol: 'HTTPS',
+      SslPolicy: 'ELBSecurityPolicy-TLS13-1-2-2021-06',
     });
     output.hasResourceProperties('AWS::WAFv2::WebACL', {
       Rules: Match.arrayWith([
@@ -373,6 +456,19 @@ describe('EagleBankStack', () => {
         }),
       ]),
     });
+  });
+
+  it('requires TLS for preproduction deployments', () => {
+    expect(() => template('preprod')).toThrow(
+      'certificateArn is required for active preprod services',
+    );
+    template('preprod', TEST_CERTIFICATE_ARN).hasResourceProperties(
+      'AWS::ElasticLoadBalancingV2::Listener',
+      {
+        Port: 443,
+        Protocol: 'HTTPS',
+      },
+    );
   });
 
   it('keeps services stopped until migrations are explicitly completed', () => {

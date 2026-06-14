@@ -1,63 +1,55 @@
 import { z } from 'zod';
-import { SECONDS_PER_HOUR } from '../common/constants.js';
 import {
-  Environment,
-  isAwsDeploymentEnvironment,
-} from '../common/config/runtime.constants.js';
+  apiConfigSchema,
+  authServiceConfigSchema,
+  ledgerEventPublisherConfigSchema,
+  ledgerServiceConfigSchema,
+  ledgerWorkerConfigSchema,
+} from './env.schemas.js';
 
-const DEFAULT_API_PORT = 3000;
-const MINIMUM_SECRET_LENGTH = 32;
-const DEFAULT_JWT_EXPIRES_IN = '1h';
-const DEFAULT_AWS_REGION = 'eu-west-2';
+// This file is the public configuration API. Services import their typed
+// loader from here without depending on the underlying Zod schema structure.
+export type AppConfig = z.infer<typeof apiConfigSchema>;
+export type AuthServiceConfig = z.infer<typeof authServiceConfigSchema>;
+export type LedgerServiceConfig = z.infer<typeof ledgerServiceConfigSchema>;
+export type LedgerEventPublisherConfig = z.infer<
+  typeof ledgerEventPublisherConfigSchema
+>;
+export type LedgerWorkerConfig = z.infer<typeof ledgerWorkerConfigSchema>;
 
-const envSchema = z
-  .object({
-    NODE_ENV: z.enum(Environment),
-    PORT: z.coerce.number().int().positive().default(DEFAULT_API_PORT),
-    DATABASE_URL: z.string().min(1),
-    JWT_SECRET: z.string().min(MINIMUM_SECRET_LENGTH),
-    JWT_EXPIRES_IN: z.string().min(1).default(DEFAULT_JWT_EXPIRES_IN),
-    AUTH_SESSION_TTL_SECONDS: z.coerce
-      .number()
-      .int()
-      .positive()
-      .default(SECONDS_PER_HOUR),
-    AWS_REGION: z.string().min(1).default(DEFAULT_AWS_REGION),
-    DYNAMODB_ENDPOINT: z.string().url().optional(),
-    SQS_ENDPOINT: z.string().url().optional(),
-    DYNAMODB_AUTH_SESSIONS_TABLE: z
-      .string()
-      .min(1)
-      .default('eagle-bank-auth-sessions'),
-    AWS_ACCESS_KEY_ID: z.string().optional(),
-    AWS_SECRET_ACCESS_KEY: z.string().optional(),
-    LEDGER_SERVICE_BASE_URL: z.string().url().optional(),
-    AUTH_SERVICE_BASE_URL: z.string().url().optional(),
-    INTERNAL_SERVICE_JWT_SECRET: z
-      .string()
-      .min(MINIMUM_SECRET_LENGTH)
-      .optional(),
-  })
-  .superRefine((configuration, context) => {
-    if (!isAwsDeploymentEnvironment(configuration.NODE_ENV)) {
-      return;
-    }
+function parseConfig<Schema extends z.ZodType>(
+  schema: Schema,
+  source: NodeJS.ProcessEnv | undefined,
+): z.infer<Schema> {
+  // Passing a source keeps tests deterministic. Production entry points omit
+  // it and validate the real process environment during startup.
+  return schema.parse(source ?? process.env);
+}
 
-    // Deployed services must use the AWS SDK's regional endpoints and ECS task
-    // role credentials. Local endpoint overrides are valid only for local/test.
-    for (const field of ['DYNAMODB_ENDPOINT', 'SQS_ENDPOINT'] as const) {
-      if (configuration[field]) {
-        context.addIssue({
-          code: 'custom',
-          path: [field],
-          message: `${field} is not allowed in ${configuration.NODE_ENV}`,
-        });
-      }
-    }
-  });
+export function loadApiConfig(source?: NodeJS.ProcessEnv): AppConfig {
+  return parseConfig(apiConfigSchema, source);
+}
 
-export type AppConfig = z.infer<typeof envSchema>;
+export function loadAuthServiceConfig(
+  source?: NodeJS.ProcessEnv,
+): AuthServiceConfig {
+  return parseConfig(authServiceConfigSchema, source);
+}
 
-export function loadConfig(source: NodeJS.ProcessEnv = process.env): AppConfig {
-  return envSchema.parse(source);
+export function loadLedgerServiceConfig(
+  source?: NodeJS.ProcessEnv,
+): LedgerServiceConfig {
+  return parseConfig(ledgerServiceConfigSchema, source);
+}
+
+export function loadLedgerEventPublisherConfig(
+  source?: NodeJS.ProcessEnv,
+): LedgerEventPublisherConfig {
+  return parseConfig(ledgerEventPublisherConfigSchema, source);
+}
+
+export function loadLedgerWorkerConfig(
+  source?: NodeJS.ProcessEnv,
+): LedgerWorkerConfig {
+  return parseConfig(ledgerWorkerConfigSchema, source);
 }

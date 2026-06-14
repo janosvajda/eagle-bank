@@ -1,25 +1,58 @@
-import { AccountStatus, Prisma, type PrismaClient } from '@prisma/client';
+import {
+  AccountStatus,
+  Prisma,
+  type PrismaClient,
+} from '../../generated/prisma/client.js';
+import type {
+  BankAccountWithOwner,
+  CreateBankAccountRecord,
+  UpdateBankAccountRecord,
+} from './accounts.repository.types.js';
+
+const ACCOUNT_OWNER_INCLUDE = {
+  user: {
+    select: {
+      id: true,
+    },
+  },
+} as const satisfies Prisma.BankAccountInclude;
+
+export type { BankAccountWithOwner } from './accounts.repository.types.js';
 
 export class AccountsRepository {
   constructor(private readonly db: PrismaClient) {}
 
-  create(data: Prisma.BankAccountUncheckedCreateInput) {
-    return this.db.bankAccount.create({ data });
+  create(userId: bigint, account: CreateBankAccountRecord) {
+    return this.db.bankAccount.create({
+      data: {
+        ...account,
+        user: { connect: { id: userId } },
+      },
+    });
   }
 
-  listByUser(userId: string) {
+  listByUser(userId: bigint) {
     return this.db.bankAccount.findMany({
-      where: { userId, status: AccountStatus.ACTIVE },
+      where: {
+        userId,
+        status: AccountStatus.ACTIVE,
+      },
       orderBy: { createdAt: Prisma.SortOrder.asc },
     });
   }
 
-  findByNumber(accountNumber: string) {
-    return this.db.bankAccount.findUnique({ where: { accountNumber } });
+  findByNumber(accountNumber: string): Promise<BankAccountWithOwner | null> {
+    return this.db.bankAccount.findUnique({
+      where: { accountNumber },
+      include: ACCOUNT_OWNER_INCLUDE,
+    });
   }
 
-  update(accountNumber: string, data: Prisma.BankAccountUpdateInput) {
-    return this.db.bankAccount.update({ where: { accountNumber }, data });
+  update(accountNumber: string, changes: UpdateBankAccountRecord) {
+    return this.db.bankAccount.update({
+      where: { accountNumber },
+      data: changes,
+    });
   }
 
   delete(accountNumber: string) {

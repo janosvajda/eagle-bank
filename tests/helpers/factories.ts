@@ -1,6 +1,9 @@
-import { randomUUID } from 'node:crypto';
 import argon2 from 'argon2';
 import { testPrisma } from './database.js';
+import {
+  formatUserApiId,
+  parseUserApiId,
+} from '../../src/modules/users/user-id.js';
 
 export const userPayload = {
   name: 'Test User',
@@ -21,9 +24,8 @@ export async function createUser(overrides: Partial<typeof userPayload> = {}) {
     ...overrides,
     address: { ...userPayload.address, ...(overrides.address ?? {}) },
   };
-  return testPrisma.user.create({
+  const user = await testPrisma.user.create({
     data: {
-      id: `usr-${randomUUID().replaceAll('-', '')}`,
       name: payload.name,
       addressLine1: payload.address.line1,
       town: payload.address.town,
@@ -34,18 +36,24 @@ export async function createUser(overrides: Partial<typeof userPayload> = {}) {
       passwordHash: await argon2.hash(payload.password),
     },
   });
+  return { ...user, publicId: formatUserApiId(user.id) };
 }
 
 export async function createAccount(
-  userId: string,
+  userPublicId: string,
   accountNumber = '01234567',
 ) {
+  const userId = parseUserApiId(userPublicId);
+  if (userId === undefined) {
+    throw new Error(`Invalid test user ID: ${userPublicId}`);
+  }
+
   return testPrisma.bankAccount.create({
     data: {
       accountNumber,
       name: 'Personal Bank Account',
       accountType: 'personal',
-      userId,
+      user: { connect: { id: userId } },
       status: 'ACTIVE',
       ledgerAccount: {
         create: {

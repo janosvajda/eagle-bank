@@ -1,8 +1,7 @@
-import argon2 from 'argon2';
 import fastify, { type FastifyInstance } from 'fastify';
 import { constants as httpConstants } from 'node:http2';
 import fastifyJwt from '@fastify/jwt';
-import type { PrismaClient } from '@prisma/client';
+import type { PrismaClient } from '../generated/prisma/client.js';
 import { registerErrorHandler } from '../common/errors/error-handler.js';
 import { registerOpenApiValidation } from '../common/openapi/openapi-validation.js';
 import { AppError } from '../common/errors/AppError.js';
@@ -25,6 +24,14 @@ import { healthRoutes } from '../modules/health/health.routes.js';
 import { verifyInternalServiceToken } from '../common/auth/internal-service-jwt.js';
 import { ServiceIdentity } from '../common/auth/auth.constants.js';
 import { MILLISECONDS_PER_SECOND } from '../common/constants.js';
+import { hashPassword } from '../common/password/password.js';
+import { userJwtOptions } from '../common/auth/user-jwt.js';
+import {
+  HTTP_BODY_LIMIT_BYTES,
+  registerHttpSecurity,
+} from '../common/security/http-security.js';
+import { Environment } from '../common/config/runtime.constants.js';
+import { secureLoggerOptions } from '../common/logging/logger-options.js';
 
 export async function buildAuthApp(options: {
   prisma: PrismaClient;
@@ -33,10 +40,16 @@ export async function buildAuthApp(options: {
   jwtExpiresIn: string;
   sessionTtlSeconds: number;
   internalSecret: string;
+  environment?: Environment;
   logger?: boolean;
 }): Promise<FastifyInstance> {
-  const app = fastify({ logger: options.logger ?? false });
-  await app.register(fastifyJwt, { secret: options.jwtSecret });
+  const environment = options.environment ?? Environment.TEST;
+  const app = fastify({
+    bodyLimit: HTTP_BODY_LIMIT_BYTES,
+    logger: secureLoggerOptions(options.logger ?? false),
+  });
+  registerHttpSecurity(app, environment);
+  await app.register(fastifyJwt, userJwtOptions(options.jwtSecret));
   app.decorate('authSessions', options.sessions);
   registerErrorHandler(app);
   await registerOpenApiValidation(app);
@@ -52,17 +65,23 @@ export async function buildAuthApp(options: {
   // Public login is allowed through the ALB. Every /internal route requires a
   // short-lived token issued specifically by the API for the Auth audience.
   app.addHook('preHandler', async (request) => {
-    if (
-      request.url.startsWith('/internal/') &&
-      !verifyInternalServiceToken({
-        token: request.headers.authorization,
-        audience: ServiceIdentity.AUTH,
-        allowedIssuers: [ServiceIdentity.API],
-        secret: options.internalSecret,
-      })
-    ) {
+    if (!request.url.startsWith('/internal/')) {
+      return;
+    }
+
+    const verification = verifyInternalServiceToken({
+      token: request.headers.authorization,
+      audience: ServiceIdentity.AUTH,
+      allowedIssuers: [ServiceIdentity.API],
+      secret: options.internalSecret,
+    });
+    if (!verification.valid) {
       request.log.warn(
-        { method: request.method, path: request.url },
+        {
+          authFailure: verification.reason,
+          method: request.method,
+          path: request.url,
+        },
         'Internal Auth request rejected',
       );
       throw new AppError(
@@ -75,7 +94,7 @@ export async function buildAuthApp(options: {
   app.post<{ Body: PasswordHashRequest; Reply: PasswordHashResponse }>(
     '/internal/auth/password-hash',
     async (request) => ({
-      passwordHash: await argon2.hash(
+      passwordHash: await hashPassword(
         passwordHashRequestSchema.parse(request.body).password,
       ),
     }),

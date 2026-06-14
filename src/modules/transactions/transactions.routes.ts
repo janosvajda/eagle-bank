@@ -1,5 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { constants as httpConstants } from 'node:http2';
+import { PUBLIC_API_PREFIX } from '../../common/http/api-version.js';
 import { authenticate } from '../../common/middleware/authenticate.js';
 import type { TransactionsService } from './transactions.service.js';
 import {
@@ -15,7 +16,7 @@ export function transactionsRoutes(
     app.addHook('preHandler', authenticate);
 
     app.post(
-      '/v1/accounts/:accountNumber/transactions',
+      `${PUBLIC_API_PREFIX}/accounts/:accountNumber/transactions`,
       async (request, reply) => {
         const { accountNumber } = transactionAccountParamsSchema.parse(
           request.params,
@@ -39,15 +40,18 @@ export function transactionsRoutes(
       },
     );
 
-    app.get('/v1/accounts/:accountNumber/transactions', async (request) => {
-      const { accountNumber } = transactionAccountParamsSchema.parse(
-        request.params,
-      );
-      return service.list(accountNumber, request.user.sub);
-    });
+    app.get(
+      `${PUBLIC_API_PREFIX}/accounts/:accountNumber/transactions`,
+      async (request) => {
+        const { accountNumber } = transactionAccountParamsSchema.parse(
+          request.params,
+        );
+        return service.list(accountNumber, request.user.sub);
+      },
+    );
 
     app.get(
-      '/v1/accounts/:accountNumber/transactions/:transactionId',
+      `${PUBLIC_API_PREFIX}/accounts/:accountNumber/transactions/:transactionId`,
       async (request) => {
         const { accountNumber, transactionId } = transactionParamsSchema.parse(
           request.params,

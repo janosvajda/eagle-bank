@@ -1,5 +1,4 @@
-import { randomUUID } from 'node:crypto';
-import { Prisma } from '@prisma/client';
+import { Prisma } from '../../generated/prisma/client.js';
 import { constants as httpConstants } from 'node:http2';
 import { AppError } from '../../common/errors/AppError.js';
 import { ErrorCode } from '../../common/errors/error-codes.js';
@@ -12,6 +11,8 @@ import type { LedgerGateway } from '../ledger/ledger.contracts.js';
 import { TransactionType } from '../../common/domain/banking.js';
 import type { FastifyBaseLogger } from 'fastify';
 import pino from 'pino';
+import { parseUserApiId } from '../users/user-id.js';
+import { parseTransactionApiId } from './transaction-id.js';
 
 export class TransactionsService {
   constructor(
@@ -73,16 +74,24 @@ export class TransactionsService {
           });
         }
 
+        const databaseUserId = parseUserApiId(userId);
+        if (databaseUserId === undefined) {
+          throw new AppError(
+            httpConstants.HTTP_STATUS_UNAUTHORIZED,
+            ErrorCode.UNAUTHORIZED,
+            'Access token is missing or invalid',
+          );
+        }
+
         return tx.transaction.create({
           data: {
-            id: `tan-${randomUUID().replaceAll('-', '')}`,
             amount,
             currency: input.currency,
             type: input.type,
             ...(input.reference !== undefined
               ? { reference: input.reference }
               : {}),
-            userId,
+            userId: databaseUserId,
             accountId: account.id,
           },
         });
@@ -112,10 +121,14 @@ export class TransactionsService {
     if (this.ledger) {
       return this.ledger.getTransaction(accountNumber, transactionId);
     }
-    const transaction = await this.transactions.findByIdAndAccount(
-      transactionId,
-      account.id,
-    );
+    const databaseTransactionId = parseTransactionApiId(transactionId);
+    const transaction =
+      databaseTransactionId === undefined
+        ? null
+        : await this.transactions.findByIdAndAccount(
+            databaseTransactionId,
+            account.id,
+          );
     if (!transaction) {
       this.logger.warn(
         { accountNumber, transactionId, userId },

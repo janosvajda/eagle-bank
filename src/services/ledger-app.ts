@@ -1,6 +1,6 @@
 import fastify, { type FastifyInstance } from 'fastify';
 import { constants as httpConstants } from 'node:http2';
-import type { PrismaClient } from '@prisma/client';
+import type { PrismaClient } from '../generated/prisma/client.js';
 import { registerErrorHandler } from '../common/errors/error-handler.js';
 import { AppError } from '../common/errors/AppError.js';
 import { ErrorCode } from '../common/errors/error-codes.js';
@@ -17,8 +17,17 @@ import type {
 } from '../modules/ledger/ledger.contracts.js';
 import {
   ledgerAccountCommandSchema,
+  ledgerAccountNumberSchema,
   postLedgerTransactionCommandSchema,
 } from '../modules/ledger/ledger.contracts.js';
+import { z } from 'zod';
+import {
+  HTTP_BODY_LIMIT_BYTES,
+  registerHttpSecurity,
+} from '../common/security/http-security.js';
+import type { Environment } from '../common/config/runtime.constants.js';
+import { Environment as RuntimeEnvironment } from '../common/config/runtime.constants.js';
+import { secureLoggerOptions } from '../common/logging/logger-options.js';
 
 interface AccountNumberParams {
   accountNumber: string;
@@ -32,12 +41,32 @@ interface AccountNumbersRequest {
   accountNumbers: string[];
 }
 
+const accountNumberParamsSchema = z.object({
+  accountNumber: ledgerAccountNumberSchema,
+});
+
+const transactionParamsSchema = accountNumberParamsSchema.extend({
+  transactionId: z.string().regex(/^tan-[A-Za-z0-9]+$/),
+});
+
+const accountNumbersRequestSchema = z
+  .object({
+    accountNumbers: z.array(ledgerAccountNumberSchema),
+  })
+  .strict();
+
 export async function buildLedgerApp(options: {
   prisma: PrismaClient;
   internalSecret: string;
+  environment?: Environment;
   logger?: boolean;
 }): Promise<FastifyInstance> {
-  const app = fastify({ logger: options.logger ?? false });
+  const environment = options.environment ?? RuntimeEnvironment.TEST;
+  const app = fastify({
+    bodyLimit: HTTP_BODY_LIMIT_BYTES,
+    logger: secureLoggerOptions(options.logger ?? false),
+  });
+  registerHttpSecurity(app, environment);
   registerErrorHandler(app);
   const ledger = new LedgerService(
     new LedgerRepository(options.prisma),
@@ -47,20 +76,23 @@ export async function buildLedgerApp(options: {
   // Ledger has no public ALB route. The hook still authenticates every internal
   // request so private-network access alone is never treated as authorization.
   app.addHook('preHandler', async (request) => {
-    if (
-      request.url.startsWith('/internal/') &&
-      !verifyInternalServiceToken({
-        token: request.headers.authorization,
-        audience: ServiceIdentity.LEDGER,
-        allowedIssuers: [
-          ServiceIdentity.API,
-          ServiceIdentity.ACCOUNT_RECONCILER,
-        ],
-        secret: options.internalSecret,
-      })
-    ) {
+    if (!request.url.startsWith('/internal/')) {
+      return;
+    }
+
+    const verification = verifyInternalServiceToken({
+      token: request.headers.authorization,
+      audience: ServiceIdentity.LEDGER,
+      allowedIssuers: [ServiceIdentity.API, ServiceIdentity.ACCOUNT_RECONCILER],
+      secret: options.internalSecret,
+    });
+    if (!verification.valid) {
       request.log.warn(
-        { method: request.method, path: request.url },
+        {
+          authFailure: verification.reason,
+          method: request.method,
+          path: request.url,
+        },
         'Internal Ledger request rejected',
       );
       throw new AppError(
@@ -86,24 +118,26 @@ export async function buildLedgerApp(options: {
   );
   app.get<{ Params: AccountNumberParams }>(
     '/internal/ledger/accounts/:accountNumber/balance',
-    async (request) => ({
-      balance: await ledger.getBalance(request.params.accountNumber),
-    }),
+    async (request) => {
+      const { accountNumber } = accountNumberParamsSchema.parse(request.params);
+      return { balance: await ledger.getBalance(accountNumber) };
+    },
   );
   app.post<{ Body: AccountNumbersRequest }>(
     '/internal/ledger/accounts/balances',
-    async (request) => ({
-      balances: await ledger.getBalances(request.body.accountNumbers),
-    }),
+    async (request) => {
+      const { accountNumbers } = accountNumbersRequestSchema.parse(
+        request.body,
+      );
+      return { balances: await ledger.getBalances(accountNumbers) };
+    },
   );
   app.post<{ Params: AccountNumberParams }>(
     '/internal/ledger/accounts/:accountNumber/close',
     async (request, reply) => {
-      await ledger.closeAccount(request.params.accountNumber);
-      request.log.info(
-        { accountNumber: request.params.accountNumber },
-        'Ledger account closed',
-      );
+      const { accountNumber } = accountNumberParamsSchema.parse(request.params);
+      await ledger.closeAccount(accountNumber);
+      request.log.info({ accountNumber }, 'Ledger account closed');
       return reply.status(httpConstants.HTTP_STATUS_NO_CONTENT).send();
     },
   );
@@ -114,12 +148,19 @@ export async function buildLedgerApp(options: {
   }>(
     '/internal/ledger/accounts/:accountNumber/transactions',
     async (request, reply) => {
-      const transaction = await ledger.postTransaction(
-        postLedgerTransactionCommandSchema.parse(request.body),
-      );
+      const { accountNumber } = accountNumberParamsSchema.parse(request.params);
+      const command = postLedgerTransactionCommandSchema.parse(request.body);
+      if (command.accountNumber !== accountNumber) {
+        throw new AppError(
+          httpConstants.HTTP_STATUS_BAD_REQUEST,
+          ErrorCode.BAD_REQUEST,
+          'Path and transaction account numbers must match',
+        );
+      }
+      const transaction = await ledger.postTransaction(command);
       request.log.info(
         {
-          accountNumber: request.params.accountNumber,
+          accountNumber,
           transactionId: transaction.id,
           transactionType: transaction.type,
           userId: transaction.userId,
@@ -131,17 +172,19 @@ export async function buildLedgerApp(options: {
   );
   app.get<{ Params: AccountNumberParams }>(
     '/internal/ledger/accounts/:accountNumber/transactions',
-    async (request) => ({
-      transactions: await ledger.listTransactions(request.params.accountNumber),
-    }),
+    async (request) => {
+      const { accountNumber } = accountNumberParamsSchema.parse(request.params);
+      return { transactions: await ledger.listTransactions(accountNumber) };
+    },
   );
   app.get<{ Params: TransactionParams }>(
     '/internal/ledger/accounts/:accountNumber/transactions/:transactionId',
-    async (request) =>
-      ledger.getTransaction(
-        request.params.accountNumber,
-        request.params.transactionId,
-      ),
+    async (request) => {
+      const { accountNumber, transactionId } = transactionParamsSchema.parse(
+        request.params,
+      );
+      return ledger.getTransaction(accountNumber, transactionId);
+    },
   );
   await app.register(healthRoutes(options.prisma));
   return app;

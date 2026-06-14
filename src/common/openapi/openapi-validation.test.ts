@@ -2,19 +2,20 @@ import { resolve } from 'node:path';
 import fastify from 'fastify';
 import { describe, expect, it, vi } from 'vitest';
 import { registerErrorHandler } from '../errors/error-handler.js';
+import { OPENAPI_DOCUMENT_PATH } from './openapi.constants.js';
 import { registerOpenApiValidation } from './openapi-validation.js';
 
 async function buildContractApp() {
   const app = fastify({ logger: false });
   registerErrorHandler(app);
   await registerOpenApiValidation(app, {
-    definition: resolve(process.cwd(), 'openapi.yaml'),
+    definition: resolve(process.cwd(), OPENAPI_DOCUMENT_PATH),
   });
   return app;
 }
 
 describe('registerOpenApiValidation', () => {
-  it('rejects a request that violates openapi.yaml', async () => {
+  it('rejects a request that violates the versioned contract', async () => {
     const app = await buildContractApp();
     app.post('/v1/users', async () => ({ unexpected: true }));
 
@@ -60,7 +61,7 @@ describe('registerOpenApiValidation', () => {
         statusCode: 200,
         validationErrors: expect.any(Array),
       },
-      'Response does not conform to openapi.yaml',
+      'Response does not conform to the versioned OpenAPI contract',
     );
     await app.close();
   });
