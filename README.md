@@ -1,6 +1,6 @@
 # Eagle Bank
 
-A TypeScript implementation of the Eagle Bank take-home assessment. It
+A JavaScript/TypeScript implementation of the Eagle Bank take-home assessment. It
 implements every public endpoint in
 [`openapi/v1/openapi.yaml`](openapi/v1/openapi.yaml), all
 assessment scenarios, JWT authentication backed by revocable sessions,
@@ -20,6 +20,11 @@ the chosen resolution, and which contract the implementation follows.
 ## Test Locally With Docker
 
 Prerequisites: Docker and Docker Compose only.
+
+No AWS account or AWS credentials are required for local execution. Docker
+Compose uses [LocalStack](https://docs.localstack.cloud/) to emulate Amazon SQS
+and DynamoDB Local to emulate Amazon DynamoDB. AWS deployments use the real
+CDK-managed SQS and DynamoDB services instead of these local endpoints.
 
 After checking out the repository, open a terminal in the repository root and
 run the following steps in order. Do not run `npm install` for this workflow.
@@ -84,7 +89,7 @@ To remove all local database state as well:
 docker compose down -v
 ```
 
-Compose waits for PostgreSQL and the local AWS emulators, applies only
+Compose waits for PostgreSQL, LocalStack, and DynamoDB Local, applies only
 unapplied Prisma migrations, creates the DynamoDB table and SQS queues
 idempotently, then starts the application services.
 
