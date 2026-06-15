@@ -136,6 +136,16 @@ npm run infra:synth
 The generated Prisma client is written to `src/generated/prisma` and excluded
 from source control.
 
+## Continuous Integration
+
+The [GitHub Actions CI workflow](.github/workflows/ci.yml) runs for every pull
+request and every push to `main`. It executes the same Docker-based test suite
+documented above, including linting, TypeScript checks, formatting checks, unit
+tests with coverage, integration tests, and infrastructure tests.
+
+To prevent unverified changes from being merged, configure the repository's
+`main` branch protection rules to require the `Verify` status check.
+
 ## Example Requests
 
 This section is a manual, sequential API walkthrough. Use the three-terminal
