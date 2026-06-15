@@ -1,10 +1,10 @@
-# Eagle Bank API — Full Senior Implementation Specification
+# Eagle Bank API Implementation Specification
 
 ## 0. Purpose
 
-You are implementing a senior-level take-home coding assessment project for Eagle Bank.
+You are implementing the Eagle Bank take-home coding assessment.
 
-This document is the full implementation contract.
+This document defines the implementation requirements.
 
 The implementation must satisfy:
 
@@ -19,7 +19,7 @@ The final project must be runnable locally through Docker Compose.
 
 The project must also include AWS CDK code that models a future deployable AWS architecture.
 
-The architecture is intentionally production-shaped, but the local reviewer experience must remain straightforward.
+The project includes a local runtime and an AWS deployment model, while keeping the reviewer setup straightforward.
 
 ---
 
@@ -27,33 +27,33 @@ The architecture is intentionally production-shaped, but the local reviewer expe
 
 Use exactly this stack:
 
-* TypeScript
-* Node.js 24+
-* npm 11+
-* Turborepo
-* Fastify
-* Prisma
-* PostgreSQL
-* Docker Compose
-* Vitest
-* Zod
-* argon2
-* JWT bearer authentication
-* DynamoDB Local
-* AWS DynamoDB
-* LocalStack
-* AWS SDK for JavaScript v3
-* Pino structured logging
-* Transactional outbox pattern
-* SQS
-* AWS CDK v2 in TypeScript
-* AWS WAF
-* Application Load Balancer
-* ECS Fargate
-* RDS PostgreSQL
-* DynamoDB
-* AWS Systems Manager Parameter Store
-* CloudWatch Logs
+- TypeScript
+- Node.js 24+
+- npm 11+
+- Turborepo
+- Fastify
+- Prisma
+- PostgreSQL
+- Docker Compose
+- Vitest
+- Zod
+- argon2
+- JWT bearer authentication
+- DynamoDB Local
+- AWS DynamoDB
+- LocalStack
+- AWS SDK for JavaScript v3
+- Pino structured logging
+- Transactional outbox pattern
+- SQS
+- AWS CDK v2 in TypeScript
+- AWS WAF
+- Application Load Balancer
+- ECS Fargate
+- RDS PostgreSQL
+- DynamoDB
+- AWS Systems Manager Parameter Store
+- CloudWatch Logs
 
 Do not replace these technologies with alternatives.
 
@@ -63,7 +63,8 @@ Root `package.json` must include:
 {
   "packageManager": "npm@11.9.0",
   "engines": {
-    "node": ">=24"
+    "node": ">=24",
+    "npm": ">=11"
   }
 }
 ```
@@ -117,41 +118,41 @@ The API service is the public OpenAPI façade.
 
 It owns:
 
-* public user routes
-* public account routes
-* public transaction routes as façade endpoints
-* OpenAPI request validation
-* OpenAPI response mapping
-* public error-envelope mapping
-* authentication enforcement
-* ownership checks
-* user profile persistence in PostgreSQL
-* account metadata persistence in PostgreSQL
-* delegation to Auth service for password hashing and session introspection
-* delegation to Ledger service for money movement and transaction reads
-* account-Ledger reconciliation logic
+- public user routes
+- public account routes
+- public transaction routes as façade endpoints
+- OpenAPI request validation
+- OpenAPI response mapping
+- public error-envelope mapping
+- authentication enforcement
+- ownership checks
+- user profile persistence in PostgreSQL
+- account metadata persistence in PostgreSQL
+- delegation to Auth service for password hashing and session introspection
+- delegation to Ledger service for money movement and transaction reads
+- account-Ledger reconciliation logic
 
 The API service must not:
 
-* hash passwords
-* verify raw passwords
-* issue JWTs
-* write auth sessions to DynamoDB
-* mutate Ledger balances
-* create Ledger transactions
-* create Ledger entries
-* own transaction idempotency
-* publish Ledger events
-* directly write Ledger-owned tables
+- hash passwords
+- verify raw passwords
+- issue JWTs
+- write auth sessions to DynamoDB
+- mutate Ledger balances
+- create Ledger transactions
+- create Ledger entries
+- own transaction idempotency
+- publish Ledger events
+- directly write Ledger-owned tables
 
 The API service may:
 
-* validate public request shape
-* verify resource ownership
-* call Auth service internally
-* call Ledger service internally
-* compose account metadata with Ledger balances
-* map Auth/Ledger errors into OpenAPI-compatible public errors
+- validate public request shape
+- verify resource ownership
+- call Auth service internally
+- call Ledger service internally
+- compose account metadata with Ledger balances
+- map Auth/Ledger errors into OpenAPI-compatible public errors
 
 ## 3.2 Auth service
 
@@ -159,15 +160,15 @@ The Auth service owns authentication.
 
 It owns:
 
-* `POST /v1/auth/login`
-* password hashing
-* password verification
-* JWT issuing
-* DynamoDB-backed session/token metadata
-* session introspection
-* auth-specific health/readiness
-* auth logging and redaction
-* public request ID, correlation ID, error-envelope, logging, and security contract for `/v1/auth/login`
+- `POST /v1/auth/login`
+- password hashing
+- password verification
+- JWT issuing
+- DynamoDB-backed session/token metadata
+- session introspection
+- auth-specific health/readiness
+- auth logging and redaction
+- public request ID, correlation ID, error-envelope, logging, and security contract for `/v1/auth/login`
 
 Users remain in PostgreSQL.
 
@@ -175,18 +176,18 @@ Auth sessions/tokens live in DynamoDB.
 
 The Auth service may read from PostgreSQL:
 
-* `users.id`
-* `users.email`
-* `users.passwordHash`
+- `users.id`
+- `users.email`
+- `users.passwordHash`
 
 The Auth service must not:
 
-* own user profile data
-* mutate user profile fields
-* own accounts
-* own Ledger accounts
-* own transactions
-* mutate balances
+- own user profile data
+- mutate user profile fields
+- own accounts
+- own Ledger accounts
+- own transactions
+- mutate balances
 
 ## 3.3 Ledger service
 
@@ -194,22 +195,22 @@ The Ledger service owns all money movement.
 
 It owns:
 
-* Ledger account creation
-* Ledger account closure
-* Ledger account balance reads
-* Ledger batch balance reads
-* deposits
-* withdrawals
-* immutable Ledger transactions
-* Ledger entries
-* account balance mutation
-* transaction idempotency
-* insufficient-funds checks
-* maximum-balance checks
-* row-level locking/concurrency control
-* Ledger outbox event creation
-* internal Ledger command API
-* internal Ledger query API
+- Ledger account creation
+- Ledger account closure
+- Ledger account balance reads
+- Ledger batch balance reads
+- deposits
+- withdrawals
+- immutable Ledger transactions
+- Ledger entries
+- account balance mutation
+- transaction idempotency
+- insufficient-funds checks
+- maximum-balance checks
+- row-level locking/concurrency control
+- Ledger outbox event creation
+- internal Ledger command API
+- internal Ledger query API
 
 The Ledger service is private.
 
@@ -223,10 +224,10 @@ The Ledger worker models the future asynchronous command processor.
 
 It owns:
 
-* consuming Ledger commands from SQS FIFO when async command processing is enabled
-* preserving per-account command ordering
-* delegating commands to Ledger domain handlers
-* command retry and command DLQ behaviour
+- consuming Ledger commands from SQS FIFO when async command processing is enabled
+- preserving per-account command ordering
+- delegating commands to Ledger domain handlers
+- command retry and command DLQ behaviour
 
 For this take-home:
 
@@ -244,21 +245,21 @@ The Ledger event publisher owns reliable publication of committed Ledger events.
 
 It owns:
 
-* polling `ledger_outbox_events`
-* concurrency-safe event claiming
-* processing leases
-* lease recovery
-* publishing events to SQS
-* retry with exponential backoff and jitter
-* marking events `PUBLISHED`, `FAILED`, or `DEAD`
-* structured logs for event publishing
+- polling `ledger_outbox_events`
+- concurrency-safe event claiming
+- processing leases
+- lease recovery
+- publishing events to SQS
+- retry with exponential backoff and jitter
+- marking events `PUBLISHED`, `FAILED`, or `DEAD`
+- structured logs for event publishing
 
 The Ledger event publisher must not:
 
-* process banking commands
-* mutate balances
-* create Ledger transactions
-* consume public API requests
+- process banking commands
+- mutate balances
+- create Ledger transactions
+- consume public API requests
 
 ---
 
@@ -319,16 +320,17 @@ Before implementing anything:
 2. Preserve the file and its existing location unless relocation is explicitly justified.
 3. Use the OpenAPI file as the source of truth for:
 
-   * paths
-   * methods
-   * parameters
-   * request bodies
-   * response bodies
-   * required fields
-   * optional fields
-   * enums
-   * status codes
-   * error response shapes
+   - paths
+   - methods
+   - parameters
+   - request bodies
+   - response bodies
+   - required fields
+   - optional fields
+   - enums
+   - status codes
+   - error response shapes
+
 4. Do not rename public fields unless listed as a correction below.
 5. Do not invent public fields that conflict with OpenAPI.
 6. Do not return public fields not allowed by OpenAPI.
@@ -432,10 +434,10 @@ Authorization: Bearer <token>
 
 Correct `CreateUserRequest`:
 
-* add required `password`
-* password is accepted only during user creation
-* password is never returned
-* passwordHash is never returned
+- add required `password`
+- password is accepted only during user creation
+- password is never returned
+- passwordHash is never returned
 
 `UserResponse` must never contain:
 
@@ -466,15 +468,15 @@ Convert custom regex definitions incorrectly expressed as `format` into `pattern
 
 This applies to:
 
-* `userId`
-* `accountNumber`
-* `phoneNumber`
-* `transactionId`
+- `userId`
+- `accountNumber`
+- `phoneNumber`
+- `transactionId`
 
 Preserve standard OpenAPI formats:
 
-* `email`
-* `date-time`
+- `email`
+- `date-time`
 
 ## 6.5 Create-user 400 response schema
 
@@ -491,9 +493,9 @@ content:
 
 Correct domain rule:
 
-* transaction amount must be greater than `0`
-* zero-value deposit returns `400 Bad Request`
-* zero-value withdrawal returns `400 Bad Request`
+- transaction amount must be greater than `0`
+- zero-value deposit returns `400 Bad Request`
+- zero-value withdrawal returns `400 Bad Request`
 
 Update OpenAPI validation accordingly.
 
@@ -515,10 +517,10 @@ A deposit that would make balance exceed `10000.00` returns:
 
 It must not:
 
-* create Ledger transaction
-* create Ledger entry
-* mutate balance
-* create `TransactionPosted` event
+- create Ledger transaction
+- create Ledger entry
+- mutate balance
+- create `TransactionPosted` event
 
 ## 6.8 Idempotency-Key header
 
@@ -819,12 +821,12 @@ Tests running from the host may use the documented published localhost ports.
 
 Local code must not:
 
-* call AWS STS
-* use AWS SSO
-* require an AWS profile
-* query EC2/ECS instance metadata
-* resolve production AWS endpoints while local endpoint variables are set
-* require `cdk bootstrap` or `cdk deploy` for local execution
+- call AWS STS
+- use AWS SSO
+- require an AWS profile
+- query EC2/ECS instance metadata
+- resolve production AWS endpoints while local endpoint variables are set
+- require `cdk bootstrap` or `cdk deploy` for local execution
 
 Include an integration safety test that starts the local configuration and
 verifies all DynamoDB and SQS SDK requests use the configured emulator
@@ -864,19 +866,19 @@ contracts must not fork into separate local and AWS implementations.
 
 These are separately deployed services with a shared PostgreSQL database.
 
-This is an intentional take-home simplification.
+This keeps the local environment manageable.
 
 Document this clearly in README.
 
-A stricter production design would split service databases and use events/sagas for consistency.
+A database-per-service design would provide stronger storage isolation and use events or sagas for cross-service consistency.
 
 ## 9.1 API-owned data
 
 API owns:
 
-* user profile fields
-* account metadata
-* account lifecycle state
+- user profile fields
+- account metadata
+- account lifecycle state
 
 API may write:
 
@@ -940,9 +942,9 @@ ledger_outbox_events
 
 It must not:
 
-* mutate balances
-* create transactions
-* create ledger entries
+- mutate balances
+- create transactions
+- create ledger entries
 
 ## 9.5 PostgreSQL indexes and constraints
 
@@ -1025,9 +1027,9 @@ transaction belongs to the resolved Ledger account.
 
 The Ledger Event Publisher must use indexes that support:
 
-* due `PENDING` or `FAILED` events by `nextAttemptAt`
-* expired `PROCESSING` leases by `processingLeaseExpiresAt`
-* deterministic ordering by `createdAt`
+- due `PENDING` or `FAILED` events by `nextAttemptAt`
+- expired `PROCESSING` leases by `processingLeaseExpiresAt`
+- deterministic ordering by `createdAt`
 
 Partial PostgreSQL indexes may be created with SQL in a Prisma migration when
 they materially improve these publisher queries. If partial indexes are used,
@@ -1067,16 +1069,16 @@ sk = SESSION#<sessionId>
 
 Attributes:
 
-* `userId`
-* `sessionId`
-* `tokenId`
-* `issuedAt`
-* `expiresAt`
-* `expiresAtEpoch`
-* `revokedAt`
-* `lastUsedAt`
-* `createdAt`
-* `updatedAt`
+- `userId`
+- `sessionId`
+- `tokenId`
+- `issuedAt`
+- `expiresAt`
+- `expiresAtEpoch`
+- `revokedAt`
+- `lastUsedAt`
+- `createdAt`
+- `updatedAt`
 
 Enable TTL on:
 
@@ -1102,9 +1104,9 @@ sort key:      sk (String) = SESSION#<sessionId>
 
 This primary key supports all required access patterns:
 
-* introspection uses strongly consistent `GetItem` with `pk` and `sk`
-* user-session listing/revocation uses `Query` by `pk`
-* known-session updates use `UpdateItem` with `pk` and `sk`
+- introspection uses strongly consistent `GetItem` with `pk` and `sk`
+- user-session listing/revocation uses `Query` by `pk`
+- known-session updates use `UpdateItem` with `pk` and `sk`
 
 No GSI or LSI is required for the current contract.
 
@@ -1127,11 +1129,11 @@ TTL attribute, billing assumptions, and secondary-index definitions.
 
 JWT payload must include:
 
-* `sub = userId`
-* `sid = sessionId`
-* `jti = tokenId`
-* `iat`
-* `exp`
+- `sub = userId`
+- `sid = sessionId`
+- `jti = tokenId`
+- `iat`
+- `exp`
 
 ---
 
@@ -1173,10 +1175,11 @@ Request:
 4. Auth service checks DynamoDB session record.
 5. Auth service verifies:
 
-   * session exists
-   * tokenId matches
-   * session is not expired
-   * session is not revoked
+   - session exists
+   - tokenId matches
+   - session is not expired
+   - session is not revoked
+
 6. API accepts request only if introspection succeeds.
 
 ## 11.2 Failure behaviour
@@ -1267,12 +1270,12 @@ Request:
 
 This endpoint:
 
-* is internal-only
-* requires service-to-service authentication
-* is not routed through public ALB listener rules
-* logs no raw password
-* logs no passwordHash
-* redacts request body
+- is internal-only
+- requires service-to-service authentication
+- is not routed through public ALB listener rules
+- logs no raw password
+- logs no passwordHash
+- redacts request body
 
 ## 12.3 Login flow
 
@@ -1314,11 +1317,11 @@ LEDGER_SERVICE_JWT_SECRET
 
 Internal JWT claims:
 
-* `iss`: calling service name
-* `aud`: target service name
-* `iat`
-* `exp`
-* `jti`
+- `iss`: calling service name
+- `aud`: target service name
+- `iat`
+- `exp`
+- `jti`
 
 Maximum lifetime:
 
@@ -1328,30 +1331,30 @@ Maximum lifetime:
 
 Required internal auth for:
 
-* API -> Auth password hash
-* API -> Auth session introspection
-* API -> Ledger account creation
-* API -> Ledger account closure
-* API -> Ledger balance read
-* API -> Ledger batch balance read
-* API -> Ledger transaction posting
-* API -> Ledger transaction queries
-* Reconciler -> Ledger account creation
-* Reconciler -> Ledger account closure
+- API -> Auth password hash
+- API -> Auth session introspection
+- API -> Ledger account creation
+- API -> Ledger account closure
+- API -> Ledger balance read
+- API -> Ledger batch balance read
+- API -> Ledger transaction posting
+- API -> Ledger transaction queries
+- Reconciler -> Ledger account creation
+- Reconciler -> Ledger account closure
 
 Internal auth failure:
 
-* internal response: `401` or `403`
-* public API maps it to `503 Service Unavailable`
-* log security event
-* do not expose internal auth details publicly
+- internal response: `401` or `403`
+- public API maps it to `503 Service Unavailable`
+- log security event
+- do not expose internal auth details publicly
 
 AWS:
 
-* services run in private subnets
-* security groups restrict service-to-service traffic
-* internal JWT secret stored as a Parameter Store `SecureString`
-* IAM remains least privilege
+- services run in private subnets
+- security groups restrict service-to-service traffic
+- internal JWT secret stored as a Parameter Store `SecureString`
+- IAM remains least privilege
 
 ---
 
@@ -1377,9 +1380,9 @@ Retries:
 
 Failure mapping:
 
-* timeout -> `503`
-* unavailable -> `503`
-* invalid session -> `401`
+- timeout -> `503`
+- unavailable -> `503`
+- invalid session -> `401`
 
 ## 14.2 API -> Auth password hash
 
@@ -1399,8 +1402,8 @@ No retry on Auth 4xx.
 
 Failure mapping:
 
-* timeout/unavailable -> `503`
-* validation failure -> `400`
+- timeout/unavailable -> `503`
+- validation failure -> `400`
 
 ## 14.3 API -> Ledger create account
 
@@ -1420,9 +1423,9 @@ Safe because Ledger account creation is idempotent by `accountNumber`.
 
 Failure mapping:
 
-* timeout/unavailable -> mark metadata `LEDGER_CREATION_FAILED`, return `503`
-* conflict -> `409`
-* validation error -> `400` or `422`
+- timeout/unavailable -> mark metadata `LEDGER_CREATION_FAILED`, return `503`
+- conflict -> `409`
+- validation error -> `400` or `422`
 
 ## 14.4 API -> Ledger close account
 
@@ -1442,8 +1445,8 @@ Safe because Ledger account closure is idempotent by `accountNumber`.
 
 Failure mapping:
 
-* timeout/unavailable -> mark metadata `LEDGER_CLOSURE_FAILED`, return `503`
-* conflict -> `409`
+- timeout/unavailable -> mark metadata `LEDGER_CLOSURE_FAILED`, return `503`
+- conflict -> `409`
 
 ## 14.5 API -> Ledger post transaction
 
@@ -1469,9 +1472,9 @@ The retry must send the same idempotency key.
 
 If no `Idempotency-Key`:
 
-* do not retry
-* timeout maps to `503`
-* README tells clients to retry with Idempotency-Key
+- do not retry
+- timeout maps to `503`
+- README tells clients to retry with Idempotency-Key
 
 ## 14.6 API -> Ledger reads
 
@@ -1489,8 +1492,8 @@ Retries:
 
 Failure mapping:
 
-* Ledger unavailable -> `503`
-* Ledger not found -> `404`
+- Ledger unavailable -> `503`
+- Ledger not found -> `404`
 
 ---
 
@@ -1525,10 +1528,10 @@ GET /internal/ledger/accounts/{accountNumber}/balance
 
 If Ledger unavailable:
 
-* return `503 Service Unavailable`
-* do not return stale balance
-* do not return partial account
-* log `LEDGER_BALANCE_UNAVAILABLE`
+- return `503 Service Unavailable`
+- do not return stale balance
+- do not return partial account
+- log `LEDGER_BALANCE_UNAVAILABLE`
 
 ## 15.2 Account list read
 
@@ -1561,15 +1564,15 @@ Request:
 
 If any Ledger account is missing:
 
-* return `503 Service Unavailable`
-* log `LEDGER_ACCOUNT_PROJECTION_MISSING`
-* do not silently omit the account
-* do not return partial list
+- return `503 Service Unavailable`
+- log `LEDGER_ACCOUNT_PROJECTION_MISSING`
+- do not silently omit the account
+- do not return partial list
 
 If Ledger unavailable:
 
-* return `503`
-* do not return stale or partial balances
+- return `503`
+- do not return stale or partial balances
 
 ## 15.3 Account create response
 
@@ -1622,8 +1625,8 @@ unless the route is the same request that is creating or deleting the account.
 
 Creating an account spans:
 
-* API-owned account metadata
-* Ledger-owned ledger account
+- API-owned account metadata
+- Ledger-owned ledger account
 
 Use deterministic pending-state workflow.
 
@@ -1686,16 +1689,16 @@ account-ledger-reconciler
 
 It may run as:
 
-* scheduled function inside API service locally
-* future ECS scheduled task in CDK
+- scheduled function inside API service locally
+- future ECS scheduled task in CDK
 
 It must:
 
-* find accounts in `PENDING_LEDGER_CREATION` or `LEDGER_CREATION_FAILED`
-* call Ledger create account idempotently
-* mark account `ACTIVE` after success
-* log failures
-* use original correlation ID where available or create a reconciliation correlation ID
+- find accounts in `PENDING_LEDGER_CREATION` or `LEDGER_CREATION_FAILED`
+- call Ledger create account idempotently
+- mark account `ACTIVE` after success
+- log failures
+- use original correlation ID where available or create a reconciliation correlation ID
 
 ## 17.4 Ledger account creation idempotency
 
@@ -1707,11 +1710,11 @@ accountNumber
 
 Same accountNumber with same data:
 
-* return existing Ledger account
+- return existing Ledger account
 
 Same accountNumber with conflicting data:
 
-* return `409 Conflict`
+- return `409 Conflict`
 
 ---
 
@@ -1719,8 +1722,8 @@ Same accountNumber with conflicting data:
 
 Deleting/closing an account spans:
 
-* API-owned metadata
-* Ledger-owned Ledger account
+- API-owned metadata
+- Ledger-owned Ledger account
 
 Use deterministic closure workflow.
 
@@ -1754,11 +1757,11 @@ Flow:
 
 If metadata was marked `PENDING_LEDGER_CLOSURE` but Ledger closure fails:
 
-* mark metadata `LEDGER_CLOSURE_FAILED`
-* return `503`
-* account must not accept new transactions
-* reconciliation retries Ledger closure
-* account remains excluded from normal account list
+- mark metadata `LEDGER_CLOSURE_FAILED`
+- return `503`
+- account must not accept new transactions
+- reconciliation retries Ledger closure
+- account remains excluded from normal account list
 
 ## 18.4 If Ledger closure succeeds but metadata update fails
 
@@ -1766,14 +1769,14 @@ Reconciliation must detect mismatch.
 
 It must:
 
-* detect Ledger closed while metadata not closed
-* update metadata to `CLOSED`
-* log `ACCOUNT_LEDGER_STATE_MISMATCH`
+- detect Ledger closed while metadata not closed
+- update metadata to `CLOSED`
+- log `ACCOUNT_LEDGER_STATE_MISMATCH`
 
 Until reconciled:
 
-* public transaction creation returns `404` or `409`
-* no new transactions are accepted
+- public transaction creation returns `404` or `409`
+- no new transactions are accepted
 
 ## 18.5 Repeated delete
 
@@ -1862,7 +1865,7 @@ ledger_entries
 
 For the take-home, single-entry Ledger records are acceptable if documented.
 
-README must state that real banking systems usually evolve toward double-entry bookkeeping.
+README must state that full double-entry bookkeeping is not implemented.
 
 ---
 
@@ -1876,18 +1879,18 @@ PostTransactionCommand
 
 Fields:
 
-* `commandId`
-* `idempotencyKey`
-* `userId`
-* `accountNumber`
-* internal `accountId`
-* `type`
-* `amount`
-* `currency`
-* `reference`
-* `requestId`
-* `correlationId`
-* `createdAt`
+- `commandId`
+- `idempotencyKey`
+- `userId`
+- `accountNumber`
+- internal `accountId`
+- `type`
+- `amount`
+- `currency`
+- `reference`
+- `requestId`
+- `correlationId`
+- `createdAt`
 
 Command result types:
 
@@ -1898,31 +1901,31 @@ TransactionRejected
 
 `TransactionPosted` includes:
 
-* `transactionId`
-* `accountNumber`
-* `type`
-* `amount`
-* `currency`
-* `balanceAfter`
-* `createdAt`
+- `transactionId`
+- `accountNumber`
+- `type`
+- `amount`
+- `currency`
+- `balanceAfter`
+- `createdAt`
 
 `TransactionRejected` includes:
 
-* `reason`
-* `errorCode`
-* `accountNumber`
-* `type`
-* `amount`
-* `currency`
+- `reason`
+- `errorCode`
+- `accountNumber`
+- `type`
+- `amount`
+- `currency`
 
 Rejection reasons:
 
-* `INSUFFICIENT_FUNDS`
-* `BALANCE_LIMIT_EXCEEDED`
-* `ACCOUNT_NOT_FOUND`
-* `ACCOUNT_CLOSED`
-* `INVALID_AMOUNT`
-* `DUPLICATE_IDEMPOTENCY_KEY`
+- `INSUFFICIENT_FUNDS`
+- `BALANCE_LIMIT_EXCEEDED`
+- `ACCOUNT_NOT_FOUND`
+- `ACCOUNT_CLOSED`
+- `INVALID_AMOUNT`
+- `DUPLICATE_IDEMPOTENCY_KEY`
 
 ---
 
@@ -2030,10 +2033,10 @@ Idempotency conflict:
 
 Rejected command must not:
 
-* create Ledger transaction
-* create Ledger entry
-* mutate balance
-* create `TransactionPosted`
+- create Ledger transaction
+- create Ledger entry
+- mutate balance
+- create `TransactionPosted`
 
 ---
 
@@ -2049,29 +2052,29 @@ Idempotency-Key
 
 Rules:
 
-* optional at public API boundary unless OpenAPI requires it
-* strongly recommended for transaction creation
-* API passes idempotency key to Ledger
-* Ledger stores idempotency key with request hash and result
-* same key + same command returns original result
-* same key + different command returns `409 Conflict`
+- optional at public API boundary unless OpenAPI requires it
+- strongly recommended for transaction creation
+- API passes idempotency key to Ledger
+- Ledger stores idempotency key with request hash and result
+- same key + same command returns original result
+- same key + different command returns `409 Conflict`
 
 Scope:
 
-* `userId`
-* `accountNumber`
-* `idempotencyKey`
+- `userId`
+- `accountNumber`
+- `idempotencyKey`
 
 Store:
 
-* `idempotencyKey`
-* `userId`
-* `accountNumber`
-* `requestHash`
-* `status`
-* `responsePayload`
-* `createdAt`
-* `expiresAt`
+- `idempotencyKey`
+- `userId`
+- `accountNumber`
+- `requestHash`
+- `status`
+- `responsePayload`
+- `createdAt`
+- `expiresAt`
 
 ---
 
@@ -2117,9 +2120,9 @@ FOR UPDATE SKIP LOCKED
 
 Delivery semantics:
 
-* at-least-once
-* duplicates possible after crash/retry
-* downstream consumers must be idempotent
+- at-least-once
+- duplicates possible after crash/retry
+- downstream consumers must be idempotent
 
 ---
 
@@ -2133,20 +2136,20 @@ TransactionPosted
 
 Payload:
 
-* `eventId`
-* `eventType`
-* `occurredAt`
-* `transactionId`
-* `accountNumber`
-* internal `accountId`
-* `userId`
-* `type`
-* `amount`
-* `currency`
-* `balanceAfter`
-* `reference`
-* `requestId`
-* `correlationId`
+- `eventId`
+- `eventType`
+- `occurredAt`
+- `transactionId`
+- `accountNumber`
+- internal `accountId`
+- `userId`
+- `type`
+- `amount`
+- `currency`
+- `balanceAfter`
+- `reference`
+- `requestId`
+- `correlationId`
 
 Do not implement `TransactionRejected` unless explicitly designed.
 
@@ -2167,8 +2170,8 @@ eagle-bank-ledger-events-dlq
 
 Purpose:
 
-* Ledger Event Publisher publishes `TransactionPosted` events here.
-* Future consumers may process audit, reporting, fraud, analytics, notifications.
+- Ledger Event Publisher publishes `TransactionPosted` events here.
+- Future consumers may process audit, reporting, fraud, analytics, notifications.
 
 ## 26.2 Required future Ledger command queue
 
@@ -2179,13 +2182,13 @@ eagle-bank-ledger-command-dlq.fifo
 
 Purpose:
 
-* future async Ledger command processing
-* disabled by default
+- future async Ledger command processing
+- disabled by default
 
 FIFO settings:
 
-* message group ID = `accountNumber`
-* deduplication ID = `idempotencyKey` or `commandId`
+- message group ID = `accountNumber`
+- deduplication ID = `idempotencyKey` or `commandId`
 
 ## 26.3 Generic events queue
 
@@ -2218,13 +2221,13 @@ Never use JavaScript floating-point arithmetic for monetary mutation.
 
 Rules:
 
-* amount must be > 0
-* currency must be `GBP`
-* balance must be >= 0
-* balance must be <= `10000.00`
-* invalid amount returns `400`
-* insufficient funds returns `422`
-* balance limit exceeded returns `422`
+- amount must be > 0
+- currency must be `GBP`
+- balance must be >= 0
+- balance must be <= `10000.00`
+- invalid amount returns `400`
+- insufficient funds returns `422`
+- balance limit exceeded returns `422`
 
 ---
 
@@ -2232,25 +2235,25 @@ Rules:
 
 Every public request must have:
 
-* `requestId`
-* `correlationId`
+- `requestId`
+- `correlationId`
 
 Headers:
 
-* accept incoming `x-correlation-id`
-* generate correlation ID if missing
-* always generate request ID
-* return `x-request-id`
-* return `x-correlation-id`
+- accept incoming `x-correlation-id`
+- generate correlation ID if missing
+- always generate request ID
+- return `x-request-id`
+- return `x-correlation-id`
 
 Pass both IDs through:
 
-* API logs
-* Auth logs
-* Ledger logs
-* internal service calls
-* Ledger events
-* Ledger Event Publisher logs
+- API logs
+- Auth logs
+- Ledger logs
+- internal service calls
+- Ledger events
+- Ledger Event Publisher logs
 
 Auth service is public for `/v1/auth/login`, so it must implement the same request/correlation/error/logging contract as API.
 
@@ -2262,41 +2265,41 @@ Use Pino structured logs.
 
 Every service log should include where applicable:
 
-* `service`
-* `requestId`
-* `correlationId`
-* `userId`
-* `accountNumber`
-* `transactionId`
-* `eventId`
-* `statusCode`
-* `latencyMs`
-* `errorCode`
+- `service`
+- `requestId`
+- `correlationId`
+- `userId`
+- `accountNumber`
+- `transactionId`
+- `eventId`
+- `statusCode`
+- `latencyMs`
+- `errorCode`
 
 Redact:
 
-* password
-* passwordHash
-* authorization
-* accessToken
-* refreshToken
-* jwt
-* token
-* cookie
-* set-cookie
-* secret
-* DATABASE_URL
-* JWT_SECRET
-* AUTH_SERVICE_JWT_SECRET
-* LEDGER_SERVICE_JWT_SECRET
+- password
+- passwordHash
+- authorization
+- accessToken
+- refreshToken
+- jwt
+- token
+- cookie
+- set-cookie
+- secret
+- DATABASE_URL
+- JWT_SECRET
+- AUTH_SERVICE_JWT_SECRET
+- LEDGER_SERVICE_JWT_SECRET
 
 Never log:
 
-* raw passwords
-* passwordHash
-* JWT
-* full Authorization header
-* database connection strings with credentials
+- raw passwords
+- passwordHash
+- JWT
+- full Authorization header
+- database connection strings with credentials
 
 ---
 
@@ -2306,18 +2309,18 @@ All public services must return OpenAPI-compatible JSON error envelopes.
 
 Public services:
 
-* API service
-* Auth service for `/v1/auth/login`
+- API service
+- Auth service for `/v1/auth/login`
 
 Public responses must not expose:
 
-* stack traces
-* Prisma errors
-* SQL errors
-* DynamoDB internals
-* internal service auth errors
-* secrets
-* tokens
+- stack traces
+- Prisma errors
+- SQL errors
+- DynamoDB internals
+- internal service auth errors
+- secrets
+- tokens
 
 Internal service errors are mapped by the public-facing service.
 
@@ -2339,13 +2342,13 @@ It does not use the general error envelope.
 
 `GET /health`:
 
-* process health only
-* returns `200` with `HealthResponse`
+- process health only
+- returns `200` with `HealthResponse`
 
 `GET /ready`:
 
-* PostgreSQL connectivity only
-* returns `200` with:
+- PostgreSQL connectivity only
+- returns `200` with:
 
 ```json
 {
@@ -2353,7 +2356,7 @@ It does not use the general error envelope.
 }
 ```
 
-* returns `503` with:
+- returns `503` with:
 
 ```json
 {
@@ -2369,12 +2372,12 @@ API readiness must not fail because DynamoDB or SQS is unavailable unless API di
 
 `GET /health`:
 
-* process health only
+- process health only
 
 `GET /ready`:
 
-* PostgreSQL connectivity
-* DynamoDB connectivity
+- PostgreSQL connectivity
+- DynamoDB connectivity
 
 Auth service readiness uses the same `ReadinessResponse` shape:
 
@@ -2396,11 +2399,11 @@ or:
 
 `GET /health`:
 
-* process health only
+- process health only
 
 `GET /ready`:
 
-* PostgreSQL connectivity
+- PostgreSQL connectivity
 
 Ledger service readiness uses the same `ReadinessResponse` shape.
 
@@ -2408,8 +2411,8 @@ Ledger service readiness uses the same `ReadinessResponse` shape.
 
 Readiness checks:
 
-* PostgreSQL connectivity
-* SQS connectivity
+- PostgreSQL connectivity
+- SQS connectivity
 
 If an operational readiness endpoint is exposed for this service, it uses the same `ReadinessResponse` shape.
 
@@ -2417,8 +2420,8 @@ If an operational readiness endpoint is exposed for this service, it uses the sa
 
 Readiness checks:
 
-* SQS connectivity
-* PostgreSQL connectivity if enabled
+- SQS connectivity
+- PostgreSQL connectivity if enabled
 
 If an operational readiness endpoint is exposed for this service, it uses the same `ReadinessResponse` shape.
 
@@ -2430,131 +2433,131 @@ If an operational readiness endpoint is exposed for this service, it uses the sa
 
 `POST /v1/users`:
 
-* creates user
-* requires password
-* API calls Auth service to hash password
-* stores passwordHash in PostgreSQL
-* never returns password/passwordHash
-* missing required data returns `400`
-* Auth unavailable returns `503`
+- creates user
+- requires password
+- API calls Auth service to hash password
+- stores passwordHash in PostgreSQL
+- never returns password/passwordHash
+- missing required data returns `400`
+- Auth unavailable returns `503`
 
 `GET /v1/users/{userId}`:
 
-* own user returns `200`
-* another user returns `403`
-* missing user returns `404`
-* Auth introspection unavailable returns `503`
+- own user returns `200`
+- another user returns `403`
+- missing user returns `404`
+- Auth introspection unavailable returns `503`
 
 `PATCH /v1/users/{userId}`:
 
-* own user updates
-* another user returns `403`
-* missing user returns `404`
-* Auth introspection unavailable returns `503`
+- own user updates
+- another user returns `403`
+- missing user returns `404`
+- Auth introspection unavailable returns `503`
 
 `DELETE /v1/users/{userId}`:
 
-* own user with no non-final accounts deletes
-* user with any non-final account returns `409`
-* `CLOSED` accounts do not block deletion
-* another user returns `403`
-* missing user returns `404`
-* Auth introspection unavailable returns `503`
+- own user with no non-final accounts deletes
+- user with any non-final account returns `409`
+- `CLOSED` accounts do not block deletion
+- another user returns `403`
+- missing user returns `404`
+- Auth introspection unavailable returns `503`
 
 ## 33.2 Auth
 
 `POST /v1/auth/login`:
 
-* Auth service handles request
-* valid credentials return `LoginResponse`
-* invalid credentials return `401`
-* malformed request returns `400`
-* password is redacted
-* passwordHash is never returned
-* session metadata written to DynamoDB
-* PostgreSQL/DynamoDB dependency failure returns `503`
+- Auth service handles request
+- valid credentials return `LoginResponse`
+- invalid credentials return `401`
+- malformed request returns `400`
+- password is redacted
+- passwordHash is never returned
+- session metadata written to DynamoDB
+- PostgreSQL/DynamoDB dependency failure returns `503`
 
 ## 33.3 Accounts
 
 `POST /v1/accounts`:
 
-* creates account metadata in pending state
-* creates Ledger account idempotently
-* marks account `ACTIVE`
-* response includes Ledger balance
-* missing required data returns `400`
-* Ledger unavailable returns `503`
+- creates account metadata in pending state
+- creates Ledger account idempotently
+- marks account `ACTIVE`
+- response includes Ledger balance
+- missing required data returns `400`
+- Ledger unavailable returns `503`
 
 `GET /v1/accounts`:
 
-* lists only authenticated user’s active accounts
-* fetches balances from Ledger batch endpoint
-* Ledger unavailable returns `503`
-* missing Ledger projection returns `503`
+- lists only authenticated user’s active accounts
+- fetches balances from Ledger batch endpoint
+- Ledger unavailable returns `503`
+- missing Ledger projection returns `503`
 
 `GET /v1/accounts/{accountNumber}`:
 
-* own active account returns `200`
-* another user’s account returns `403`
-* missing account returns `404`
-* non-active account returns `404`
-* Ledger unavailable returns `503`
+- own active account returns `200`
+- another user’s account returns `403`
+- missing account returns `404`
+- non-active account returns `404`
+- Ledger unavailable returns `503`
 
 `PATCH /v1/accounts/{accountNumber}`:
 
-* own active account updates
-* another user returns `403`
-* missing/non-active account returns `404`
-* Auth introspection unavailable returns `503`
+- own active account updates
+- another user returns `403`
+- missing/non-active account returns `404`
+- Auth introspection unavailable returns `503`
 
 `DELETE /v1/accounts/{accountNumber}`:
 
-* own account with no Ledger transactions may be physically deleted
-* own account with Ledger transactions is closed/soft-deleted
-* Ledger closure failure returns `503`
-* another user returns `403`
-* missing/non-active account returns `404`
-* repeated delete after closed returns `404`
+- own account with no Ledger transactions may be physically deleted
+- own account with Ledger transactions is closed/soft-deleted
+- Ledger closure failure returns `503`
+- another user returns `403`
+- missing/non-active account returns `404`
+- repeated delete after closed returns `404`
 
 ## 33.4 Transactions
 
 `POST /v1/accounts/{accountNumber}/transactions`:
 
-* API validates request
-* API verifies ownership
-* API delegates to Ledger
-* API does not mutate balance
-* API does not create Ledger transaction
-* deposit succeeds through Ledger
-* withdrawal succeeds through Ledger
-* insufficient funds returns `422`
-* balance limit exceeded returns `422`
-* amount `0.00` returns `400`
-* idempotency conflict returns `409`
-* missing required fields returns `400`
-* another user’s account returns `403` and Ledger is not called
-* missing/non-active account returns `404`
-* Ledger unavailable returns `503`
+- API validates request
+- API verifies ownership
+- API delegates to Ledger
+- API does not mutate balance
+- API does not create Ledger transaction
+- deposit succeeds through Ledger
+- withdrawal succeeds through Ledger
+- insufficient funds returns `422`
+- balance limit exceeded returns `422`
+- amount `0.00` returns `400`
+- idempotency conflict returns `409`
+- missing required fields returns `400`
+- another user’s account returns `403` and Ledger is not called
+- missing/non-active account returns `404`
+- Ledger unavailable returns `503`
 
 `GET /v1/accounts/{accountNumber}/transactions`:
 
-* API verifies ownership
-* API delegates query to Ledger
-* own account returns transactions
-* another user returns `403`
-* missing/non-active account returns `404`
-* Ledger unavailable returns `503`
+- API verifies ownership
+- API delegates query to Ledger
+- own account returns transactions
+- another user returns `403`
+- missing/non-active account returns `404`
+- Ledger unavailable returns `503`
 
 `GET /v1/accounts/{accountNumber}/transactions/{transactionId}`:
 
-* API verifies ownership
-* API delegates query to Ledger
-* own transaction returns `200`
-* wrong accountNumber returns `404`
-* missing transaction returns `404`
-* another user’s account returns `403`
-* missing/non-active account returns `404`
-* Ledger unavailable returns `503`
+- API verifies ownership
+- API delegates query to Ledger
+- own transaction returns `200`
+- wrong accountNumber returns `404`
+- missing transaction returns `404`
+- another user’s account returns `403`
+- missing/non-active account returns `404`
+- Ledger unavailable returns `503`
 
 ---
 
@@ -2956,18 +2959,18 @@ scripts/
 
 Every executable source file must have a sibling `.test.ts` file except:
 
-* `index.ts` barrel files
-* `*.types.ts`
-* generated files
-* Prisma migration files
-* `schema.prisma`
-* `packages/database/prisma/seed.ts`
-* test helper files under `test/` or `test-support/`
-* CDK `bin/` entrypoint files
-* CDK construct files under `infra/lib/*.ts`
-* static config files
-* files containing only type exports
-* files containing only constants with no logic
+- `index.ts` barrel files
+- `*.types.ts`
+- generated files
+- Prisma migration files
+- `schema.prisma`
+- `packages/database/prisma/seed.ts`
+- test helper files under `test/` or `test-support/`
+- CDK `bin/` entrypoint files
+- CDK construct files under `infra/lib/*.ts`
+- static config files
+- files containing only type exports
+- files containing only constants with no logic
 
 CDK constructs are tested through:
 
@@ -3020,14 +3023,14 @@ after migrations run against an empty test database.
 
 Tests must also verify:
 
-* all foreign-key columns have a supporting index
-* duplicate email is rejected
-* duplicate accountNumber is rejected
-* duplicate transactionId is rejected
-* duplicate Ledger eventId is rejected
-* duplicate `(userId, accountNumber, idempotencyKey)` is rejected
-* migrations apply successfully from an empty database
-* migrations are repeatable through the documented deployment command
+- all foreign-key columns have a supporting index
+- duplicate email is rejected
+- duplicate accountNumber is rejected
+- duplicate transactionId is rejected
+- duplicate Ledger eventId is rejected
+- duplicate `(userId, accountNumber, idempotencyKey)` is rejected
+- migrations apply successfully from an empty database
+- migrations are repeatable through the documented deployment command
 
 For critical list, reconciliation, idempotency, and outbox queries, include
 `EXPLAIN` or `EXPLAIN ANALYZE` tests against representative seeded data and
@@ -3036,13 +3039,13 @@ assertions on exact costs or timing.
 
 DynamoDB integration/CDK tests must verify:
 
-* partition key is `pk` with type String
-* sort key is `sk` with type String
-* TTL attribute is `expiresAtEpoch`
-* no unintended GSI or LSI exists
-* introspection performs `GetItem`, not `Scan`
-* listing a user's sessions performs `Query`, not `Scan`
-* DynamoDB Local and CDK definitions remain equivalent
+- partition key is `pk` with type String
+- sort key is `sk` with type String
+- TTL attribute is `expiresAtEpoch`
+- no unintended GSI or LSI exists
+- introspection performs `GetItem`, not `Scan`
+- listing a user's sessions performs `Query`, not `Scan`
+- DynamoDB Local and CDK definitions remain equivalent
 
 ---
 
@@ -3050,43 +3053,43 @@ DynamoDB integration/CDK tests must verify:
 
 Auth service:
 
-* login succeeds with valid credentials
-* login fails with invalid email
-* login fails with invalid password
-* login writes auth session metadata to DynamoDB
-* login returns `LoginResponse` with `accessToken`, `tokenType`, and `expiresIn`
-* login JWT includes `sub`, `sid`, `jti`, `iat`, `exp`
-* login never returns passwordHash
-* password hash endpoint returns argon2 hash
-* password hash endpoint requires internal service auth
-* session introspection succeeds for valid session
-* session introspection fails for revoked session
-* session introspection fails for expired session
-* session introspection fails for missing session
-* `/ready` returns 200 with `{ "status": "ready" }` when PostgreSQL and DynamoDB reachable
-* `/ready` returns 503 with `{ "status": "not_ready" }` when DynamoDB unavailable
-* logs redact password
-* logs redact JWT
-* logs include request/correlation IDs
-* public auth errors use OpenAPI-compatible envelope except `/ready`, which uses `ReadinessResponse`
+- login succeeds with valid credentials
+- login fails with invalid email
+- login fails with invalid password
+- login writes auth session metadata to DynamoDB
+- login returns `LoginResponse` with `accessToken`, `tokenType`, and `expiresIn`
+- login JWT includes `sub`, `sid`, `jti`, `iat`, `exp`
+- login never returns passwordHash
+- password hash endpoint returns argon2 hash
+- password hash endpoint requires internal service auth
+- session introspection succeeds for valid session
+- session introspection fails for revoked session
+- session introspection fails for expired session
+- session introspection fails for missing session
+- `/ready` returns 200 with `{ "status": "ready" }` when PostgreSQL and DynamoDB reachable
+- `/ready` returns 503 with `{ "status": "not_ready" }` when DynamoDB unavailable
+- logs redact password
+- logs redact JWT
+- logs include request/correlation IDs
+- public auth errors use OpenAPI-compatible envelope except `/ready`, which uses `ReadinessResponse`
 
 API auth integration:
 
-* protected route accepts valid JWT plus valid session
-* protected route rejects expired JWT
-* protected route rejects invalid JWT
-* protected route rejects valid JWT with missing session
-* protected route rejects revoked session
-* Auth unavailable returns 503
-* missing JWT returns 401
+- protected route accepts valid JWT plus valid session
+- protected route rejects expired JWT
+- protected route rejects invalid JWT
+- protected route rejects valid JWT with missing session
+- protected route rejects revoked session
+- Auth unavailable returns 503
+- missing JWT returns 401
 
 DynamoDB:
 
-* session record written with correct `pk` and `sk`
-* TTL attribute set
-* tokenId persisted
-* sessionId persisted
-* revokedAt nullable on active session
+- session record written with correct `pk` and `sk`
+- TTL attribute set
+- tokenId persisted
+- sessionId persisted
+- revokedAt nullable on active session
 
 ---
 
@@ -3094,38 +3097,38 @@ DynamoDB:
 
 API/account + Ledger creation:
 
-* account creation creates metadata `PENDING_LEDGER_CREATION`
-* successful Ledger creation marks account `ACTIVE`
-* response balance comes from Ledger
-* Ledger creation failure marks `LEDGER_CREATION_FAILED`
-* failed account does not appear in list
-* failed account cannot receive transaction
-* reconciler retries failed Ledger creation
-* reconciler marks account `ACTIVE` after success
-* duplicate Ledger creation with same accountNumber is idempotent
-* duplicate Ledger creation with conflicting data returns 409
+- account creation creates metadata `PENDING_LEDGER_CREATION`
+- successful Ledger creation marks account `ACTIVE`
+- response balance comes from Ledger
+- Ledger creation failure marks `LEDGER_CREATION_FAILED`
+- failed account does not appear in list
+- failed account cannot receive transaction
+- reconciler retries failed Ledger creation
+- reconciler marks account `ACTIVE` after success
+- duplicate Ledger creation with same accountNumber is idempotent
+- duplicate Ledger creation with conflicting data returns 409
 
 Account deletion:
 
-* account with no Ledger transactions closes/deletes successfully
-* account with Ledger transactions becomes `PENDING_LEDGER_CLOSURE`, then `CLOSED`
-* Ledger closure failure marks `LEDGER_CLOSURE_FAILED`
-* failed closure blocks new transactions
-* reconciler retries failed closure
-* Ledger closed + metadata not closed mismatch is reconciled
-* repeated delete after closed returns 404
-* `CLOSED` account does not block user deletion
-* non-final account states block user deletion with 409
+- account with no Ledger transactions closes/deletes successfully
+- account with Ledger transactions becomes `PENDING_LEDGER_CLOSURE`, then `CLOSED`
+- Ledger closure failure marks `LEDGER_CLOSURE_FAILED`
+- failed closure blocks new transactions
+- reconciler retries failed closure
+- Ledger closed + metadata not closed mismatch is reconciled
+- repeated delete after closed returns 404
+- `CLOSED` account does not block user deletion
+- non-final account states block user deletion with 409
 
 Account balance reads:
 
-* single account response fetches Ledger balance
-* account list uses Ledger batch balance endpoint
-* Ledger unavailable during single account read returns 503
-* Ledger unavailable during account list returns 503
-* missing Ledger projection returns 503
-* API does not use stale balance
-* API does not store balance as source of truth in metadata
+- single account response fetches Ledger balance
+- account list uses Ledger batch balance endpoint
+- Ledger unavailable during single account read returns 503
+- Ledger unavailable during account list returns 503
+- missing Ledger projection returns 503
+- API does not use stale balance
+- API does not store balance as source of truth in metadata
 
 ---
 
@@ -3133,40 +3136,40 @@ Account balance reads:
 
 `ledger.rules.test.ts`:
 
-* deposit with positive amount valid
-* withdrawal with positive amount valid
-* amount zero invalid
-* negative amount invalid
-* unsupported currency invalid
-* deposit within balance limit valid
-* deposit exceeding max balance rejected
-* withdrawal with sufficient funds valid
-* withdrawal with insufficient funds rejected
-* closed Ledger account rejects deposit
-* closed Ledger account rejects withdrawal
-* balance cannot become negative
-* balance cannot exceed `10000.00`
-* Decimal calculations avoid JavaScript floating point arithmetic
+- deposit with positive amount valid
+- withdrawal with positive amount valid
+- amount zero invalid
+- negative amount invalid
+- unsupported currency invalid
+- deposit within balance limit valid
+- deposit exceeding max balance rejected
+- withdrawal with sufficient funds valid
+- withdrawal with insufficient funds rejected
+- closed Ledger account rejects deposit
+- closed Ledger account rejects withdrawal
+- balance cannot become negative
+- balance cannot exceed `10000.00`
+- Decimal calculations avoid JavaScript floating point arithmetic
 
 `ledger.mapper.test.ts`:
 
-* maps Ledger transaction to OpenAPI transaction response
-* does not expose internal accountId unless contract requires it
-* maps Decimal correctly
-* maps transaction type correctly
-* maps createdAt correctly
+- maps Ledger transaction to OpenAPI transaction response
+- does not expose internal accountId unless contract requires it
+- maps Decimal correctly
+- maps transaction type correctly
+- maps createdAt correctly
 
 `ledger-events.test.ts`:
 
-* builds `TransactionPosted`
-* includes eventId
-* includes transactionId
-* includes accountNumber
-* includes userId
-* includes amount/currency
-* includes balanceAfter
-* includes requestId/correlationId
-* excludes secrets/tokens
+- builds `TransactionPosted`
+- includes eventId
+- includes transactionId
+- includes accountNumber
+- includes userId
+- includes amount/currency
+- includes balanceAfter
+- includes requestId/correlationId
+- excludes secrets/tokens
 
 ---
 
@@ -3178,105 +3181,105 @@ Do not mock database behaviour.
 
 ## 40.1 create-ledger-account.integration.test.ts
 
-* creates Ledger account for accountNumber
-* initializes balance
-* rejects duplicate accountNumber deterministically
-* duplicate same data is idempotent
-* duplicate conflicting data returns 409
-* stores internal accountId relation
-* creates account in GBP
-* closed account cannot be recreated unless explicitly allowed
+- creates Ledger account for accountNumber
+- initializes balance
+- rejects duplicate accountNumber deterministically
+- duplicate same data is idempotent
+- duplicate conflicting data returns 409
+- stores internal accountId relation
+- creates account in GBP
+- closed account cannot be recreated unless explicitly allowed
 
 ## 40.2 close-ledger-account.integration.test.ts
 
-* closes Ledger account
-* closed Ledger account rejects posting
-* missing Ledger account returns not found
-* repeated close deterministic
-* closing account with transaction history preserves historical transactions
+- closes Ledger account
+- closed Ledger account rejects posting
+- missing Ledger account returns not found
+- repeated close deterministic
+- closing account with transaction history preserves historical transactions
 
 ## 40.3 ledger-balance-read.integration.test.ts
 
-* returns balance for accountNumber
-* missing Ledger account returns not found
-* closed Ledger account returns not found for public semantics
-* does not expose internal-only fields
+- returns balance for accountNumber
+- missing Ledger account returns not found
+- closed Ledger account returns not found for public semantics
+- does not expose internal-only fields
 
 ## 40.4 ledger-batch-balance-read.integration.test.ts
 
-* returns balances for multiple accountNumbers
-* preserves accountNumber mapping
-* missing one account returns error
-* empty request returns empty response or validation error as specified
-* does not return partial balances on missing projection
+- returns balances for multiple accountNumbers
+- preserves accountNumber mapping
+- missing one account returns error
+- empty request returns empty response or validation error as specified
+- does not return partial balances on missing projection
 
 ## 40.5 post-deposit.integration.test.ts
 
-* posts deposit successfully
-* creates immutable Ledger transaction
-* creates Ledger entry
-* updates balance
-* stores balanceAfter
-* creates `TransactionPosted` outbox event
-* returns Ledger contract result
-* rejects amount `0.00`
-* rejects negative amount
-* rejects unsupported currency
-* rejects deposit exceeding `10000.00`
-* failed deposit creates no transaction
-* failed deposit creates no entry
-* failed deposit creates no event
-* failed deposit does not mutate balance
+- posts deposit successfully
+- creates immutable Ledger transaction
+- creates Ledger entry
+- updates balance
+- stores balanceAfter
+- creates `TransactionPosted` outbox event
+- returns Ledger contract result
+- rejects amount `0.00`
+- rejects negative amount
+- rejects unsupported currency
+- rejects deposit exceeding `10000.00`
+- failed deposit creates no transaction
+- failed deposit creates no entry
+- failed deposit creates no event
+- failed deposit does not mutate balance
 
 ## 40.6 post-withdrawal.integration.test.ts
 
-* posts withdrawal successfully
-* creates immutable Ledger transaction
-* creates Ledger entry
-* updates balance
-* stores balanceAfter
-* creates `TransactionPosted` outbox event
-* rejects amount `0.00`
-* rejects negative amount
-* rejects unsupported currency
-* rejects insufficient funds
-* failed withdrawal creates no transaction
-* failed withdrawal creates no entry
-* failed withdrawal creates no event
-* failed withdrawal does not mutate balance
+- posts withdrawal successfully
+- creates immutable Ledger transaction
+- creates Ledger entry
+- updates balance
+- stores balanceAfter
+- creates `TransactionPosted` outbox event
+- rejects amount `0.00`
+- rejects negative amount
+- rejects unsupported currency
+- rejects insufficient funds
+- failed withdrawal creates no transaction
+- failed withdrawal creates no entry
+- failed withdrawal creates no event
+- failed withdrawal does not mutate balance
 
 ## 40.7 idempotency.integration.test.ts
 
-* first request with key posts transaction
-* retry same key/body returns original result
-* retry creates no duplicate transaction
-* retry creates no duplicate entry
-* retry creates no duplicate event
-* same key different amount returns 409
-* same key different type returns 409
-* same key different accountNumber returns 409
-* idempotency scoped by userId/accountNumber/key
-* request hash stored
-* response payload stored
+- first request with key posts transaction
+- retry same key/body returns original result
+- retry creates no duplicate transaction
+- retry creates no duplicate entry
+- retry creates no duplicate event
+- same key different amount returns 409
+- same key different type returns 409
+- same key different accountNumber returns 409
+- idempotency scoped by userId/accountNumber/key
+- request hash stored
+- response payload stored
 
 ## 40.8 ledger-query.integration.test.ts
 
-* list transactions by accountNumber in deterministic order
-* fetch transaction by transactionId
-* wrong accountNumber returns not found
-* missing transaction returns not found
-* closed account returns not found for public semantics
-* internal-only fields not exposed
+- list transactions by accountNumber in deterministic order
+- fetch transaction by transactionId
+- wrong accountNumber returns not found
+- missing transaction returns not found
+- closed account returns not found for public semantics
+- internal-only fields not exposed
 
 ## 40.9 ledger-outbox.integration.test.ts
 
-* successful deposit creates one pending outbox event
-* successful withdrawal creates one pending outbox event
-* failed withdrawal creates no outbox event
-* failed balance-limit deposit creates no outbox event
-* payload validates against Ledger event schema
-* payload includes requestId/correlationId
-* event starts as `PENDING`
+- successful deposit creates one pending outbox event
+- successful withdrawal creates one pending outbox event
+- failed withdrawal creates no outbox event
+- failed balance-limit deposit creates no outbox event
+- payload validates against Ledger event schema
+- payload includes requestId/correlationId
+- event starts as `PENDING`
 
 ---
 
@@ -3288,21 +3291,21 @@ Use real PostgreSQL transactions.
 
 Required tests:
 
-* two concurrent withdrawals from same account cannot both spend same balance
-* concurrent withdrawals cannot produce negative balance
-* one withdrawal succeeds and one fails when combined amount exceeds balance
-* concurrent deposits both succeed and final balance correct
-* concurrent deposit and withdrawal produce valid final balance
-* account row is locked during posting
-* idempotent concurrent duplicate requests create only one transaction
-* same idempotency key with different body returns deterministic conflict
-* concurrent requests for different accounts do not block unnecessarily
+- two concurrent withdrawals from same account cannot both spend same balance
+- concurrent withdrawals cannot produce negative balance
+- one withdrawal succeeds and one fails when combined amount exceeds balance
+- concurrent deposits both succeed and final balance correct
+- concurrent deposit and withdrawal produce valid final balance
+- account row is locked during posting
+- idempotent concurrent duplicate requests create only one transaction
+- same idempotency key with different body returns deterministic conflict
+- concurrent requests for different accounts do not block unnecessarily
 
 Implementation expectation:
 
-* use `SELECT ... FOR UPDATE` or equivalent row-level locking
-* balance check and mutation inside one PostgreSQL transaction
-* document isolation level and locking strategy
+- use `SELECT ... FOR UPDATE` or equivalent row-level locking
+- balance check and mutation inside one PostgreSQL transaction
+- document isolation level and locking strategy
 
 ---
 
@@ -3310,24 +3313,24 @@ Implementation expectation:
 
 Required:
 
-* API deposit calls Ledger service
-* API withdrawal calls Ledger service
-* API maps Ledger success to OpenAPI response
-* API maps insufficient funds to 422
-* API maps balance limit exceeded to 422
-* API maps invalid amount to 400
-* API maps idempotency conflict to 409
-* API maps Ledger unavailable to 503
-* API maps Ledger account closed/not found to 404
-* API verifies ownership before calling Ledger
-* API returns 403 for another user’s account and does not call Ledger
-* API does not write Ledger transaction rows
-* API does not mutate Ledger balances
-* API passes requestId to Ledger
-* API passes correlationId to Ledger
-* API passes Idempotency-Key to Ledger
-* API does not retry financial command without Idempotency-Key
-* API retries once with Idempotency-Key on timeout/network failure
+- API deposit calls Ledger service
+- API withdrawal calls Ledger service
+- API maps Ledger success to OpenAPI response
+- API maps insufficient funds to 422
+- API maps balance limit exceeded to 422
+- API maps invalid amount to 400
+- API maps idempotency conflict to 409
+- API maps Ledger unavailable to 503
+- API maps Ledger account closed/not found to 404
+- API verifies ownership before calling Ledger
+- API returns 403 for another user’s account and does not call Ledger
+- API does not write Ledger transaction rows
+- API does not mutate Ledger balances
+- API passes requestId to Ledger
+- API passes correlationId to Ledger
+- API passes Idempotency-Key to Ledger
+- API does not retry financial command without Idempotency-Key
+- API retries once with Idempotency-Key on timeout/network failure
 
 At least one E2E test must use the real Ledger service.
 
@@ -3339,44 +3342,44 @@ Do not call these outbox worker tests.
 
 ## 43.1 publish-ledger-events.integration.test.ts
 
-* claims pending Ledger event
-* publishes event to LocalStack SQS
-* marks event `PUBLISHED`
-* stores `publishedAt`
-* does not alter Ledger transaction data
-* published message matches `TransactionPosted` schema
+- claims pending Ledger event
+- publishes event to LocalStack SQS
+- marks event `PUBLISHED`
+- stores `publishedAt`
+- does not alter Ledger transaction data
+- published message matches `TransactionPosted` schema
 
 ## 43.2 retry-ledger-events.integration.test.ts
 
-* failed publish increments attempts
-* failed publish sets status `FAILED`
-* failed publish sets `nextAttemptAt`
-* retry uses exponential backoff with jitter
-* retry eventually publishes successfully
-* successful retry marks event `PUBLISHED`
+- failed publish increments attempts
+- failed publish sets status `FAILED`
+- failed publish sets `nextAttemptAt`
+- retry uses exponential backoff with jitter
+- retry eventually publishes successfully
+- successful retry marks event `PUBLISHED`
 
 ## 43.3 dead-ledger-events.integration.test.ts
 
-* event becomes `DEAD` after max attempts
-* `lastError` stored
-* dead event logged at error level
-* dead event not retried automatically
-* dead event does not affect committed Ledger transaction
+- event becomes `DEAD` after max attempts
+- `lastError` stored
+- dead event logged at error level
+- dead event not retried automatically
+- dead event does not affect committed Ledger transaction
 
 ## 43.4 lease-recovery.integration.test.ts
 
-* expired `PROCESSING` event recoverable
-* non-expired `PROCESSING` event not reclaimed
-* recovered event can be published
-* recovery increments or preserves attempts according to documented policy
+- expired `PROCESSING` event recoverable
+- non-expired `PROCESSING` event not reclaimed
+- recovered event can be published
+- recovery increments or preserves attempts according to documented policy
 
 ## 43.5 multi-publisher-claiming.integration.test.ts
 
-* two publisher instances cannot claim same event
-* batch claiming uses `FOR UPDATE SKIP LOCKED`
-* events distributed across publishers
-* no duplicate SQS messages under normal operation
-* at-least-once semantics documented for crash cases
+- two publisher instances cannot claim same event
+- batch claiming uses `FOR UPDATE SKIP LOCKED`
+- events distributed across publishers
+- no duplicate SQS messages under normal operation
+- at-least-once semantics documented for crash cases
 
 ---
 
@@ -3384,12 +3387,12 @@ Do not call these outbox worker tests.
 
 E2E tests run with:
 
-* API service
-* Auth service
-* Ledger service
-* PostgreSQL test database
-* DynamoDB Local
-* LocalStack
+- API service
+- Auth service
+- Ledger service
+- PostgreSQL test database
+- DynamoDB Local
+- LocalStack
 
 ## 44.1 create-user-login-create-account-deposit.e2e.test.ts
 
@@ -3466,28 +3469,28 @@ E2E tests run with:
 
 Verify:
 
-* OpenAPI uses `{accountNumber}`
-* OpenAPI does not expose `{accountId}` in public route paths
-* transaction response matches OpenAPI
-* account response matches OpenAPI
-* user response never includes passwordHash
-* login request schema exists
-* login response schema exists
-* login response uses `accessToken`, `tokenType`, `expiresIn`
-* `POST /v1/users` 400 uses `BadRequestErrorResponse`
-* `POST /v1/users` documents `503`
-* `POST /v1/accounts/{accountNumber}/transactions` documents `Idempotency-Key`
-* transaction idempotency conflict documents `409`
-* public distributed dependency failures document `503`
-* `/health` is documented
-* `/ready` is documented
-* `/ready` 200 uses `ReadinessResponse`
-* `/ready` 503 uses `ReadinessResponse`
-* `/ready` 503 does not use general error envelope
-* transactionId pattern corrected to `^tan-[A-Za-z0-9]+$`
-* custom regexes use `pattern`, not non-standard `format`
-* protected endpoints have bearer security
-* public endpoints remain unauthenticated as specified
+- OpenAPI uses `{accountNumber}`
+- OpenAPI does not expose `{accountId}` in public route paths
+- transaction response matches OpenAPI
+- account response matches OpenAPI
+- user response never includes passwordHash
+- login request schema exists
+- login response schema exists
+- login response uses `accessToken`, `tokenType`, `expiresIn`
+- `POST /v1/users` 400 uses `BadRequestErrorResponse`
+- `POST /v1/users` documents `503`
+- `POST /v1/accounts/{accountNumber}/transactions` documents `Idempotency-Key`
+- transaction idempotency conflict documents `409`
+- public distributed dependency failures document `503`
+- `/health` is documented
+- `/ready` is documented
+- `/ready` 200 uses `ReadinessResponse`
+- `/ready` 503 uses `ReadinessResponse`
+- `/ready` 503 does not use general error envelope
+- transactionId pattern corrected to `^tan-[A-Za-z0-9]+$`
+- custom regexes use `pattern`, not non-standard `format`
+- protected endpoints have bearer security
+- public endpoints remain unauthenticated as specified
 
 ---
 
@@ -3565,30 +3568,30 @@ the only mandatory runtime prerequisites for this path.
 
 CDK must model:
 
-* VPC
-* public subnets for ALB
-* private subnets for ECS services
-* private/isolated subnets for RDS
-* AWS WAF Web ACL
-* WAF association with ALB
-* Application Load Balancer
-* ECS cluster
-* API Fargate service
-* Auth Fargate service
-* Ledger Fargate service
-* Ledger Worker Fargate service
-* Ledger Event Publisher Fargate service
-* migration task
-* RDS PostgreSQL
-* DynamoDB auth sessions table
-* SQS Ledger events queue
-* SQS Ledger events DLQ
-* SQS Ledger command FIFO queue
-* SQS Ledger command DLQ
-* Parameter Store `SecureString` parameters
-* CloudWatch log groups
-* least-privilege IAM roles
-* security groups
+- VPC
+- public subnets for ALB
+- private subnets for ECS services
+- private/isolated subnets for RDS
+- AWS WAF Web ACL
+- WAF association with ALB
+- Application Load Balancer
+- ECS cluster
+- API Fargate service
+- Auth Fargate service
+- Ledger Fargate service
+- Ledger Worker Fargate service
+- Ledger Event Publisher Fargate service
+- migration task
+- RDS PostgreSQL
+- DynamoDB auth sessions table
+- SQS Ledger events queue
+- SQS Ledger events DLQ
+- SQS Ledger command FIFO queue
+- SQS Ledger command DLQ
+- Parameter Store `SecureString` parameters
+- CloudWatch log groups
+- least-privilege IAM roles
+- security groups
 
 Public ingress:
 
@@ -3639,13 +3642,13 @@ appear in synthesized AWS task definitions.
 
 AWS ECS task definitions must:
 
-* omit `DYNAMODB_ENDPOINT`
-* omit `SQS_ENDPOINT`
-* omit static `AWS_ACCESS_KEY_ID`
-* omit static `AWS_SECRET_ACCESS_KEY`
-* use task roles with least-privilege DynamoDB and SQS permissions
-* obtain application secrets from Parameter Store `SecureString` parameters
-* use private networking for RDS and private services
+- omit `DYNAMODB_ENDPOINT`
+- omit `SQS_ENDPOINT`
+- omit static `AWS_ACCESS_KEY_ID`
+- omit static `AWS_SECRET_ACCESS_KEY`
+- use task roles with least-privilege DynamoDB and SQS permissions
+- obtain application secrets from Parameter Store `SecureString` parameters
+- use private networking for RDS and private services
 
 CDK assertion tests must verify these properties.
 
@@ -3682,24 +3685,24 @@ WAF must protect the ALB.
 
 Rules:
 
-* AWS managed common rule set
-* known bad inputs rule set
-* SQL injection rule set
-* Amazon IP reputation list
-* rate-based rule
+- AWS managed common rule set
+- known bad inputs rule set
+- SQL injection rule set
+- Amazon IP reputation list
+- rate-based rule
 
 Rate limits:
 
-* `test`: permissive
-* `preprod`: moderate
-* `prod`: stricter
+- `test`: permissive
+- `preprod`: moderate
+- `prod`: stricter
 
 CDK tests must verify:
 
-* Web ACL exists
-* Web ACL has managed rules
-* Web ACL has rate-based rule
-* Web ACL associated with ALB
+- Web ACL exists
+- Web ACL has managed rules
+- Web ACL has rate-based rule
+- Web ACL associated with ALB
 
 ---
 
@@ -3719,10 +3722,10 @@ Deployment order:
 
 Migration task:
 
-* uses same app image with migration command or dedicated migration image
-* reaches RDS
-* reads DB secret
-* logs to CloudWatch
+- uses same app image with migration command or dedicated migration image
+- reaches RDS
+- reads DB secret
+- logs to CloudWatch
 
 ---
 
@@ -3730,41 +3733,41 @@ Migration task:
 
 Verify:
 
-* VPC exists
-* ALB exists
-* ALB has `/health` route to API
-* ALB has `/ready` route to API
-* ALB has `/v1/auth/*` route to Auth service
-* ALB has `/v1/*` route to API
-* ALB has default fixed 404 response
-* WAF Web ACL exists
-* WAF associated with ALB
-* WAF managed rules exist
-* WAF rate-based rule exists
-* RDS PostgreSQL exists
-* RDS not publicly accessible
-* DynamoDB auth sessions table exists
-* DynamoDB TTL configured
-* SQS Ledger command FIFO queue exists
-* SQS Ledger command DLQ exists
-* SQS Ledger events queue exists
-* SQS Ledger events DLQ exists
-* ECS API service exists
-* ECS Auth service exists
-* ECS Ledger service exists
-* ECS Ledger Worker exists
-* ECS Ledger Event Publisher exists
-* migration task exists
-* API behind ALB
-* Auth behind ALB for `/v1/auth/*`
-* Ledger service private
-* Ledger Worker private
-* Ledger Event Publisher private
-* Auth can read/write DynamoDB
-* Ledger Event Publisher can publish to SQS
-* Ledger Worker can consume command queue
-* API has no unnecessary DynamoDB permissions
-* CloudWatch log groups exist
+- VPC exists
+- ALB exists
+- ALB has `/health` route to API
+- ALB has `/ready` route to API
+- ALB has `/v1/auth/*` route to Auth service
+- ALB has `/v1/*` route to API
+- ALB has default fixed 404 response
+- WAF Web ACL exists
+- WAF associated with ALB
+- WAF managed rules exist
+- WAF rate-based rule exists
+- RDS PostgreSQL exists
+- RDS not publicly accessible
+- DynamoDB auth sessions table exists
+- DynamoDB TTL configured
+- SQS Ledger command FIFO queue exists
+- SQS Ledger command DLQ exists
+- SQS Ledger events queue exists
+- SQS Ledger events DLQ exists
+- ECS API service exists
+- ECS Auth service exists
+- ECS Ledger service exists
+- ECS Ledger Worker exists
+- ECS Ledger Event Publisher exists
+- migration task exists
+- API behind ALB
+- Auth behind ALB for `/v1/auth/*`
+- Ledger service private
+- Ledger Worker private
+- Ledger Event Publisher private
+- Auth can read/write DynamoDB
+- Ledger Event Publisher can publish to SQS
+- Ledger Worker can consume command queue
+- API has no unnecessary DynamoDB permissions
+- CloudWatch log groups exist
 
 ---
 
@@ -3840,11 +3843,11 @@ AWS_EC2_METADATA_DISABLED=true
 
 Rules:
 
-* local Docker Compose must set all local emulator overrides
-* AWS ECS task definitions must not set endpoint overrides or static AWS keys
-* empty endpoint strings must be normalized to `undefined`
-* AWS runtime uses ECS task-role credentials
-* `AWS_REGION` is required in both local and AWS runtimes
+- local Docker Compose must set all local emulator overrides
+- AWS ECS task definitions must not set endpoint overrides or static AWS keys
+- empty endpoint strings must be normalized to `undefined`
+- AWS runtime uses ECS task-role credentials
+- `AWS_REGION` is required in both local and AWS runtimes
 
 Testing:
 
@@ -3968,13 +3971,13 @@ README must explicitly say:
 
 The public API service implements the OpenAPI contract but does not own the banking Ledger. Deposits, withdrawals, immutable transaction records, idempotency, and balance mutation are owned by a separate Ledger service.
 
-The Ledger Event Publisher publishes committed Ledger events from the Ledger outbox table to the Ledger events queue. It is named after its business responsibility rather than the underlying outbox implementation pattern.
+The Ledger Event Publisher reads committed events from the Ledger outbox table and publishes them to the Ledger events queue.
 
-These are separately deployed services using a shared PostgreSQL database as a take-home simplification. A stricter production design would split databases and coordinate through events and sagas.
+These are separately deployed services using a shared PostgreSQL database to keep local setup manageable. A database-per-service deployment would coordinate cross-service workflows through events and sagas.
 
 `CLOSED` accounts are preserved internally for historical integrity but do not block user deletion, because the user has successfully deleted their active accounts.
 
-`GET /ready` uses `ReadinessResponse` for both ready and not-ready states. It intentionally does not use the general error envelope.
+`GET /ready` uses `ReadinessResponse` for both ready and not-ready states instead of the general error envelope.
 
 Local execution uses DynamoDB Local for auth sessions and LocalStack for SQS.
 It does not require AWS credentials, an AWS account, CDK bootstrap, or deployed
@@ -4016,14 +4019,14 @@ Examples must use the documented localhost base URL and cover:
 
 The examples must:
 
-* show required headers and JSON request bodies
-* use `Authorization: Bearer <token>` on protected endpoints
-* use valid OpenAPI field names
-* show how to capture and reuse `userId`, `accessToken`, `accountNumber`, and
+- show required headers and JSON request bodies
+- use `Authorization: Bearer <token>` on protected endpoints
+- use valid OpenAPI field names
+- show how to capture and reuse `userId`, `accessToken`, `accountNumber`, and
   `transactionId`
-* include expected status codes
-* avoid hard-coded identifiers that do not exist in a clean environment
-* never include real secrets
+- include expected status codes
+- avoid hard-coded identifiers that do not exist in a clean environment
+- never include real secrets
 
 ## 53.2 Automated smoke test
 
@@ -4052,14 +4055,14 @@ delete user
 
 It must:
 
-* use `set -euo pipefail`
-* wait for readiness with a bounded timeout
-* generate unique user data and idempotency keys for repeated runs
-* capture and reuse all returned identifiers and the JWT
-* parse JSON using Node.js in a documented containerized command
-* fail with a non-zero exit code on unexpected status or response
-* print concise progress and a final success message
-* require no host dependency other than Docker and Docker Compose
+- use `set -euo pipefail`
+- wait for readiness with a bounded timeout
+- generate unique user data and idempotency keys for repeated runs
+- capture and reuse all returned identifiers and the JWT
+- parse JSON using Node.js in a documented containerized command
+- fail with a non-zero exit code on unexpected status or response
+- print concise progress and a final success message
+- require no host dependency other than Docker and Docker Compose
 
 The smoke test supplements tests; it does not replace unit, integration, or E2E
 tests.
@@ -4148,90 +4151,90 @@ tests.
 
 Before final response, confirm:
 
-* OpenAPI inspected
-* OpenAPI corrections made
-* login schemas added
-* public 503 responses added
-* `POST /v1/users` documents 503
-* Idempotency-Key documented
-* transaction 409 documented
-* `/health` documented
-* `/ready` documented
-* `/ready` 503 uses `ReadinessResponse`
-* `/ready` 503 does not use general error envelope
-* public routes use `accountNumber`
-* packageManager pinned to `npm@11.9.0`
-* Auth service separate
-* users remain in PostgreSQL
-* Auth hashes passwords
-* API does not hash passwords
-* API calls Auth for password hashing
-* Auth sessions stored in DynamoDB
-* PostgreSQL constraints and indexes match required access patterns
-* every foreign-key column has a supporting PostgreSQL index
-* critical PostgreSQL query plans can use the intended indexes
-* DynamoDB uses `pk` and `sk` with the documented String key types
-* DynamoDB TTL uses `expiresAtEpoch`
-* no unnecessary DynamoDB GSI or LSI exists
-* DynamoDB request paths do not use `Scan`
-* DynamoDB Local and AWS CDK table definitions match
-* local execution requires no AWS account or AWS profile
-* local AWS SDK calls use DynamoDB Local and LocalStack endpoints
-* local execution performs no AWS STS or metadata calls
-* application code uses shared environment-driven AWS SDK client factories
-* API validates JWT and introspects session
-* Auth unavailable on protected request returns 503
-* internal service calls use signed service JWTs
-* API owns metadata only
-* Ledger owns balances
-* account reads fetch balance from Ledger
-* account lists use Ledger batch balances
-* Ledger unavailable for balance read returns 503
-* account creation uses pending-state workflow
-* Ledger account creation idempotent
-* failed Ledger creation marked and reconciled
-* account deletion uses closure workflow
-* failed Ledger closure marked and reconciled
-* `CLOSED` accounts do not block user deletion
-* Ledger service separate
-* API does not mutate balances
-* API does not write Ledger transactions
-* API delegates money movement to Ledger
-* Ledger owns idempotency
-* Ledger uses row-level locking or documented equivalent
-* no blind retry of financial commands
-* retry allowed only with Idempotency-Key
-* async Ledger command path disabled by default
-* no competing sync/async execution path
-* Ledger Event Publisher exists
-* no service named `outbox-worker`
-* generic `eagle-bank-events` queue not created unless used
-* WAF protects ALB
-* ALB routes `/health` to API
-* ALB routes `/ready` to API
-* ALB routes `/v1/auth/*` to Auth
-* ALB routes `/v1/*` to API
-* ALB default returns fixed 404
-* Ledger service private
-* Docker Compose includes required services
-* clean-checkout Docker startup applies migrations and initializes DynamoDB/SQS
-* local services become healthy and ready without manual intervention
-* CDK includes required resources
-* `infra:test` and `infra:synth` work without AWS credentials
-* AWS ECS tasks omit emulator endpoints and static AWS access keys
-* AWS ECS tasks use least-privilege task roles
-* CDK construct test strategy is not contradicted by sibling-test rule
-* seed script is excluded from sibling-test rule
-* Ledger integration tests exist
-* Ledger concurrency tests exist
-* Ledger Event Publisher tests exist
-* E2E tests exist
-* README contains example requests for every public endpoint
-* `examples/requests.http` is complete and runnable
-* `scripts/smoke-test.sh` passes against Docker Compose
-* tests pass
-* coverage reported
-* README explains architecture and trade-offs
+- OpenAPI inspected
+- OpenAPI corrections made
+- login schemas added
+- public 503 responses added
+- `POST /v1/users` documents 503
+- Idempotency-Key documented
+- transaction 409 documented
+- `/health` documented
+- `/ready` documented
+- `/ready` 503 uses `ReadinessResponse`
+- `/ready` 503 does not use general error envelope
+- public routes use `accountNumber`
+- packageManager pinned to `npm@11.9.0`
+- Auth service separate
+- users remain in PostgreSQL
+- Auth hashes passwords
+- API does not hash passwords
+- API calls Auth for password hashing
+- Auth sessions stored in DynamoDB
+- PostgreSQL constraints and indexes match required access patterns
+- every foreign-key column has a supporting PostgreSQL index
+- critical PostgreSQL query plans can use the intended indexes
+- DynamoDB uses `pk` and `sk` with the documented String key types
+- DynamoDB TTL uses `expiresAtEpoch`
+- no unnecessary DynamoDB GSI or LSI exists
+- DynamoDB request paths do not use `Scan`
+- DynamoDB Local and AWS CDK table definitions match
+- local execution requires no AWS account or AWS profile
+- local AWS SDK calls use DynamoDB Local and LocalStack endpoints
+- local execution performs no AWS STS or metadata calls
+- application code uses shared environment-driven AWS SDK client factories
+- API validates JWT and introspects session
+- Auth unavailable on protected request returns 503
+- internal service calls use signed service JWTs
+- API owns metadata only
+- Ledger owns balances
+- account reads fetch balance from Ledger
+- account lists use Ledger batch balances
+- Ledger unavailable for balance read returns 503
+- account creation uses pending-state workflow
+- Ledger account creation idempotent
+- failed Ledger creation marked and reconciled
+- account deletion uses closure workflow
+- failed Ledger closure marked and reconciled
+- `CLOSED` accounts do not block user deletion
+- Ledger service separate
+- API does not mutate balances
+- API does not write Ledger transactions
+- API delegates money movement to Ledger
+- Ledger owns idempotency
+- Ledger uses row-level locking or documented equivalent
+- no blind retry of financial commands
+- retry allowed only with Idempotency-Key
+- async Ledger command path disabled by default
+- no competing sync/async execution path
+- Ledger Event Publisher exists
+- no service named `outbox-worker`
+- generic `eagle-bank-events` queue not created unless used
+- WAF protects ALB
+- ALB routes `/health` to API
+- ALB routes `/ready` to API
+- ALB routes `/v1/auth/*` to Auth
+- ALB routes `/v1/*` to API
+- ALB default returns fixed 404
+- Ledger service private
+- Docker Compose includes required services
+- clean-checkout Docker startup applies migrations and initializes DynamoDB/SQS
+- local services become healthy and ready without manual intervention
+- CDK includes required resources
+- `infra:test` and `infra:synth` work without AWS credentials
+- AWS ECS tasks omit emulator endpoints and static AWS access keys
+- AWS ECS tasks use least-privilege task roles
+- CDK construct test strategy is not contradicted by sibling-test rule
+- seed script is excluded from sibling-test rule
+- Ledger integration tests exist
+- Ledger concurrency tests exist
+- Ledger Event Publisher tests exist
+- E2E tests exist
+- README contains example requests for every public endpoint
+- `examples/requests.http` is complete and runnable
+- `scripts/smoke-test.sh` passes against Docker Compose
+- tests pass
+- coverage reported
+- README explains architecture and trade-offs
 
 ---
 
@@ -4239,31 +4242,31 @@ Before final response, confirm:
 
 When complete, provide:
 
-* implemented features
-* endpoint list
-* OpenAPI corrections made
-* runtime services summary
-* Auth service summary
-* Ledger service summary
-* Ledger Event Publisher summary
-* account lifecycle summary
-* balance read path summary
-* user deletion semantics summary
-* internal service security summary
-* timeout/retry summary
-* Docker summary
-* PostgreSQL index/constraint summary
-* DynamoDB key/index summary
-* CDK summary
-* WAF/ALB summary
-* reviewer local-start summary
-* example-request and smoke-test summary
-* testing summary
-* Ledger integration testing summary
-* Ledger concurrency testing summary
-* E2E testing summary
-* build/typecheck summary
-* coverage summary
-* assumptions
-* trade-offs
-* incomplete items
+- implemented features
+- endpoint list
+- OpenAPI corrections made
+- runtime services summary
+- Auth service summary
+- Ledger service summary
+- Ledger Event Publisher summary
+- account lifecycle summary
+- balance read path summary
+- user deletion semantics summary
+- internal service security summary
+- timeout/retry summary
+- Docker summary
+- PostgreSQL index/constraint summary
+- DynamoDB key/index summary
+- CDK summary
+- WAF/ALB summary
+- reviewer local-start summary
+- example-request and smoke-test summary
+- testing summary
+- Ledger integration testing summary
+- Ledger concurrency testing summary
+- E2E testing summary
+- build/typecheck summary
+- coverage summary
+- assumptions
+- trade-offs
+- incomplete items

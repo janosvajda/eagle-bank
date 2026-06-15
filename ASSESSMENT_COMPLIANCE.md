@@ -1,56 +1,66 @@
 # Assessment Compliance
 
-This matrix maps the scenarios in `take-home-test-text-from-pdf.txt` to the
-executable API contract and integration coverage.
+This matrix traces the scenarios in
+[`take-home-test-text-from-pdf.txt`](take-home-test-text-from-pdf.txt) to the
+implemented API and integration tests.
 
-The assessment prose names account path parameters `{accountId}`. The supplied
-OpenAPI contract defines the public identifier as `{accountNumber}` matching
-`^01\d{6}$`; the implementation follows that contract. This resolution is also
-recorded in `Contract conflicts.md`.
+The assessment text names public account route parameters `{accountId}` while
+the supplied OpenAPI contract defines `{accountNumber}`. The implementation
+uses the OpenAPI route form. This resolution is recorded in
+[`Contract conflicts.md`](Contract%20conflicts.md).
 
-| Assessment requirement                | Endpoint                                                        | Expected result            | Integration coverage                     |
-| ------------------------------------- | --------------------------------------------------------------- | -------------------------- | ---------------------------------------- |
-| Create user                           | `POST /v1/users`                                                | `201`                      | `tests/integration/users.test.ts`        |
-| Reject incomplete user                | `POST /v1/users`                                                | `400` and error details    | `tests/integration/users.test.ts`        |
-| Authenticate and return JWT           | `POST /v1/auth/login`                                           | `200`, bearer JWT          | `tests/integration/auth.test.ts`         |
-| Reject missing or invalid credentials | All protected endpoints                                         | `401` and error message    | `tests/integration/auth.test.ts`         |
-| Fetch own user                        | `GET /v1/users/{userId}`                                        | `200`                      | `tests/integration/users.test.ts`        |
-| Fetch another user                    | `GET /v1/users/{userId}`                                        | `403`                      | `tests/integration/users.test.ts`        |
-| Fetch missing user                    | `GET /v1/users/{userId}`                                        | `404`                      | `tests/integration/users.test.ts`        |
-| Update own user                       | `PATCH /v1/users/{userId}`                                      | `200`, updated data        | `tests/integration/users.test.ts`        |
-| Update another user                   | `PATCH /v1/users/{userId}`                                      | `403`                      | `tests/integration/users.test.ts`        |
-| Update missing user                   | `PATCH /v1/users/{userId}`                                      | `404`                      | `tests/integration/users.test.ts`        |
-| Delete user without accounts          | `DELETE /v1/users/{userId}`                                     | `204`                      | `tests/integration/users.test.ts`        |
-| Delete user with account              | `DELETE /v1/users/{userId}`                                     | `409`                      | `tests/integration/users.test.ts`        |
-| Delete another user                   | `DELETE /v1/users/{userId}`                                     | `403`                      | `tests/integration/users.test.ts`        |
-| Delete missing user                   | `DELETE /v1/users/{userId}`                                     | `404`                      | `tests/integration/users.test.ts`        |
-| Create account                        | `POST /v1/accounts`                                             | `201`, account data        | `tests/integration/accounts.test.ts`     |
-| Reject incomplete account             | `POST /v1/accounts`                                             | `400` and error details    | `tests/integration/accounts.test.ts`     |
-| List own accounts                     | `GET /v1/accounts`                                              | `200`, only owned accounts | `tests/integration/accounts.test.ts`     |
-| Fetch own account                     | `GET /v1/accounts/{accountNumber}`                              | `200`                      | `tests/integration/accounts.test.ts`     |
-| Fetch another account                 | `GET /v1/accounts/{accountNumber}`                              | `403`                      | `tests/integration/accounts.test.ts`     |
-| Fetch missing account                 | `GET /v1/accounts/{accountNumber}`                              | `404`                      | `tests/integration/accounts.test.ts`     |
-| Update own account                    | `PATCH /v1/accounts/{accountNumber}`                            | `200`, updated data        | `tests/integration/accounts.test.ts`     |
-| Update another account                | `PATCH /v1/accounts/{accountNumber}`                            | `403`                      | `tests/integration/accounts.test.ts`     |
-| Update missing account                | `PATCH /v1/accounts/{accountNumber}`                            | `404`                      | `tests/integration/accounts.test.ts`     |
-| Delete own account                    | `DELETE /v1/accounts/{accountNumber}`                           | `204`                      | `tests/integration/accounts.test.ts`     |
-| Delete another account                | `DELETE /v1/accounts/{accountNumber}`                           | `403`                      | `tests/integration/accounts.test.ts`     |
-| Delete missing account                | `DELETE /v1/accounts/{accountNumber}`                           | `404`                      | `tests/integration/accounts.test.ts`     |
-| Deposit and update balance            | `POST /v1/accounts/{accountNumber}/transactions`                | `201`                      | `tests/integration/transactions.test.ts` |
-| Withdraw and update balance           | `POST /v1/accounts/{accountNumber}/transactions`                | `201`                      | `tests/integration/transactions.test.ts` |
-| Reject insufficient funds             | `POST /v1/accounts/{accountNumber}/transactions`                | `422`                      | `tests/integration/transactions.test.ts` |
-| Reject transaction on another account | `POST /v1/accounts/{accountNumber}/transactions`                | `403`                      | `tests/integration/transactions.test.ts` |
-| Reject transaction on missing account | `POST /v1/accounts/{accountNumber}/transactions`                | `404`                      | `tests/integration/transactions.test.ts` |
-| Reject incomplete transaction         | `POST /v1/accounts/{accountNumber}/transactions`                | `400` and error details    | `tests/integration/transactions.test.ts` |
-| List own-account transactions         | `GET /v1/accounts/{accountNumber}/transactions`                 | `200`                      | `tests/integration/transactions.test.ts` |
-| Reject listing another account        | `GET /v1/accounts/{accountNumber}/transactions`                 | `403`                      | `tests/integration/transactions.test.ts` |
-| Reject listing missing account        | `GET /v1/accounts/{accountNumber}/transactions`                 | `404`                      | `tests/integration/transactions.test.ts` |
-| Fetch matching transaction            | `GET /v1/accounts/{accountNumber}/transactions/{transactionId}` | `200`                      | `tests/integration/transactions.test.ts` |
-| Reject fetch through another account  | Same                                                            | `403`                      | `tests/integration/transactions.test.ts` |
-| Reject fetch through missing account  | Same                                                            | `404`                      | `tests/integration/transactions.test.ts` |
-| Reject missing transaction            | Same                                                            | `404`                      | `tests/integration/transactions.test.ts` |
-| Reject transaction/account mismatch   | Same                                                            | `404`                      | `tests/integration/transactions.test.ts` |
+## Authentication
 
-Additional contract tests verify that every OpenAPI operation is registered,
-all protected operations declare bearer authentication, requests are validated,
-and successful and error responses conform to `openapi/v1/openapi.yaml`.
+| Assessment requirement                            | Implementation                                             | Verification                                                                    |
+| ------------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Authenticate a user and return a JWT bearer token | `POST /v1/auth/login`                                      | `tests/integration/auth.test.ts`                                                |
+| Reject invalid or missing credentials             | Protected routes return `401`; invalid login returns `401` | `tests/integration/auth.test.ts`, `tests/integration/assessment-errors.test.ts` |
+
+## Users
+
+| Assessment scenarios                                                                   | Public behavior                                                   | Verification                      |
+| -------------------------------------------------------------------------------------- | ----------------------------------------------------------------- | --------------------------------- |
+| Create user; reject missing required data                                              | `POST /v1/users` returns `201` or `400`                           | `tests/integration/users.test.ts` |
+| Fetch own user; reject another or missing user                                         | `GET /v1/users/{userId}` returns `200`, `403`, or `404`           | `tests/integration/users.test.ts` |
+| Update own user; reject another or missing user                                        | `PATCH /v1/users/{userId}` returns `200`, `403`, or `404`         | `tests/integration/users.test.ts` |
+| Delete own user without accounts; reject active account, another user, or missing user | `DELETE /v1/users/{userId}` returns `204`, `409`, `403`, or `404` | `tests/integration/users.test.ts` |
+
+## Bank Accounts
+
+| Assessment scenarios                                    | Public behavior                                                      | Verification                         |
+| ------------------------------------------------------- | -------------------------------------------------------------------- | ------------------------------------ |
+| Create account; reject missing required data            | `POST /v1/accounts` returns `201` or `400`                           | `tests/integration/accounts.test.ts` |
+| List authenticated user's accounts                      | `GET /v1/accounts` returns only owned active accounts                | `tests/integration/accounts.test.ts` |
+| Fetch owned account; reject another or missing account  | `GET /v1/accounts/{accountNumber}` returns `200`, `403`, or `404`    | `tests/integration/accounts.test.ts` |
+| Update owned account; reject another or missing account | `PATCH /v1/accounts/{accountNumber}` returns `200`, `403`, or `404`  | `tests/integration/accounts.test.ts` |
+| Delete owned account; reject another or missing account | `DELETE /v1/accounts/{accountNumber}` returns `204`, `403`, or `404` | `tests/integration/accounts.test.ts` |
+
+Account deletion closes the account externally while retaining historical
+Ledger records. Closed accounts are excluded from subsequent reads and no
+longer block deletion of their owner.
+
+## Transactions
+
+| Assessment scenarios                                                                               | Public behavior                                                                | Verification                             |
+| -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ | ---------------------------------------- |
+| Deposit and update balance                                                                         | `POST /v1/accounts/{accountNumber}/transactions` returns `201`                 | `tests/integration/transactions.test.ts` |
+| Withdraw with sufficient funds and update balance                                                  | Transaction endpoint returns `201`                                             | `tests/integration/transactions.test.ts` |
+| Reject insufficient funds                                                                          | Transaction endpoint returns `422` without mutating balance or history         | `tests/integration/transactions.test.ts` |
+| Reject another user's or missing account                                                           | Transaction endpoint returns `403` or `404`                                    | `tests/integration/transactions.test.ts` |
+| Reject missing transaction data                                                                    | Transaction endpoint returns `400`                                             | `tests/integration/transactions.test.ts` |
+| List transactions for owned account; reject another or missing account                             | `GET /v1/accounts/{accountNumber}/transactions` returns `200`, `403`, or `404` | `tests/integration/transactions.test.ts` |
+| Fetch transaction from owned account                                                               | `GET /v1/accounts/{accountNumber}/transactions/{transactionId}` returns `200`  | `tests/integration/transactions.test.ts` |
+| Reject another user's account, missing account, missing transaction, or wrong account relationship | Fetch endpoint returns `403` or `404`                                          | `tests/integration/transactions.test.ts` |
+
+Transactions are immutable: the public API exposes create, list, and fetch
+operations only. It exposes no transaction update or delete route.
+
+## Contract Enforcement
+
+The versioned OpenAPI document is
+[`openapi/v1/openapi.yaml`](openapi/v1/openapi.yaml). Runtime middleware
+validates matched public requests and responses against that document.
+
+The README walkthrough and `./scripts/smoke-test.sh` exercise every public
+assessment endpoint, ownership failure, missing resource, validation failure,
+insufficient-funds response, deletion conflict, and idempotency behavior.
