@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Eagle Bank take-home platform",
+  "description": "Eagle Bank REST API",
   "packageManager": "npm@11.9.0",
   "main": "dist/src/server.js",
   "scripts": {

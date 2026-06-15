@@ -1,13 +1,21 @@
 # Eagle Bank
 
-A production-shaped TypeScript implementation of the Eagle Bank take-home
-assessment. It implements every public endpoint in
+A TypeScript implementation of the Eagle Bank take-home assessment. It
+implements every public endpoint in
 [`openapi/v1/openapi.yaml`](openapi/v1/openapi.yaml), all
-assessment scenarios, strict bearer-session enforcement, Ledger-owned money
-movement, and a no-AWS-account local runtime.
+assessment scenarios, JWT authentication backed by revocable sessions,
+Ledger-owned money movement, and local execution without an AWS account.
 
 The original-scenario traceability matrix is available in
 [`ASSESSMENT_COMPLIANCE.md`](ASSESSMENT_COMPLIANCE.md).
+
+The complete implementation specification is available in
+[`specification_v1.md`](specification_v1.md).
+
+Differences and ambiguities between the assessment scenarios and the supplied
+OpenAPI document are recorded in
+[`Contract conflicts.md`](Contract%20conflicts.md). It explains each conflict,
+the chosen resolution, and which contract the implementation follows.
 
 ## Test Locally With Docker
 
@@ -47,8 +55,9 @@ With the application stack still running:
 ./scripts/smoke-test.sh
 ```
 
-The smoke test verifies health, user registration and login, account creation,
-deposit, withdrawal, reads, account closure, and user deletion.
+The smoke test exercises every public endpoint plus the assessment's required
+authentication, validation, ownership, missing-resource, deletion-conflict,
+idempotency, and insufficient-funds responses.
 
 ### 4. View logs when needed
 
@@ -742,11 +751,10 @@ The manual walkthrough is now complete. Stop the local stack when finished:
 docker compose down
 ```
 
-For a shorter automated verification, start the stack using
+For an automated verification, start the stack using
 [Test Locally With Docker](#test-locally-with-docker) and run
-`./scripts/smoke-test.sh`. It verifies
-health, user creation/login, account creation, deposit, withdrawal,
-account/transaction reads, account closure, and user deletion.
+`./scripts/smoke-test.sh`. It runs the complete public endpoint and assessment
+error workflow described above.
 
 Expected successful statuses are `200`, `201`, or `204`; invalid input is
 `400`, invalid authentication `401`, cross-owner access `403`, missing
@@ -790,18 +798,17 @@ The public API service implements the OpenAPI contract but does not own the
 banking Ledger. Deposits, withdrawals, immutable transaction records,
 idempotency, and balance mutation are owned by a separate Ledger service.
 
-The Ledger Event Publisher publishes committed Ledger events from the Ledger
-outbox table to the Ledger events queue. It is named after its business
-responsibility rather than the underlying outbox implementation pattern.
+The Ledger Event Publisher reads committed events from the Ledger outbox table
+and publishes them to the Ledger events queue.
 
 `shared-application-db` is PostgreSQL database `eagle_bank`, used by API, Auth,
-and Ledger as a take-home simplification. `integration-test-db` is the isolated
-PostgreSQL database `eagle_bank_test`. `auth-session-db` is an in-memory
-DynamoDB emulator containing the `eagle-bank-auth-sessions` table. In AWS it is
-replaced by the CDK-managed DynamoDB table.
+and Ledger to keep local setup manageable. `integration-test-db` is the
+isolated PostgreSQL database `eagle_bank_test`. `auth-session-db` is an
+in-memory DynamoDB emulator containing the `eagle-bank-auth-sessions` table. In
+AWS it is replaced by the CDK-managed DynamoDB table.
 
-A stricter production design would give each service its own datastore and
-coordinate cross-service workflows through events and sagas.
+A database-per-service deployment would provide stronger storage isolation but
+would require event-driven coordination for cross-service workflows.
 
 ## Security
 
@@ -855,13 +862,14 @@ version 1 contract, not documentation-only:
 The URI version is centralized as `v1` in the application. Contract tests
 verify that all public resource paths use `/v1`, protected operations declare
 bearer authentication, and every OpenAPI operation is registered by Fastify.
-Operational `/health` and `/ready` endpoints remain deliberately unversioned.
+Operational `/health` and `/ready` endpoints are unversioned.
 
 Corrections to the supplied contract include login, bearer security, password
 input, health/readiness, `accountNumber` path naming, identifier regexes,
 positive transaction amounts, transaction idempotency conflict, and
 distributed-service `503` responses. Decisions are recorded in
-`Contract conflicts.md`.
+[`Contract conflicts.md`](Contract%20conflicts.md) so reviewers can distinguish
+intentional contract resolutions from implementation deviations.
 
 Public endpoints:
 
@@ -883,8 +891,8 @@ GET    /health
 GET    /ready
 ```
 
-`GET /ready` uses `ReadinessResponse` for both ready and not-ready states. It
-intentionally does not use the general error envelope.
+`GET /ready` uses `ReadinessResponse` for both ready and not-ready states
+instead of the general error envelope.
 
 ## Data And Consistency
 
@@ -923,8 +931,9 @@ accounts are preserved internally for historical integrity but do not block
 user deletion, because the user has successfully deleted their active
 accounts.
 
-Real banking systems typically evolve this Ledger toward full double-entry
-bookkeeping with independently balanced debit and credit accounts.
+The current Ledger records each posted transaction and its resulting balance.
+Full double-entry bookkeeping with independently balanced debit and credit
+accounts is not implemented.
 
 ## Indexes
 
@@ -999,8 +1008,8 @@ Those commands require no AWS account. `npm run infra:diff`,
 optional AWS operations and require configured credentials.
 
 Before the first deployment of a stage, create four `SecureString` parameters.
-The stack deliberately references existing parameters so secret values never
-enter source control, CDK context, or the generated CloudFormation template:
+The stack references existing parameters so secret values do not enter source
+control, CDK context, or the generated CloudFormation template:
 
 ```text
 /eagle-bank-<stage>/secrets/database-password
@@ -1045,26 +1054,24 @@ removal policy.
 ## Trade-offs
 
 - Shared PostgreSQL reduces reviewer setup but weakens physical service
-  ownership; AWS production should split stores.
-- Private service HTTP is security-group isolated and signed, but not mTLS.
-  A real banking deployment should enable Service Connect TLS/mTLS with AWS
-  Private CA and certificate rotation.
-- JWTs use symmetric `HS256` secrets for assessment simplicity. A larger
-  deployment should prefer asymmetric signing, managed key rotation, and
-  verification through a published JWKS so verifiers do not hold signing keys.
+  ownership. A database-per-service deployment would provide stronger
+  isolation.
+- Private service HTTP is security-group isolated and signed. Service-to-service
+  mTLS and certificate rotation are not implemented.
+- JWTs currently use symmetric `HS256` secrets. A larger deployment could use
+  asymmetric signing, managed key rotation, and verification through a
+  published JWKS so verifiers do not hold signing keys.
 - Customer PII currently relies on RDS encryption at rest. Regulatory threat
   models may also require application-level envelope encryption with KMS and
   searchable tokenization for selected fields.
-- Account create/delete use explicit lifecycle states and reconciliation-ready
-  metadata rather than pretending distributed calls are atomic.
-- Async Ledger commands are modeled but disabled to keep the public API
-  deterministic for the assessment.
+- Account create/delete use explicit lifecycle states and reconciliation
+  metadata to represent partial failures across services.
+- Async Ledger commands are modeled but disabled so public transaction requests
+  complete synchronously.
 - The outbox provides at-least-once event delivery, so downstream consumers
   must deduplicate by `eventId`.
 - Pagination, refresh-token endpoints, administrative session revocation, and
-  a continuously scheduled account reconciler are logical next production
-  additions.
-
+  a continuously scheduled account reconciler are not implemented.
 
 ## System diagram high level description:
 
@@ -1073,11 +1080,13 @@ Create a simple left-to-right system architecture diagram for Eagle Bank.
 Use two boundaries:
 
 PUBLIC
+
 - Client
 - AWS WAF
 - Application Load Balancer
 
 PRIVATE
+
 - API Service
 - Auth Service
 - Ledger Service
