@@ -63,6 +63,70 @@ describe('transactions', () => {
     ).toBe(75.25);
   });
 
+  it('preserves decimal precision in API responses and persisted ledger rows', async () => {
+    const user = await createUser();
+    await createAccount(user.publicId);
+    const headers = authorization(tokenFor(app, user.publicId));
+
+    const firstDeposit = await app.inject({
+      method: 'POST',
+      url: '/v1/accounts/01234567/transactions',
+      headers,
+      payload: { amount: 0.1, currency: 'GBP', type: 'deposit' },
+    });
+    expect(firstDeposit.statusCode).toBe(201);
+    expect(firstDeposit.json()).toMatchObject({ amount: 0.1 });
+
+    const secondDeposit = await app.inject({
+      method: 'POST',
+      url: '/v1/accounts/01234567/transactions',
+      headers,
+      payload: { amount: 0.2, currency: 'GBP', type: 'deposit' },
+    });
+    expect(secondDeposit.statusCode).toBe(201);
+    expect(secondDeposit.json()).toMatchObject({ amount: 0.2 });
+
+    for (const amount of [1.22, 0.89, 2.12]) {
+      const deposit = await app.inject({
+        method: 'POST',
+        url: '/v1/accounts/01234567/transactions',
+        headers,
+        payload: { amount, currency: 'GBP', type: 'deposit' },
+      });
+      expect(deposit.statusCode).toBe(201);
+      expect(deposit.json()).toMatchObject({ amount });
+    }
+
+    const accountResponse = await app.inject({
+      method: 'GET',
+      url: '/v1/accounts/01234567',
+      headers,
+    });
+    expect(accountResponse.statusCode).toBe(200);
+    expect(accountResponse.json()).toMatchObject({ balance: 4.53 });
+
+    const ledgerAccount = await testPrisma.ledgerAccount.findUniqueOrThrow({
+      where: { accountNumber: '01234567' },
+    });
+    expect(ledgerAccount.availableBalance.toFixed(2)).toBe('4.53');
+
+    const ledgerTransactions = await testPrisma.ledgerTransaction.findMany({
+      where: { accountNumber: '01234567' },
+      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+    });
+    expect(
+      ledgerTransactions.map((transaction) => transaction.amount.toFixed(2)),
+    ).toEqual(['0.10', '0.20', '1.22', '0.89', '2.12']);
+
+    const ledgerEntries = await testPrisma.ledgerEntry.findMany({
+      where: { accountId: ledgerAccount.accountId },
+      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+    });
+    expect(ledgerEntries.map((entry) => entry.balanceAfter.toFixed(2))).toEqual(
+      ['0.10', '0.30', '1.52', '2.41', '4.53'],
+    );
+  });
+
   it('does not mutate state when funds are insufficient', async () => {
     const user = await createUser();
     const account = await createAccount(user.publicId);

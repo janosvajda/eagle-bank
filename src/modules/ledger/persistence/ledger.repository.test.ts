@@ -1,6 +1,6 @@
-import { Prisma } from '../../generated/prisma/client.js';
+import { Prisma } from '../../../generated/prisma/client.js';
 import { describe, expect, it, vi } from 'vitest';
-import type { LedgerTransactionResponse } from './ledger.contracts.js';
+import type { LedgerTransactionResponse } from '../domain/ledger.contracts.js';
 import { LedgerRepository } from './ledger.repository.js';
 
 const account = {

@@ -4,8 +4,8 @@ import type { PrismaClient } from '../generated/prisma/client.js';
 import { registerErrorHandler } from '../common/errors/error-handler.js';
 import { AppError } from '../common/errors/AppError.js';
 import { ErrorCode } from '../common/errors/error-codes.js';
-import { LedgerService } from '../modules/ledger/ledger.service.js';
-import { LedgerRepository } from '../modules/ledger/ledger.repository.js';
+import { LedgerService } from '../modules/ledger/application/ledger.service.js';
+import { LedgerRepository } from '../modules/ledger/persistence/ledger.repository.js';
 import { healthRoutes } from '../modules/health/health.routes.js';
 import { verifyInternalServiceToken } from '../common/auth/internal-service-jwt.js';
 import { ServiceIdentity } from '../common/auth/auth.constants.js';
@@ -14,12 +14,12 @@ import type {
   LedgerAccountResponse,
   LedgerTransactionResponse,
   PostLedgerTransactionCommand,
-} from '../modules/ledger/ledger.contracts.js';
+} from '../modules/ledger/domain/ledger.contracts.js';
 import {
   ledgerAccountCommandSchema,
   ledgerAccountNumberSchema,
   postLedgerTransactionCommandSchema,
-} from '../modules/ledger/ledger.contracts.js';
+} from '../modules/ledger/domain/ledger.contracts.js';
 import { z } from 'zod';
 import {
   HTTP_BODY_LIMIT_BYTES,

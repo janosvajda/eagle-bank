@@ -3,14 +3,17 @@ import { z } from 'zod';
 import { MONEY_DECIMAL_PLACES } from '../constants.js';
 
 export const MAX_TRANSACTION_AMOUNT = 10000;
-const MINOR_UNITS_PER_MAJOR_UNIT = 100;
+
+function hasSupportedDecimalPlaces(value: number): boolean {
+  return new Prisma.Decimal(value).decimalPlaces() <= MONEY_DECIMAL_PLACES;
+}
 
 export const moneySchema = z
   .number()
   .finite()
   .positive()
   .max(MAX_TRANSACTION_AMOUNT)
-  .refine((value) => Number.isInteger(value * MINOR_UNITS_PER_MAJOR_UNIT), {
+  .refine(hasSupportedDecimalPlaces, {
     message: 'Amount must have no more than two decimal places',
   });
 

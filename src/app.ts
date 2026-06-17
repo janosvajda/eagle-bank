@@ -16,9 +16,9 @@ import { TransactionsService } from './modules/transactions/transactions.service
 import { transactionsRoutes } from './modules/transactions/transactions.routes.js';
 import { registerOpenApiValidation } from './common/openapi/openapi-validation.js';
 import { healthRoutes } from './modules/health/health.routes.js';
-import { LedgerService } from './modules/ledger/ledger.service.js';
-import { LedgerRepository } from './modules/ledger/ledger.repository.js';
-import { LedgerHttpClient } from './modules/ledger/ledger.client.js';
+import { LedgerService } from './modules/ledger/application/ledger.service.js';
+import { LedgerRepository } from './modules/ledger/persistence/ledger.repository.js';
+import { LedgerHttpClient } from './modules/ledger/transport/ledger.client.js';
 import {
   createDynamoDbClient,
   DynamoDbAuthSessionStore,

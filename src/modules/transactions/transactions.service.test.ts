@@ -6,7 +6,7 @@ import {
 import { describe, expect, it, vi } from 'vitest';
 import { AppError } from '../../common/errors/AppError.js';
 import type { AccountsService } from '../accounts/accounts.service.js';
-import type { LedgerGateway } from '../ledger/ledger.contracts.js';
+import type { LedgerGateway } from '../ledger/domain/ledger.contracts.js';
 import type { TransactionsRepository } from './transactions.repository.js';
 import { TransactionsService } from './transactions.service.js';
 
@@ -91,31 +91,46 @@ describe('TransactionsService', () => {
     const { service, tx, repository } = setup();
 
     await service.create(account.accountNumber, ownerId, {
-      amount: 10,
+      amount: 0.1,
       currency: 'GBP',
       type: 'deposit',
     });
 
     expect(repository.db.$transaction).toHaveBeenCalledOnce();
-    expect(tx.bankAccount.update).toHaveBeenCalledOnce();
-    expect(tx.transaction.create).toHaveBeenCalledOnce();
+    expect(tx.bankAccount.update).toHaveBeenCalledWith({
+      where: { id: account.id },
+      data: { balance: { increment: new Prisma.Decimal('0.10') } },
+    });
+    expect(tx.transaction.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        amount: new Prisma.Decimal('0.10'),
+      }),
+    });
   });
 
   it('conditionally decrements balance for a withdrawal', async () => {
     const { service, tx } = setup();
 
     await service.create(account.accountNumber, ownerId, {
-      amount: 10,
+      amount: 0.2,
       currency: 'GBP',
       type: 'withdrawal',
     });
 
     expect(tx.bankAccount.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: expect.objectContaining({ id: account.id }),
+        data: { balance: { decrement: new Prisma.Decimal('0.20') } },
+        where: expect.objectContaining({
+          balance: { gte: new Prisma.Decimal('0.20') },
+          id: account.id,
+        }),
       }),
     );
-    expect(tx.transaction.create).toHaveBeenCalledOnce();
+    expect(tx.transaction.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        amount: new Prisma.Decimal('0.20'),
+      }),
+    });
   });
 
   it('does not create a transaction when funds are insufficient', async () => {

@@ -12,18 +12,38 @@ import {
 } from '../../modules/users/users.schemas.js';
 
 describe('money handling', () => {
-  it.each([0.01, 10.99, 10000])('accepts valid amount %s', (amount) => {
-    expect(moneySchema.parse(amount)).toBe(amount);
-  });
+  it.each([0.01, 0.1, 0.2, 0.89, 1.13, 1.22, 2.12, 4.29, 10.99, 10000])(
+    'accepts valid amount %s',
+    (amount) => {
+      expect(moneySchema.parse(amount)).toBe(amount);
+    },
+  );
 
-  it.each([0, -1, 10000.01, 1.001])('rejects invalid amount %s', (amount) => {
-    expect(() => moneySchema.parse(amount)).toThrow();
-  });
+  it.each([0, -1, 10000.01, 1.001, 10.999])(
+    'rejects invalid amount %s',
+    (amount) => {
+      expect(() => moneySchema.parse(amount)).toThrow();
+    },
+  );
 
   it('converts money without binary floating-point output', () => {
     const decimal = toDecimal(10.1);
     expect(decimal).toEqual(new Prisma.Decimal('10.10'));
     expect(fromDecimal(decimal)).toBe(10.1);
+  });
+
+  it('keeps minor-unit arithmetic exact with Decimal values', () => {
+    const total = toDecimal(0.1).add(toDecimal(0.2));
+
+    expect(total).toEqual(new Prisma.Decimal('0.30'));
+    expect(fromDecimal(total)).toBe(0.3);
+  });
+
+  it('keeps representative two-decimal amounts exact', () => {
+    const total = toDecimal(1.22).add(toDecimal(0.89)).add(toDecimal(2.12));
+
+    expect(total).toEqual(new Prisma.Decimal('4.23'));
+    expect(fromDecimal(total)).toBe(4.23);
   });
 });
 

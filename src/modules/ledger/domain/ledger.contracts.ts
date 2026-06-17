@@ -1,10 +1,18 @@
 import { z } from 'zod';
-import { Currency, TransactionType } from '../../common/domain/banking.js';
+import {
+  ACCOUNT_NUMBER_CONTRACT_PATTERN,
+  Currency,
+  TransactionType,
+} from '../../../common/domain/banking.js';
+import { USER_API_ID_CONTRACT_PATTERN } from '../../users/user-id.js';
+import { TRANSACTION_API_ID_CONTRACT_PATTERN } from '../../transactions/transaction-id.js';
+import { LEDGER_MINIMUM_IDEMPOTENCY_KEY_LENGTH } from './ledger.constants.js';
 
-export const ledgerAccountNumberSchema = z.string().regex(/^01\d{6}$/);
-const userIdSchema = z.string().regex(/^usr-[A-Za-z0-9]+$/);
+export const ledgerAccountNumberSchema = z
+  .string()
+  .regex(ACCOUNT_NUMBER_CONTRACT_PATTERN);
+const userIdSchema = z.string().regex(USER_API_ID_CONTRACT_PATTERN);
 const transactionTypeSchema = z.enum(TransactionType);
-const MINIMUM_IDEMPOTENCY_KEY_LENGTH = 8;
 
 export const ledgerAccountCommandSchema = z
   .object({
@@ -31,7 +39,10 @@ export const postLedgerTransactionCommandSchema = z
     amount: z.number().positive(),
     currency: z.literal(Currency.GBP),
     reference: z.string().optional(),
-    idempotencyKey: z.string().min(MINIMUM_IDEMPOTENCY_KEY_LENGTH).optional(),
+    idempotencyKey: z
+      .string()
+      .min(LEDGER_MINIMUM_IDEMPOTENCY_KEY_LENGTH)
+      .optional(),
     requestId: z.string().optional(),
     correlationId: z.string().optional(),
   })
@@ -43,7 +54,7 @@ export type PostLedgerTransactionCommand = z.infer<
 
 export const ledgerTransactionResponseSchema = z
   .object({
-    id: z.string().regex(/^tan-[A-Za-z0-9]+$/),
+    id: z.string().regex(TRANSACTION_API_ID_CONTRACT_PATTERN),
     amount: z.number().positive(),
     currency: z.literal(Currency.GBP),
     type: transactionTypeSchema,

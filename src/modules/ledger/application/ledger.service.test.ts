@@ -2,11 +2,12 @@ import {
   Prisma,
   type LedgerAccount,
   type LedgerTransaction,
-} from '../../generated/prisma/client.js';
+} from '../../../generated/prisma/client.js';
 import { describe, expect, it, vi } from 'vitest';
-import type { PostLedgerTransactionCommand } from './ledger.contracts.js';
-import { LedgerRepository } from './ledger.repository.js';
+import type { PostLedgerTransactionCommand } from '../domain/ledger.contracts.js';
+import { LedgerRepository } from '../persistence/ledger.repository.js';
 import { LedgerService } from './ledger.service.js';
+import { PrismaErrorCode } from '../../../common/errors/prisma-error-codes.js';
 
 const createdAt = new Date('2026-01-01T12:00:00.000Z');
 
@@ -294,6 +295,46 @@ describe('LedgerService transactions', () => {
     });
   });
 
+  it('posts minor-unit decimal amounts without floating-point drift', async () => {
+    const posted = transaction({
+      amount: new Prisma.Decimal('1.22'),
+    });
+    const { tx, service } = database({
+      createdTransaction: posted,
+      foundAccount: account({
+        availableBalance: new Prisma.Decimal('0.89'),
+      }),
+    });
+    const result = await service.postTransaction(command({ amount: 1.22 }));
+
+    expect(result).toMatchObject({ amount: 1.22 });
+    expect(tx.ledgerAccount.updateMany).toHaveBeenCalledWith({
+      where: {
+        id: account().id,
+        status: 'ACTIVE',
+        version: account().version,
+      },
+      data: {
+        availableBalance: new Prisma.Decimal('2.11'),
+        version: { increment: 1 },
+      },
+    });
+    expect(tx.ledgerEntry.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        amount: new Prisma.Decimal('1.22'),
+        balanceAfter: new Prisma.Decimal('2.11'),
+      }),
+    });
+    expect(tx.ledgerOutboxEvent.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        payload: expect.objectContaining({
+          amount: '1.22',
+          balanceAfter: '2.11',
+        }),
+      }),
+    });
+  });
+
   it('posts an idempotent withdrawal and records completion', async () => {
     const posted = transaction({
       type: 'withdrawal',
@@ -380,7 +421,7 @@ describe('LedgerService transactions', () => {
     expect(db.$transaction).not.toHaveBeenCalled();
   });
 
-  it('continues an idempotency record that has no response yet', async () => {
+  it('rejects an idempotency record that is still processing', async () => {
     const hashSource = database();
     await hashSource.service.postTransaction(
       command({ idempotencyKey: 'key-1' }),
@@ -391,8 +432,77 @@ describe('LedgerService transactions', () => {
     const pending = database({
       previousIdempotency: { requestHash, responsePayload: null },
     });
-    await pending.service.postTransaction(command({ idempotencyKey: 'key-1' }));
-    expect(pending.db.$transaction).toHaveBeenCalledOnce();
+    await expect(
+      pending.service.postTransaction(command({ idempotencyKey: 'key-1' })),
+    ).rejects.toMatchObject({
+      statusCode: 503,
+      code: 'SERVICE_UNAVAILABLE',
+    });
+    expect(pending.db.$transaction).not.toHaveBeenCalled();
+  });
+
+  it('replays a completed idempotent response after a duplicate-key race', async () => {
+    const response = {
+      id: 'tan-replayed',
+      amount: 25.5,
+      currency: 'GBP',
+      type: 'deposit' as const,
+      userId: 'usr-1',
+      createdTimestamp: createdAt.toISOString(),
+    };
+    const hashSource = database();
+    await hashSource.service.postTransaction(
+      command({ idempotencyKey: 'key-1' }),
+    );
+    const requestHash =
+      hashSource.tx.ledgerIdempotencyKey.create.mock.calls[0]![0].data
+        .requestHash;
+    const duplicateKeyError = new Prisma.PrismaClientKnownRequestError(
+      'Unique constraint failed',
+      {
+        clientVersion: 'test',
+        code: PrismaErrorCode.UNIQUE_CONSTRAINT,
+      },
+    );
+    const raced = database();
+    raced.db.ledgerIdempotencyKey.findUnique
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({ requestHash, responsePayload: response });
+    raced.tx.ledgerIdempotencyKey.create.mockRejectedValueOnce(
+      duplicateKeyError,
+    );
+
+    await expect(
+      raced.service.postTransaction(command({ idempotencyKey: 'key-1' })),
+    ).resolves.toEqual(response);
+    expect(raced.db.ledgerIdempotencyKey.findUnique).toHaveBeenCalledTimes(2);
+    expect(raced.tx.ledgerTransaction.create).not.toHaveBeenCalled();
+  });
+
+  it('returns service unavailable when a duplicate-key race cannot be replayed yet', async () => {
+    const duplicateKeyError = new Prisma.PrismaClientKnownRequestError(
+      'Unique constraint failed',
+      {
+        clientVersion: 'test',
+        code: PrismaErrorCode.UNIQUE_CONSTRAINT,
+      },
+    );
+    const raced = database();
+    raced.db.ledgerIdempotencyKey.findUnique
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(null);
+    raced.tx.ledgerIdempotencyKey.create.mockRejectedValueOnce(
+      duplicateKeyError,
+    );
+
+    await expect(
+      raced.service.postTransaction(command({ idempotencyKey: 'key-1' })),
+    ).rejects.toMatchObject({
+      statusCode: 503,
+      code: 'SERVICE_UNAVAILABLE',
+    });
+    expect(raced.db.ledgerIdempotencyKey.findUnique).toHaveBeenCalledTimes(2);
+    expect(raced.tx.ledgerTransaction.create).not.toHaveBeenCalled();
   });
 
   it('rejects transactions for missing and closed accounts', async () => {

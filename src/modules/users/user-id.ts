@@ -1,3 +1,4 @@
+export const USER_API_ID_CONTRACT_PATTERN = /^usr-[A-Za-z0-9]+$/;
 const USER_API_ID_PATTERN = /^usr-(\d+)$/;
 
 // PostgreSQL owns the numeric identity. The API exposes that identity with the

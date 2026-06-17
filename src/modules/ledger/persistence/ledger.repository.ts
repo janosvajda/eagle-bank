@@ -8,8 +8,8 @@ import {
   type LedgerIdempotencyKey,
   type LedgerTransaction,
   type PrismaClient,
-} from '../../generated/prisma/client.js';
-import type { LedgerTransactionResponse } from './ledger.contracts.js';
+} from '../../../generated/prisma/client.js';
+import type { LedgerTransactionResponse } from '../domain/ledger.contracts.js';
 
 export interface LedgerTransactionRecord {
   ledgerAccountId: string;

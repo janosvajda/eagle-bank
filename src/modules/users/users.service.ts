@@ -22,6 +22,8 @@ export class UsersService {
   async create(input: CreateUserInput) {
     const email = input.email.toLowerCase();
     if (await this.users.findByEmail(email)) {
+      // Email is a durable unique identity for login, so duplicates are a
+      // client-correctable conflict rather than a validation or server error.
       this.logger.warn(
         { conflictField: 'email' },
         'User creation rejected because the email already exists',

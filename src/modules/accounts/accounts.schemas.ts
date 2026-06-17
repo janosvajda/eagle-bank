@@ -1,7 +1,12 @@
 import { z } from 'zod';
-import { AccountType } from '../../common/domain/banking.js';
+import {
+  ACCOUNT_NUMBER_CONTRACT_PATTERN,
+  AccountType,
+} from '../../common/domain/banking.js';
 
-export const accountNumberSchema = z.string().regex(/^01\d{6}$/);
+export const accountNumberSchema = z
+  .string()
+  .regex(ACCOUNT_NUMBER_CONTRACT_PATTERN);
 export const accountParamsSchema = z.object({
   accountNumber: accountNumberSchema,
 });

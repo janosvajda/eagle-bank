@@ -1,11 +1,9 @@
 import { loadLedgerEventPublisherConfig } from '../config/env.js';
 import { prisma } from '../db/prisma.js';
-import { LedgerEventPublisher } from '../modules/ledger/ledger-event-publisher.js';
-import { LedgerOutboxRepository } from '../modules/ledger/ledger-outbox.repository.js';
-import {
-  createSqsClient,
-  SqsLedgerEventSink,
-} from '../modules/ledger/ledger-event-sink.js';
+import { LedgerEventPublisher } from '../modules/ledger/events/ledger-event-publisher.js';
+import { LedgerOutboxRepository } from '../modules/ledger/persistence/ledger-outbox.repository.js';
+import { SqsLedgerEventSink } from '../modules/ledger/events/ledger-event-sink.js';
+import { createSqsClient } from '../common/aws/sqs-client.js';
 import pino from 'pino';
 
 const config = loadLedgerEventPublisherConfig();
