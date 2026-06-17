@@ -5,7 +5,7 @@ import { PrismaErrorCode } from '../../common/errors/prisma-error-codes.js';
 import type { AccountsRepository } from './accounts.repository.js';
 import type { BankAccountWithOwner } from './accounts.repository.js';
 import { AccountsService } from './accounts.service.js';
-import type { LedgerGateway } from '../ledger/ledger.contracts.js';
+import type { LedgerGateway } from '../ledger/domain/ledger.contracts.js';
 
 const ownerId = 'usr-1';
 const account: BankAccountWithOwner = {

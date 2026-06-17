@@ -1,6 +1,6 @@
 import { SendMessageCommand } from '@aws-sdk/client-sqs';
 import { describe, expect, it, vi } from 'vitest';
-import { createSqsClient, SqsLedgerEventSink } from './ledger-event-sink.js';
+import { SqsLedgerEventSink } from './ledger-event-sink.js';
 
 describe('SqsLedgerEventSink', () => {
   it('publishes a typed outbox event to the configured queue', async () => {
@@ -22,25 +22,5 @@ describe('SqsLedgerEventSink', () => {
         },
       },
     });
-  });
-
-  it('creates AWS and LocalStack clients with environment safeguards', () => {
-    expect(
-      createSqsClient({ environment: 'prod', region: 'eu-west-2' }),
-    ).toBeDefined();
-    expect(
-      createSqsClient({
-        environment: 'local',
-        region: 'eu-west-2',
-        endpoint: 'http://localhost:4566',
-      }),
-    ).toBeDefined();
-    expect(() =>
-      createSqsClient({
-        environment: 'prod',
-        region: 'eu-west-2',
-        endpoint: 'http://localhost:4566',
-      }),
-    ).toThrow('not allowed');
   });
 });

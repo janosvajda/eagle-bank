@@ -4,6 +4,8 @@ export const AccountType = {
 
 export type AccountType = (typeof AccountType)[keyof typeof AccountType];
 
+export const ACCOUNT_NUMBER_CONTRACT_PATTERN = /^01\d{6}$/;
+
 export const Currency = {
   GBP: 'GBP',
 } as const;

@@ -7,7 +7,7 @@ import type { AccountsService } from '../accounts/accounts.service.js';
 import { mapTransaction } from './transactions.mapper.js';
 import type { TransactionsRepository } from './transactions.repository.js';
 import type { CreateTransactionInput } from './transactions.schemas.js';
-import type { LedgerGateway } from '../ledger/ledger.contracts.js';
+import type { LedgerGateway } from '../ledger/domain/ledger.contracts.js';
 import { TransactionType } from '../../common/domain/banking.js';
 import type { FastifyBaseLogger } from 'fastify';
 import pino from 'pino';

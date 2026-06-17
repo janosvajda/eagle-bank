@@ -1,3 +1,4 @@
+export const TRANSACTION_API_ID_CONTRACT_PATTERN = /^tan-[A-Za-z0-9]+$/;
 const TRANSACTION_API_ID_PATTERN = /^tan-(\d+)$/;
 
 // PostgreSQL owns the numeric identity. The API exposes that identity with the

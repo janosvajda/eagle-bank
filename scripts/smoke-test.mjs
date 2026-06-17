@@ -141,6 +141,26 @@ const primaryUser = await request('POST', '/v1/users', {
 expectStatus(primaryUser, 201, 'create primary user');
 const primaryUserId = requireString(primaryUser, 'id', 'create primary user');
 
+expectError(
+  await request('POST', '/v1/users', {
+    body: {
+      name: 'Duplicate Smoke User',
+      address: {
+        line1: '1 Test Road',
+        town: 'London',
+        county: 'Greater London',
+        postcode: 'SW1A 1AA',
+      },
+      phoneNumber: `+4475${String(Date.now()).slice(-8)}`,
+      email: primaryEmail,
+      password,
+    },
+  }),
+  409,
+  'A user with this email already exists',
+  'reject duplicate user email',
+);
+
 const primaryLogin = await request('POST', '/v1/auth/login', {
   body: { email: primaryEmail, password },
 });
@@ -228,6 +248,98 @@ expectField(
   'updated primary account response',
 );
 
+const decimalDepositA = await request(
+  'POST',
+  `/v1/accounts/${primaryAccountNumber}/transactions`,
+  {
+    token: primaryToken,
+    idempotencyKey: `decimal-deposit-a-${unique}`,
+    body: {
+      amount: 0.1,
+      currency: 'GBP',
+      type: 'deposit',
+      reference: 'Smoke decimal deposit 0.10',
+    },
+  },
+);
+expectStatus(decimalDepositA, 201, 'decimal deposit 0.10');
+expectField(decimalDepositA, 'amount', 0.1, 'decimal deposit 0.10 response');
+
+const decimalDepositB = await request(
+  'POST',
+  `/v1/accounts/${primaryAccountNumber}/transactions`,
+  {
+    token: primaryToken,
+    idempotencyKey: `decimal-deposit-b-${unique}`,
+    body: {
+      amount: 0.2,
+      currency: 'GBP',
+      type: 'deposit',
+      reference: 'Smoke decimal deposit 0.20',
+    },
+  },
+);
+expectStatus(decimalDepositB, 201, 'decimal deposit 0.20');
+expectField(decimalDepositB, 'amount', 0.2, 'decimal deposit 0.20 response');
+
+for (const [amount, expectedBalance] of [
+  [1.22, 1.52],
+  [0.89, 2.41],
+  [2.12, 4.53],
+]) {
+  const decimalDeposit = await request(
+    'POST',
+    `/v1/accounts/${primaryAccountNumber}/transactions`,
+    {
+      token: primaryToken,
+      idempotencyKey: `decimal-deposit-${amount}-${unique}`,
+      body: {
+        amount,
+        currency: 'GBP',
+        type: 'deposit',
+        reference: `Smoke decimal deposit ${amount.toFixed(2)}`,
+      },
+    },
+  );
+  expectStatus(decimalDeposit, 201, `decimal deposit ${amount.toFixed(2)}`);
+  expectField(
+    decimalDeposit,
+    'amount',
+    amount,
+    `decimal deposit ${amount.toFixed(2)} response`,
+  );
+
+  const accountAfterDecimalDeposit = await request(
+    'GET',
+    `/v1/accounts/${primaryAccountNumber}`,
+    { token: primaryToken },
+  );
+  expectStatus(
+    accountAfterDecimalDeposit,
+    200,
+    `fetch account after decimal deposit ${amount.toFixed(2)}`,
+  );
+  expectField(
+    accountAfterDecimalDeposit,
+    'balance',
+    expectedBalance,
+    `account balance after decimal deposit ${amount.toFixed(2)}`,
+  );
+}
+
+const decimalAccount = await request(
+  'GET',
+  `/v1/accounts/${primaryAccountNumber}`,
+  { token: primaryToken },
+);
+expectStatus(decimalAccount, 200, 'fetch account after decimal deposits');
+expectField(
+  decimalAccount,
+  'balance',
+  4.53,
+  'account balance after decimal deposits',
+);
+
 const depositKey = `deposit-${unique}`;
 const depositBody = {
   amount: 100,
@@ -307,6 +419,29 @@ if (
   fail(
     'list primary transactions',
     'deposit transaction was not returned',
+    transactions,
+  );
+}
+if (
+  !transactions.body.transactions.some(
+    (transaction) => transaction.amount === 0.1,
+  ) ||
+  !transactions.body.transactions.some(
+    (transaction) => transaction.amount === 0.2,
+  ) ||
+  !transactions.body.transactions.some(
+    (transaction) => transaction.amount === 1.22,
+  ) ||
+  !transactions.body.transactions.some(
+    (transaction) => transaction.amount === 0.89,
+  ) ||
+  !transactions.body.transactions.some(
+    (transaction) => transaction.amount === 2.12,
+  )
+) {
+  fail(
+    'list primary transactions',
+    'decimal deposit transactions were not returned precisely',
     transactions,
   );
 }

@@ -1,11 +1,11 @@
 import { constants as httpConstants } from 'node:http2';
-import { createInternalServiceToken } from '../../common/auth/internal-service-jwt.js';
+import { createInternalServiceToken } from '../../../common/auth/internal-service-jwt.js';
 import {
   AUTHORIZATION_BEARER_PREFIX,
   ServiceIdentity,
-} from '../../common/auth/auth.constants.js';
-import { AppError } from '../../common/errors/AppError.js';
-import { ErrorCode } from '../../common/errors/error-codes.js';
+} from '../../../common/auth/auth.constants.js';
+import { AppError } from '../../../common/errors/AppError.js';
+import { ErrorCode } from '../../../common/errors/error-codes.js';
 import {
   ledgerAccountResponseSchema,
   ledgerBalanceResponseSchema,
@@ -17,30 +17,20 @@ import {
   type LedgerGateway,
   type LedgerTransactionResponse,
   type PostLedgerTransactionCommand,
-} from './ledger.contracts.js';
+} from '../domain/ledger.contracts.js';
 import {
   HttpHeader,
   HttpMethod,
   MediaType,
-} from '../../common/http/http.constants.js';
+} from '../../../common/http/http.constants.js';
 import type { FastifyBaseLogger } from 'fastify';
 import pino from 'pino';
-import type { JsonValue } from '../../common/http/json.types.js';
+import type { JsonValue } from '../../../common/http/json.types.js';
+import { responseMessage } from '../../../common/http/response-message.js';
+import { LEDGER_REQUEST_TIMEOUT_MS } from '../domain/ledger.constants.js';
 
-const LEDGER_REQUEST_TIMEOUT_MS = 2000;
-
-function responseMessage(
-  payload: JsonValue | undefined,
-  fallback: string,
-): string {
-  return typeof payload === 'object' &&
-    payload !== null &&
-    'message' in payload &&
-    typeof payload.message === 'string'
-    ? payload.message
-    : fallback;
-}
-
+// Service-to-service adapter used by the public API process to call the
+// private Ledger service. It implements the same gateway as LedgerService.
 export class LedgerHttpClient implements LedgerGateway {
   constructor(
     private readonly baseUrl: string,

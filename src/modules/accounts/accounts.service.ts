@@ -9,7 +9,7 @@ import type {
   CreateAccountInput,
   UpdateAccountInput,
 } from './accounts.schemas.js';
-import type { LedgerGateway } from '../ledger/ledger.contracts.js';
+import type { LedgerGateway } from '../ledger/domain/ledger.contracts.js';
 import { PrismaErrorCode } from '../../common/errors/prisma-error-codes.js';
 import { Currency } from '../../common/domain/banking.js';
 import type { FastifyBaseLogger } from 'fastify';

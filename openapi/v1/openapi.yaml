@@ -534,6 +534,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/BadRequestErrorResponse'
+        '409':
+          description: A user with this email already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: An unexpected error occurred
           content:
@@ -585,6 +591,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: User was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: A user with this email already exists
           content:
             application/json:
               schema:

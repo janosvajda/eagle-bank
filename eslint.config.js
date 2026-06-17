@@ -109,7 +109,7 @@ export default tseslint.config(
       'src/common/domain/banking.ts',
       'src/common/http/http.constants.ts',
       'src/modules/health/health.constants.ts',
-      'src/modules/ledger/ledger.constants.ts',
+      'src/modules/ledger/domain/ledger.constants.ts',
     ],
     rules: {
       'no-restricted-syntax': 'off',

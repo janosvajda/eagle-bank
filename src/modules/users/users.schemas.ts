@@ -3,11 +3,12 @@ import {
   MAXIMUM_EMAIL_LENGTH,
   MAXIMUM_PHONE_NUMBER_LENGTH,
 } from './users.constants.js';
+import { USER_API_ID_CONTRACT_PATTERN } from './user-id.js';
 
 const MINIMUM_PASSWORD_LENGTH = 8;
 const MAXIMUM_PASSWORD_LENGTH = 128;
 
-export const userIdSchema = z.string().regex(/^usr-[A-Za-z0-9]+$/);
+export const userIdSchema = z.string().regex(USER_API_ID_CONTRACT_PATTERN);
 
 export const addressSchema = z.object({
   line1: z.string().min(1),

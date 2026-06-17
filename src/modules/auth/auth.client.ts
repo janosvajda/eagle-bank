@@ -27,18 +27,10 @@ import type { FastifyBaseLogger } from 'fastify';
 import pino from 'pino';
 import type { JsonValue } from '../../common/http/json.types.js';
 import { PUBLIC_API_PREFIX } from '../../common/http/api-version.js';
+import { responseMessage } from '../../common/http/response-message.js';
 
 const AUTH_INTROSPECTION_TIMEOUT_MS = 300;
 const AUTH_REQUEST_TIMEOUT_MS = 1000;
-
-function responseMessage(payload: JsonValue, fallback: string): string {
-  return typeof payload === 'object' &&
-    payload !== null &&
-    'message' in payload &&
-    typeof payload.message === 'string'
-    ? payload.message
-    : fallback;
-}
 
 export class AuthHttpClient implements PasswordHasher {
   constructor(

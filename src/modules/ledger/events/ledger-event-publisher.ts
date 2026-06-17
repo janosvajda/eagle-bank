@@ -2,15 +2,16 @@ import { randomUUID } from 'node:crypto';
 import {
   OutboxStatus,
   type LedgerOutboxEvent,
-} from '../../generated/prisma/client.js';
+} from '../../../generated/prisma/client.js';
 import type { Logger } from 'pino';
-import type { LedgerOutboxRepository } from './ledger-outbox.repository.js';
+import type { LedgerOutboxRepository } from '../persistence/ledger-outbox.repository.js';
 import type { LedgerEventSink } from './ledger-event-sink.js';
-
-const EXPONENTIAL_BACKOFF_BASE = 2;
-const JITTER_DIVISOR = 4;
-const MINIMUM_JITTER_RANGE_MS = 1;
-const MAX_ERROR_MESSAGE_LENGTH = 1000;
+import {
+  LEDGER_BACKOFF_EXPONENTIAL_BASE,
+  LEDGER_JITTER_DIVISOR,
+  LEDGER_MAX_ERROR_MESSAGE_LENGTH,
+  LEDGER_MINIMUM_JITTER_RANGE_MS,
+} from '../domain/ledger.constants.js';
 
 export interface LedgerEventPublisherOptions {
   batchSize: number;
@@ -71,10 +72,11 @@ export class LedgerEventPublisher {
     const dead = attempts >= this.options.maxAttempts;
     const exponential =
       this.options.backoffBaseMs *
-      EXPONENTIAL_BACKOFF_BASE ** Math.max(0, attempts - 1);
+      LEDGER_BACKOFF_EXPONENTIAL_BASE ** Math.max(0, attempts - 1);
     const delay = Math.min(exponential, this.options.backoffMaxMs);
     const jitter = Math.floor(
-      Math.random() * Math.max(MINIMUM_JITTER_RANGE_MS, delay / JITTER_DIVISOR),
+      Math.random() *
+        Math.max(LEDGER_MINIMUM_JITTER_RANGE_MS, delay / LEDGER_JITTER_DIVISOR),
     );
 
     // Backoff reduces pressure during outages; jitter prevents synchronized
@@ -83,7 +85,7 @@ export class LedgerEventPublisher {
       eventId: event.id,
       errorMessage:
         error instanceof Error
-          ? error.message.slice(0, MAX_ERROR_MESSAGE_LENGTH)
+          ? error.message.slice(0, LEDGER_MAX_ERROR_MESSAGE_LENGTH)
           : `Publish failure ${randomUUID()}`,
       nextAttemptAt: new Date(Date.now() + delay + jitter),
       status: dead ? OutboxStatus.DEAD : OutboxStatus.FAILED,

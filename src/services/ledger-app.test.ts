@@ -15,7 +15,7 @@ const ledger = vi.hoisted(() => ({
   }),
 }));
 
-vi.mock('../modules/ledger/ledger.service.js', () => ({
+vi.mock('../modules/ledger/application/ledger.service.js', () => ({
   LedgerService: class {
     closeAccount = ledger.closeAccount;
     createAccount = ledger.createAccount;

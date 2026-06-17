@@ -139,12 +139,14 @@ from source control.
 ## Continuous Integration
 
 The [GitHub Actions CI workflow](.github/workflows/ci.yml) runs for every pull
-request and every push to `main`. It executes the same Docker-based test suite
-documented above, including linting, TypeScript checks, formatting checks, unit
-tests with coverage, integration tests, and infrastructure tests.
+request, merge queue run, and push to `main`. It executes the same Docker-based
+test suite documented above, including linting, TypeScript checks, formatting
+checks, unit tests with coverage, integration tests, and infrastructure tests.
 
-To prevent unverified changes from being merged, configure the repository's
-`main` branch protection rules to require the `Verify` status check.
+GitHub Actions reports the result; merge blocking is controlled by repository
+settings. To prevent unverified changes from being merged, enable a GitHub
+branch protection rule or ruleset for `main` that requires the `Verify` status
+check to pass.
 
 ## Example Requests
 

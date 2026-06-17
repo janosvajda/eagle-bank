@@ -33,3 +33,12 @@ the supplied OpenAPI specification, together with the agreed resolutions.
   numbers, user IDs, and phone numbers.
 - Resolution: express these constraints with the OpenAPI `pattern` keyword.
   Standard formats such as `email` and `date-time` remain unchanged.
+
+## User email conflicts
+
+- Assessment text: requires appropriate error handling for invalid scenarios, but
+  does not explicitly name the response for duplicate user emails.
+- OpenAPI specification: the original user create/update operations did not
+  document a `409` response for the unique `email` constraint.
+- Resolution: keep `email` unique because it is used for login identity, and
+  document `409 Conflict` for duplicate emails on user creation and update.
