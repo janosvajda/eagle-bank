@@ -47,6 +47,7 @@ build/Release
 # Dependency directories
 node_modules/
 jspm_packages/
+generated/prisma/
 src/generated/prisma/
 
 # Snowpack dependency directory (https://snowpack.dev/)

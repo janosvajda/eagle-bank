@@ -1,4 +1,4 @@
-import type { User } from '../../generated/prisma/client.js';
+import type { User } from '../../../generated/prisma/client.js';
 import { formatUserApiId } from './user-id.js';
 
 export function mapUser(user: User) {

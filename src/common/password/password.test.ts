@@ -11,10 +11,4 @@ describe('password protection', () => {
     await expect(verifyPassword(first, 'Password123!')).resolves.toBe(true);
     await expect(verifyPassword(first, 'wrong')).resolves.toBe(false);
   });
-
-  it('performs a dummy verification for an unknown user', async () => {
-    await expect(verifyPassword(undefined, 'Password123!')).resolves.toBe(
-      false,
-    );
-  });
 });

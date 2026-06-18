@@ -4,7 +4,6 @@ import {
   authServiceConfigSchema,
   ledgerEventPublisherConfigSchema,
   ledgerServiceConfigSchema,
-  ledgerWorkerConfigSchema,
 } from './env.schemas.js';
 
 // This file is the public configuration API. Services import their typed
@@ -15,7 +14,6 @@ export type LedgerServiceConfig = z.infer<typeof ledgerServiceConfigSchema>;
 export type LedgerEventPublisherConfig = z.infer<
   typeof ledgerEventPublisherConfigSchema
 >;
-export type LedgerWorkerConfig = z.infer<typeof ledgerWorkerConfigSchema>;
 
 function parseConfig<Schema extends z.ZodType>(
   schema: Schema,
@@ -46,10 +44,4 @@ export function loadLedgerEventPublisherConfig(
   source?: NodeJS.ProcessEnv,
 ): LedgerEventPublisherConfig {
   return parseConfig(ledgerEventPublisherConfigSchema, source);
-}
-
-export function loadLedgerWorkerConfig(
-  source?: NodeJS.ProcessEnv,
-): LedgerWorkerConfig {
-  return parseConfig(ledgerWorkerConfigSchema, source);
 }

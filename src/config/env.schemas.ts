@@ -7,7 +7,6 @@ import {
   httpRuntimeFields,
   ledgerEventPublisherFields,
   ledgerServiceJwtFields,
-  ledgerWorkerFields,
   userJwtFields,
 } from './env.fields.js';
 import {
@@ -59,7 +58,3 @@ export const ledgerEventPublisherConfigSchema = z
     ...ledgerEventPublisherFields,
   })
   .superRefine(rejectLocalAwsOverrides);
-
-// Asynchronous command worker: intentionally minimal until command
-// consumption is enabled.
-export const ledgerWorkerConfigSchema = z.object(ledgerWorkerFields);

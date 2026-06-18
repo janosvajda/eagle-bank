@@ -2,7 +2,7 @@ import { constants as httpConstants } from 'node:http2';
 import {
   LedgerAccountStatus,
   type LedgerAccount,
-} from '../../../generated/prisma/client.js';
+} from '../../../../generated/prisma/client.js';
 import type { FastifyBaseLogger } from 'fastify';
 import pino from 'pino';
 import { ErrorCode } from '../../../common/errors/error-codes.js';
@@ -23,8 +23,8 @@ import {
   mapLedgerTransaction,
 } from '../domain/ledger.mapper.js';
 import { LedgerTransactionPoster } from './ledger-transaction-poster.js';
-import { LEDGER_MAX_ACCOUNT_BALANCE } from '../domain/ledger.constants.js';
 import { rejectLedgerOperation } from '../domain/ledger.errors.js';
+import { MAX_TRANSACTION_AMOUNT } from '../../../common/domain/banking.js';
 
 export class LedgerService implements LedgerGateway {
   private readonly transactionPoster: LedgerTransactionPoster;
@@ -32,7 +32,7 @@ export class LedgerService implements LedgerGateway {
   constructor(
     private readonly ledger: LedgerRepository,
     private readonly logger: FastifyBaseLogger = pino({ enabled: false }),
-    maxBalance = toDecimal(LEDGER_MAX_ACCOUNT_BALANCE),
+    maxBalance = toDecimal(MAX_TRANSACTION_AMOUNT),
   ) {
     this.transactionPoster = new LedgerTransactionPoster(
       ledger,

@@ -2,7 +2,7 @@ import {
   Prisma,
   type LedgerAccount,
   type LedgerTransaction,
-} from '../../../generated/prisma/client.js';
+} from '../../../../generated/prisma/client.js';
 import { describe, expect, it, vi } from 'vitest';
 import type { PostLedgerTransactionCommand } from '../domain/ledger.contracts.js';
 import { LedgerRepository } from '../persistence/ledger.repository.js';
@@ -54,7 +54,7 @@ function command(
     accountNumber: account().accountNumber,
     userId: 'usr-1',
     type: 'deposit',
-    amount: 25.5,
+    amount: new Prisma.Decimal('25.50'),
     currency: 'GBP',
     ...overrides,
   };
@@ -305,7 +305,9 @@ describe('LedgerService transactions', () => {
         availableBalance: new Prisma.Decimal('0.89'),
       }),
     });
-    const result = await service.postTransaction(command({ amount: 1.22 }));
+    const result = await service.postTransaction(
+      command({ amount: new Prisma.Decimal('1.22') }),
+    );
 
     expect(result).toMatchObject({ amount: 1.22 });
     expect(tx.ledgerAccount.updateMany).toHaveBeenCalledWith({
@@ -346,7 +348,7 @@ describe('LedgerService transactions', () => {
     const result = await service.postTransaction(
       command({
         type: 'withdrawal',
-        amount: 20,
+        amount: new Prisma.Decimal('20.00'),
         idempotencyKey: 'key-1',
       }),
     );
@@ -529,7 +531,7 @@ describe('LedgerService transactions', () => {
   it('enforces insufficient-funds and maximum-balance limits', async () => {
     await expect(
       database().service.postTransaction(
-        command({ type: 'withdrawal', amount: 100.01 }),
+        command({ type: 'withdrawal', amount: new Prisma.Decimal('100.01') }),
       ),
     ).rejects.toMatchObject({ statusCode: 422, code: 'INSUFFICIENT_FUNDS' });
 
@@ -538,7 +540,9 @@ describe('LedgerService transactions', () => {
         foundAccount: account({
           availableBalance: new Prisma.Decimal('9990.00'),
         }),
-      }).service.postTransaction(command({ amount: 10.01 })),
+      }).service.postTransaction(
+        command({ amount: new Prisma.Decimal('10.01') }),
+      ),
     ).rejects.toMatchObject({
       statusCode: 422,
       code: 'BALANCE_LIMIT_EXCEEDED',

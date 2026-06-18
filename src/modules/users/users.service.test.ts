@@ -1,4 +1,4 @@
-import type { User } from '../../generated/prisma/client.js';
+import type { User } from '../../../generated/prisma/client.js';
 import { describe, expect, it, vi } from 'vitest';
 import { AppError } from '../../common/errors/AppError.js';
 import type { UsersRepository } from './users.repository.js';

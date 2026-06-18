@@ -1,15 +1,29 @@
 import argon2 from 'argon2';
 import type { FastifyInstance } from 'fastify';
-import { beforeAll, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { UsersRepository } from '../users/users.repository.js';
 import { AuthService } from './auth.service.js';
 import type { AuthSessionStore } from './auth-session.contracts.js';
+import { verifyPassword } from '../../common/password/password.js';
+
+vi.mock('../../common/password/password.js', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('../../common/password/password.js')>();
+  return {
+    ...actual,
+    verifyPassword: vi.fn(actual.verifyPassword),
+  };
+});
 
 describe('AuthService', () => {
   let passwordHash: string;
 
   beforeAll(async () => {
     passwordHash = await argon2.hash('Password123!');
+  });
+
+  beforeEach(() => {
+    vi.mocked(verifyPassword).mockClear();
   });
 
   function service(user: { id: bigint; passwordHash: string } | null) {
@@ -77,5 +91,6 @@ describe('AuthService', () => {
     await expect(
       auth.login({ email: 'missing@example.com', password: 'Password123!' }),
     ).rejects.toMatchObject({ statusCode: 401 });
+    expect(verifyPassword).not.toHaveBeenCalled();
   });
 });

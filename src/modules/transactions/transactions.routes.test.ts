@@ -3,6 +3,7 @@ import fastifyJwt from '@fastify/jwt';
 import { describe, expect, it, vi } from 'vitest';
 import { transactionsRoutes } from './transactions.routes.js';
 import type { TransactionsService } from './transactions.service.js';
+import { Prisma } from '../../../generated/prisma/client.js';
 
 describe('transactionsRoutes', () => {
   it('delegates transaction creation, listing, and fetching', async () => {
@@ -53,7 +54,7 @@ describe('transactionsRoutes', () => {
     expect(service.create).toHaveBeenCalledWith(
       '01234567',
       'usr-owner',
-      payload,
+      { ...payload, amount: new Prisma.Decimal('10.00') },
       undefined,
     );
     expect(infoLog).toHaveBeenCalledWith(

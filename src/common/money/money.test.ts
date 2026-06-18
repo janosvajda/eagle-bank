@@ -1,4 +1,4 @@
-import { Prisma } from '../../generated/prisma/client.js';
+import { Prisma } from '../../../generated/prisma/client.js';
 import { describe, expect, it } from 'vitest';
 import { fromDecimal, moneySchema, toDecimal } from './money.js';
 import {
@@ -10,21 +10,36 @@ import {
   createUserSchema,
   updateUserSchema,
 } from '../../modules/users/users.schemas.js';
+import { MAX_TRANSACTION_AMOUNT } from '../domain/banking.js';
 
 describe('money handling', () => {
-  it.each([0.01, 0.1, 0.2, 0.89, 1.13, 1.22, 2.12, 4.29, 10.99, 10000])(
-    'accepts valid amount %s',
-    (amount) => {
-      expect(moneySchema.parse(amount)).toBe(amount);
-    },
-  );
+  it.each([
+    0.01,
+    0.1,
+    0.2,
+    0.89,
+    1.13,
+    1.22,
+    2.12,
+    4.29,
+    10.99,
+    MAX_TRANSACTION_AMOUNT,
+  ])('accepts valid amount %s', (amount) => {
+    expect(moneySchema.parse(amount)).toEqual(toDecimal(amount));
+  });
 
-  it.each([0, -1, 10000.01, 1.001, 10.999])(
-    'rejects invalid amount %s',
-    (amount) => {
-      expect(() => moneySchema.parse(amount)).toThrow();
-    },
-  );
+  it.each([
+    0,
+    -1,
+    MAX_TRANSACTION_AMOUNT + 0.01,
+    1.001,
+    10.999,
+    Number.NaN,
+    Infinity,
+    -Infinity,
+  ])('rejects invalid amount %s', (amount) => {
+    expect(() => moneySchema.parse(amount)).toThrow();
+  });
 
   it('converts money without binary floating-point output', () => {
     const decimal = toDecimal(10.1);
@@ -85,7 +100,11 @@ describe('request schemas', () => {
         currency: 'GBP',
         type: 'deposit',
       }),
-    ).toMatchObject({ amount: 12.34, currency: 'GBP', type: 'deposit' });
+    ).toMatchObject({
+      amount: new Prisma.Decimal('12.34'),
+      currency: 'GBP',
+      type: 'deposit',
+    });
 
     expect(() =>
       createTransactionSchema.parse({

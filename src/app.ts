@@ -1,6 +1,6 @@
 import fastify, { type FastifyInstance } from 'fastify';
 import fastifyJwt from '@fastify/jwt';
-import type { PrismaClient } from './generated/prisma/client.js';
+import type { PrismaClient } from '../generated/prisma/client.js';
 import type { AppConfig } from './config/env.js';
 import { registerErrorHandler } from './common/errors/error-handler.js';
 import { UsersRepository } from './modules/users/users.repository.js';
@@ -11,7 +11,6 @@ import { authRoutes } from './modules/auth/auth.routes.js';
 import { AccountsRepository } from './modules/accounts/accounts.repository.js';
 import { AccountsService } from './modules/accounts/accounts.service.js';
 import { accountsRoutes } from './modules/accounts/accounts.routes.js';
-import { TransactionsRepository } from './modules/transactions/transactions.repository.js';
 import { TransactionsService } from './modules/transactions/transactions.service.js';
 import { transactionsRoutes } from './modules/transactions/transactions.routes.js';
 import { registerOpenApiValidation } from './common/openapi/openapi-validation.js';
@@ -112,7 +111,6 @@ export async function buildApp(
     app.log,
   );
   const transactionsService = new TransactionsService(
-    new TransactionsRepository(options.prisma),
     accountsService,
     ledgerService,
     app.log,

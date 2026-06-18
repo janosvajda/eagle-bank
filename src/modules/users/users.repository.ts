@@ -2,7 +2,7 @@ import {
   AccountStatus,
   type Prisma,
   type PrismaClient,
-} from '../../generated/prisma/client.js';
+} from '../../../generated/prisma/client.js';
 
 export class UsersRepository {
   constructor(private readonly db: PrismaClient) {}

@@ -3,7 +3,7 @@ import {
   LedgerAccountStatus,
   Prisma,
   type LedgerAccount,
-} from '../../../generated/prisma/client.js';
+} from '../../../../generated/prisma/client.js';
 import type { FastifyBaseLogger } from 'fastify';
 import { ErrorCode } from '../../../common/errors/error-codes.js';
 import { toDecimal } from '../../../common/money/money.js';

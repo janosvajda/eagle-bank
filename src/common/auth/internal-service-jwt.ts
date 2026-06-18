@@ -2,15 +2,15 @@ import { createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
 import { MILLISECONDS_PER_SECOND } from '../constants.js';
 import {
   AUTHORIZATION_BEARER_PREFIX,
+  INTERNAL_SERVICE_CLOCK_TOLERANCE_SECONDS,
+  INTERNAL_SERVICE_TOKEN_TTL_SECONDS,
+  JWT_TYPE,
+  JwtAlgorithm,
   type ServiceIdentity,
 } from './auth.constants.js';
 
-const INTERNAL_SERVICE_TOKEN_TTL_SECONDS = 60;
-const INTERNAL_SERVICE_CLOCK_TOLERANCE_SECONDS = 5;
 const BEARER_PREFIX_LENGTH = AUTHORIZATION_BEARER_PREFIX.length;
 const JWT_SEGMENT_COUNT = 3;
-const INTERNAL_SERVICE_JWT_ALGORITHM = 'HS256';
-const JWT_TYPE = 'JWT';
 
 export interface InternalServiceClaims {
   iss: ServiceIdentity;
@@ -58,7 +58,7 @@ function isJwtHeader(value: unknown): value is JwtHeader {
     typeof value === 'object' &&
     value !== null &&
     'alg' in value &&
-    value.alg === INTERNAL_SERVICE_JWT_ALGORITHM &&
+    value.alg === JwtAlgorithm.HMAC_SHA_256 &&
     'typ' in value &&
     value.typ === JWT_TYPE
   );
@@ -105,7 +105,7 @@ export function createInternalServiceToken(options: {
   const issuedAt =
     options.now ?? Math.floor(Date.now() / MILLISECONDS_PER_SECOND);
   const header = encode({
-    alg: INTERNAL_SERVICE_JWT_ALGORITHM,
+    alg: JwtAlgorithm.HMAC_SHA_256,
     typ: JWT_TYPE,
   });
   const payload = encode({

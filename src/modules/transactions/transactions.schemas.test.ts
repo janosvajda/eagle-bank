@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { Prisma } from '../../../generated/prisma/client.js';
 import {
   createTransactionSchema,
   transactionAccountParamsSchema,
@@ -33,7 +34,7 @@ describe('transaction schemas', () => {
         reference: 'ATM',
       }),
     ).toEqual({
-      amount: 10.5,
+      amount: new Prisma.Decimal('10.50'),
       currency: 'GBP',
       type: 'withdrawal',
       reference: 'ATM',

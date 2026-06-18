@@ -7,6 +7,7 @@ import {
 import { AppError } from '../../../common/errors/AppError.js';
 import { ErrorCode } from '../../../common/errors/error-codes.js';
 import {
+  ledgerErrorResponseSchema,
   ledgerAccountResponseSchema,
   ledgerBalanceResponseSchema,
   ledgerBalancesResponseSchema,
@@ -26,8 +27,8 @@ import {
 import type { FastifyBaseLogger } from 'fastify';
 import pino from 'pino';
 import type { JsonValue } from '../../../common/http/json.types.js';
-import { responseMessage } from '../../../common/http/response-message.js';
 import { LEDGER_REQUEST_TIMEOUT_MS } from '../domain/ledger.constants.js';
+import { fromDecimal } from '../../../common/money/money.js';
 
 // Service-to-service adapter used by the public API process to call the
 // private Ledger service. It implements the same gateway as LedgerService.
@@ -78,7 +79,10 @@ export class LedgerHttpClient implements LedgerGateway {
         `/internal/ledger/accounts/${command.accountNumber}/transactions`,
         {
           method: HttpMethod.POST,
-          body: JSON.stringify(command),
+          body: JSON.stringify({
+            ...command,
+            amount: fromDecimal(command.amount),
+          }),
         },
       ),
     );
@@ -142,6 +146,7 @@ export class LedgerHttpClient implements LedgerGateway {
         ? undefined
         : ((await response.json()) as JsonValue);
     if (!response.ok) {
+      const errorBody = ledgerErrorResponseSchema.safeParse(payload);
       this.logger.warn(
         { path, statusCode: response.status },
         'Ledger service rejected request',
@@ -151,7 +156,7 @@ export class LedgerHttpClient implements LedgerGateway {
         response.status === httpConstants.HTTP_STATUS_NOT_FOUND
           ? ErrorCode.NOT_FOUND
           : ErrorCode.CONFLICT,
-        responseMessage(payload, 'Ledger request failed'),
+        errorBody.success ? errorBody.data.message : 'Ledger request failed',
       );
     }
     return payload;

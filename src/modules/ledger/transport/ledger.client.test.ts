@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { LedgerHttpClient } from './ledger.client.js';
+import { Prisma } from '../../../../generated/prisma/client.js';
 
 const accountResponse = {
   accountId: '00000000-0000-4000-8000-000000000001',
@@ -56,11 +57,14 @@ describe('LedgerHttpClient', () => {
       client.postTransaction({
         accountNumber: '01234567',
         userId: 'usr-owner',
-        amount: 10,
+        amount: new Prisma.Decimal('10.00'),
         currency: 'GBP',
         type: 'deposit',
       }),
     ).resolves.toEqual(transactionResponse);
+    expect(
+      JSON.parse(fetchMock.mock.calls[3]?.[1]?.body as string),
+    ).toMatchObject({ amount: 10 });
     await expect(client.listTransactions('01234567')).resolves.toEqual([
       transactionResponse,
     ]);

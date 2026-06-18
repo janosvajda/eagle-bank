@@ -1,4 +1,4 @@
-import type { LedgerOutboxEvent } from '../../../generated/prisma/client.js';
+import type { LedgerOutboxEvent } from '../../../../generated/prisma/client.js';
 import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs';
 import { SqsMessageDataType } from '../domain/ledger.constants.js';
 

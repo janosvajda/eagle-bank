@@ -1,4 +1,4 @@
-import { Prisma, type BankAccount } from '../../generated/prisma/client.js';
+import { Prisma, type BankAccount } from '../../../generated/prisma/client.js';
 import { describe, expect, it } from 'vitest';
 import { mapAccount } from './accounts.mapper.js';
 

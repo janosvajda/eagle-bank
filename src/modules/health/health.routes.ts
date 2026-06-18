@@ -1,5 +1,5 @@
 import type { FastifyPluginAsync } from 'fastify';
-import type { PrismaClient } from '../../generated/prisma/client.js';
+import type { PrismaClient } from '../../../generated/prisma/client.js';
 import { constants as httpConstants } from 'node:http2';
 import { HealthStatus } from './health.constants.js';
 

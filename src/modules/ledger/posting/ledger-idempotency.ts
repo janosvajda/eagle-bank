@@ -3,7 +3,7 @@ import { constants as httpConstants } from 'node:http2';
 import {
   Prisma,
   type LedgerIdempotencyKey,
-} from '../../../generated/prisma/client.js';
+} from '../../../../generated/prisma/client.js';
 import type { FastifyBaseLogger } from 'fastify';
 import { ErrorCode } from '../../../common/errors/error-codes.js';
 import { MONEY_DECIMAL_PLACES } from '../../../common/constants.js';

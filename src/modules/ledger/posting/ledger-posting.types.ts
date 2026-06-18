@@ -1,7 +1,7 @@
 import {
   Prisma,
   type LedgerAccount,
-} from '../../../generated/prisma/client.js';
+} from '../../../../generated/prisma/client.js';
 import type { PostLedgerTransactionCommand } from '../domain/ledger.contracts.js';
 
 export interface LedgerPostingContext {

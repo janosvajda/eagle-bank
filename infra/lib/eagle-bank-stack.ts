@@ -216,7 +216,6 @@ export class EagleBankStack extends Stack {
     const apiSecurityGroup = this.serviceSecurityGroup(vpc, 'Api');
     const authSecurityGroup = this.serviceSecurityGroup(vpc, 'Auth');
     const ledgerSecurityGroup = this.serviceSecurityGroup(vpc, 'Ledger');
-    const workerSecurityGroup = this.serviceSecurityGroup(vpc, 'LedgerWorker');
     const publisherSecurityGroup = this.serviceSecurityGroup(
       vpc,
       'LedgerEventPublisher',
@@ -224,7 +223,6 @@ export class EagleBankStack extends Stack {
     const migrationSecurityGroup = this.serviceSecurityGroup(vpc, 'Migration');
 
     // PostgreSQL accepts traffic only from workloads that actually use it.
-    // The worker is intentionally absent because the disabled worker has no DB path.
     for (const client of [
       apiSecurityGroup,
       authSecurityGroup,
@@ -320,28 +318,6 @@ export class EagleBankStack extends Stack {
       },
     });
 
-    // FIFO command queues model the future asynchronous ledger path. That path
-    // remains disabled until a response/correlation workflow is implemented.
-    const commandsDlq = this.queue('LedgerCommandsDlq', {
-      queueName: `${config.resourcePrefix}-ledger-commands-dlq.fifo`,
-      fifo: true,
-      contentBasedDeduplication: true,
-      retentionPeriod: DLQ_RETENTION_PERIOD,
-      removalPolicy: config.removalPolicy,
-    });
-    const commands = this.queue('LedgerCommands', {
-      queueName: `${config.resourcePrefix}-ledger-commands.fifo`,
-      fifo: true,
-      contentBasedDeduplication: true,
-      visibilityTimeout: QUEUE_VISIBILITY_TIMEOUT,
-      retentionPeriod: QUEUE_RETENTION_PERIOD,
-      removalPolicy: config.removalPolicy,
-      deadLetterQueue: {
-        queue: commandsDlq,
-        maxReceiveCount: QUEUE_MAX_RECEIVE_COUNT,
-      },
-    });
-
     // Non-secret resource coordinates are regular environment variables.
     // Database credentials and signing keys are injected separately as secrets.
     const commonEnvironment = {
@@ -354,9 +330,6 @@ export class EagleBankStack extends Stack {
       DYNAMODB_AUTH_SESSIONS_TABLE: sessions.tableName,
       SQS_LEDGER_EVENTS_QUEUE_URL: events.queueUrl,
       SQS_LEDGER_EVENTS_DLQ_URL: eventsDlq.queueUrl,
-      SQS_LEDGER_COMMANDS_QUEUE_URL: commands.queueUrl,
-      SQS_LEDGER_COMMANDS_DLQ_URL: commandsDlq.queueUrl,
-      LEDGER_ASYNC_COMMANDS_ENABLED: 'false',
     };
     const image = ecs.ContainerImage.fromAsset('.');
 
@@ -461,16 +434,6 @@ export class EagleBankStack extends Stack {
         applicationSecrets: ledgerSecrets,
       },
     );
-    const workerTask = makeTask(
-      {
-        id: 'LedgerWorker',
-        serviceName: 'ledger-worker',
-        command: ['node', 'dist/src/services/ledger-worker.js'],
-      },
-      {
-        includeDatabase: false,
-      },
-    );
     const publisherTask = makeTask({
       id: 'LedgerEventPublisher',
       serviceName: 'ledger-event-publisher',
@@ -486,7 +449,6 @@ export class EagleBankStack extends Stack {
       apiTask,
       authTask,
       ledgerTask,
-      workerTask,
       publisherTask,
       migrationTask,
     ];
@@ -527,7 +489,6 @@ export class EagleBankStack extends Stack {
         left: [
           database.metricCPUUtilization(),
           eventsDlq.metricApproximateNumberOfMessagesVisible(),
-          commandsDlq.metricApproximateNumberOfMessagesVisible(),
         ],
         width: DASHBOARD_HALF_WIDTH,
       }),
@@ -551,7 +512,6 @@ export class EagleBankStack extends Stack {
     // Secret access required for ECS injection is handled by execution roles.
     sessions.grantReadWriteData(authTask.task.taskRole);
     events.grantSendMessages(publisherTask.task.taskRole);
-    commands.grantConsumeMessages(workerTask.task.taskRole);
     const service = (
       id: string,
       taskDefinition: ecs.FargateTaskDefinition,
@@ -603,7 +563,6 @@ export class EagleBankStack extends Stack {
         },
       ],
     });
-    service('LedgerWorker', workerTask.task, workerSecurityGroup, {});
     service(
       'LedgerEventPublisher',
       publisherTask.task,
@@ -612,7 +571,7 @@ export class EagleBankStack extends Stack {
     );
 
     // Only API and the public login route on Auth are reachable from the ALB.
-    // Ledger, worker, and publisher remain private ECS services.
+    // Ledger and publisher remain private ECS services.
     const albSecurityGroup = new ec2.SecurityGroup(this, 'AlbSecurityGroup', {
       vpc,
       allowAllOutbound: false,

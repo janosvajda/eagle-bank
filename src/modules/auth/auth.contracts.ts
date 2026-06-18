@@ -12,6 +12,10 @@ export const loginResultSchema = z
 
 export type LoginResult = z.infer<typeof loginResultSchema>;
 
+export const authErrorResponseSchema = z
+  .object({ message: z.string().min(1) })
+  .passthrough();
+
 export const passwordHashRequestSchema = z
   .object({ password: z.string().min(1) })
   .strict();

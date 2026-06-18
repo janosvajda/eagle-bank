@@ -1,4 +1,4 @@
-import { Prisma } from '../../generated/prisma/client.js';
+import { Prisma } from '../../../generated/prisma/client.js';
 import { describe, expect, it, vi } from 'vitest';
 import { AppError } from '../../common/errors/AppError.js';
 import { PrismaErrorCode } from '../../common/errors/prisma-error-codes.js';

@@ -2,7 +2,7 @@ import {
   AccountStatus,
   Prisma,
   type PrismaClient,
-} from '../../generated/prisma/client.js';
+} from '../../../generated/prisma/client.js';
 import type {
   BankAccountWithOwner,
   CreateBankAccountRecord,

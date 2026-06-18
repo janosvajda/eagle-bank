@@ -3,7 +3,6 @@ import {
   SECONDS_PER_HOUR,
 } from '../../../common/constants.js';
 
-export const LEDGER_MAX_ACCOUNT_BALANCE = 10000;
 export const LEDGER_TRANSACTION_ATTEMPTS = 3;
 export const LEDGER_FIRST_TRANSACTION_ATTEMPT = 1;
 export const LEDGER_IDEMPOTENCY_RETENTION_HOURS = 24;
