@@ -7,7 +7,6 @@ import type { FastifyBaseLogger } from 'fastify';
 import pino from 'pino';
 import { ErrorCode } from '../../../common/errors/error-codes.js';
 import { toDecimal } from '../../../common/money/money.js';
-import { MONEY_DECIMAL_PLACES } from '../../../common/constants.js';
 import type {
   LedgerAccountCommand,
   LedgerAccountResponse,
@@ -24,7 +23,10 @@ import {
 } from '../domain/ledger.mapper.js';
 import { LedgerTransactionPoster } from './ledger-transaction-poster.js';
 import { rejectLedgerOperation } from '../domain/ledger.errors.js';
-import { MAX_TRANSACTION_AMOUNT } from '../../../common/domain/banking.js';
+import {
+  MONEY_DECIMAL_PLACES,
+  MAX_TRANSACTION_AMOUNT,
+} from '../../../common/domain/banking.js';
 
 export class LedgerService implements LedgerGateway {
   private readonly transactionPoster: LedgerTransactionPoster;

@@ -23,7 +23,10 @@ import {
   DynamoDbAuthSessionStore,
   InMemoryAuthSessionStore,
 } from './modules/auth/auth-session.store.js';
-import type { AuthSessionStore } from './modules/auth/auth-session.contracts.js';
+import type {
+  AuthSessionReader,
+  AuthSessionStore,
+} from './modules/auth/auth-session.contracts.js';
 import {
   AuthHttpClient,
   RemoteAuthSessionStore,
@@ -46,67 +49,37 @@ export interface BuildAppOptions {
 export async function buildApp(
   options: BuildAppOptions,
 ): Promise<FastifyInstance> {
+  const { config, prisma } = options;
   const app = fastify({
     bodyLimit: HTTP_BODY_LIMIT_BYTES,
     logger: secureLoggerOptions(options.logger ?? false),
   });
 
-  registerHttpSecurity(app, options.config.NODE_ENV);
-  await app.register(fastifyJwt, userJwtOptions(options.config.JWT_SECRET));
+  registerHttpSecurity(app, config.NODE_ENV);
+  await app.register(fastifyJwt, userJwtOptions(config.JWT_SECRET));
 
   // When a service URL is configured, the API acts as a façade and delegates
   // Auth ownership to the Auth service. Tests can omit it and run in-process.
-  const remoteAuth = options.config.AUTH_SERVICE_BASE_URL
-    ? new AuthHttpClient(
-        options.config.AUTH_SERVICE_BASE_URL,
-        options.config.AUTH_SERVICE_JWT_SECRET,
-        app.log,
-      )
-    : undefined;
-  const authSessions =
-    options.authSessions ??
-    (remoteAuth
-      ? new RemoteAuthSessionStore(remoteAuth)
-      : options.config.NODE_ENV === Environment.TEST &&
-          !options.config.DYNAMODB_ENDPOINT
-        ? new InMemoryAuthSessionStore()
-        : new DynamoDbAuthSessionStore(
-            createDynamoDbClient({
-              environment: options.config.NODE_ENV,
-              region: options.config.AWS_REGION,
-              ...(options.config.DYNAMODB_ENDPOINT
-                ? { endpoint: options.config.DYNAMODB_ENDPOINT }
-                : {}),
-              ...(options.config.AWS_ACCESS_KEY_ID
-                ? { accessKeyId: options.config.AWS_ACCESS_KEY_ID }
-                : {}),
-              ...(options.config.AWS_SECRET_ACCESS_KEY
-                ? { secretAccessKey: options.config.AWS_SECRET_ACCESS_KEY }
-                : {}),
-            }),
-            options.config.DYNAMODB_AUTH_SESSIONS_TABLE,
-          ));
+  const remoteAuth = createRemoteAuthClient(config, app);
+  const localAuthSessions = createAuthSessionStore(config, options);
+  const authSessionReader: AuthSessionReader = remoteAuth
+    ? new RemoteAuthSessionStore(remoteAuth)
+    : localAuthSessions;
 
-  // Authentication middleware reads this abstraction without knowing whether
-  // sessions are local test data, DynamoDB, or remote Auth introspection.
-  app.decorate('authSessions', authSessions);
+  // Authentication middleware only needs session lookup. Session creation is
+  // limited to the Auth service/store path and is not exposed by remote API adapters.
+  app.decorate('authSessions', authSessionReader);
   registerErrorHandler(app);
   await registerOpenApiValidation(app);
 
-  const usersRepository = new UsersRepository(options.prisma);
+  const usersRepository = new UsersRepository(prisma);
   const usersService = new UsersService(usersRepository, remoteAuth, app.log);
 
-  // The same façade supports a split ECS deployment and a compact in-process
-  // test topology; domain services depend only on the LedgerGateway contract.
-  const ledgerService = options.config.LEDGER_SERVICE_BASE_URL
-    ? new LedgerHttpClient(
-        options.config.LEDGER_SERVICE_BASE_URL,
-        options.config.LEDGER_SERVICE_JWT_SECRET,
-        app.log,
-      )
-    : new LedgerService(new LedgerRepository(options.prisma), app.log);
+  // The API depends on the LedgerGateway contract. In deployed runtimes this is
+  // the private Ledger HTTP client; tests may inject the in-process service.
+  const ledgerService = createLedgerGateway(config, prisma, app);
   const accountsService = new AccountsService(
-    new AccountsRepository(options.prisma),
+    new AccountsRepository(prisma),
     ledgerService,
     app.log,
   );
@@ -120,16 +93,69 @@ export async function buildApp(
     new AuthService(
       usersRepository,
       app,
-      options.config.JWT_EXPIRES_IN,
-      authSessions,
-      options.config.AUTH_SESSION_TTL_SECONDS,
+      config.JWT_EXPIRES_IN,
+      localAuthSessions,
+      config.AUTH_SESSION_TTL_SECONDS,
     );
 
   await app.register(usersRoutes(usersService));
   await app.register(authRoutes(authService));
   await app.register(accountsRoutes(accountsService));
   await app.register(transactionsRoutes(transactionsService));
-  await app.register(healthRoutes(options.prisma));
+  await app.register(healthRoutes(prisma));
 
   return app;
+}
+
+function createRemoteAuthClient(
+  config: AppConfig,
+  app: FastifyInstance,
+): AuthHttpClient | undefined {
+  return config.AUTH_SERVICE_BASE_URL
+    ? new AuthHttpClient(
+        config.AUTH_SERVICE_BASE_URL,
+        config.AUTH_SERVICE_JWT_SECRET,
+        app.log,
+      )
+    : undefined;
+}
+
+function createAuthSessionStore(
+  config: AppConfig,
+  options: BuildAppOptions,
+): AuthSessionStore {
+  if (options.authSessions) {
+    return options.authSessions;
+  }
+  if (config.NODE_ENV === Environment.TEST && !config.DYNAMODB_ENDPOINT) {
+    return new InMemoryAuthSessionStore();
+  }
+  return new DynamoDbAuthSessionStore(
+    createDynamoDbClient({
+      environment: config.NODE_ENV,
+      region: config.AWS_REGION,
+      ...(config.DYNAMODB_ENDPOINT ? { endpoint: config.DYNAMODB_ENDPOINT } : {}),
+      ...(config.AWS_ACCESS_KEY_ID
+        ? { accessKeyId: config.AWS_ACCESS_KEY_ID }
+        : {}),
+      ...(config.AWS_SECRET_ACCESS_KEY
+        ? { secretAccessKey: config.AWS_SECRET_ACCESS_KEY }
+        : {}),
+    }),
+    config.DYNAMODB_AUTH_SESSIONS_TABLE,
+  );
+}
+
+function createLedgerGateway(
+  config: AppConfig,
+  prisma: PrismaClient,
+  app: FastifyInstance,
+): LedgerHttpClient | LedgerService {
+  return config.LEDGER_SERVICE_BASE_URL
+    ? new LedgerHttpClient(
+        config.LEDGER_SERVICE_BASE_URL,
+        config.LEDGER_SERVICE_JWT_SECRET,
+        app.log,
+      )
+    : new LedgerService(new LedgerRepository(prisma), app.log);
 }

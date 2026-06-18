@@ -1,12 +1,6 @@
-export const AuthTokenType = {
-  BEARER: 'Bearer',
-} as const;
-
-export const AUTHORIZATION_BEARER_PREFIX = `${AuthTokenType.BEARER} `;
-
-export const JwtAlgorithm = {
-  HMAC_SHA_256: 'HS256',
-} as const;
+export const AUTH_TOKEN_TYPE_BEARER = 'Bearer';
+export const AUTHORIZATION_BEARER_PREFIX = `${AUTH_TOKEN_TYPE_BEARER} `;
+export const JWT_HMAC_SHA_256_ALGORITHM = 'HS256';
 
 export const JWT_TYPE = 'JWT';
 

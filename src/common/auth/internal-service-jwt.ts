@@ -4,8 +4,8 @@ import {
   AUTHORIZATION_BEARER_PREFIX,
   INTERNAL_SERVICE_CLOCK_TOLERANCE_SECONDS,
   INTERNAL_SERVICE_TOKEN_TTL_SECONDS,
+  JWT_HMAC_SHA_256_ALGORITHM,
   JWT_TYPE,
-  JwtAlgorithm,
   type ServiceIdentity,
 } from './auth.constants.js';
 
@@ -58,7 +58,7 @@ function isJwtHeader(value: unknown): value is JwtHeader {
     typeof value === 'object' &&
     value !== null &&
     'alg' in value &&
-    value.alg === JwtAlgorithm.HMAC_SHA_256 &&
+    value.alg === JWT_HMAC_SHA_256_ALGORITHM &&
     'typ' in value &&
     value.typ === JWT_TYPE
   );
@@ -105,7 +105,7 @@ export function createInternalServiceToken(options: {
   const issuedAt =
     options.now ?? Math.floor(Date.now() / MILLISECONDS_PER_SECOND);
   const header = encode({
-    alg: JwtAlgorithm.HMAC_SHA_256,
+    alg: JWT_HMAC_SHA_256_ALGORITHM,
     typ: JWT_TYPE,
   });
   const payload = encode({

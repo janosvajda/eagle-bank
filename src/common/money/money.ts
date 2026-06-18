@@ -1,7 +1,9 @@
 import { Prisma } from '../../../generated/prisma/client.js';
 import { z } from 'zod';
-import { MONEY_DECIMAL_PLACES } from '../constants.js';
-import { MAX_TRANSACTION_AMOUNT } from '../domain/banking.js';
+import {
+  MONEY_DECIMAL_PLACES,
+  MAX_TRANSACTION_AMOUNT,
+} from '../domain/banking.js';
 
 function hasSupportedDecimalPlaces(value: number): boolean {
   return new Prisma.Decimal(value).decimalPlaces() <= MONEY_DECIMAL_PLACES;

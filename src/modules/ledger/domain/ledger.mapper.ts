@@ -2,8 +2,10 @@ import type {
   LedgerAccount,
   LedgerTransaction,
 } from '../../../../generated/prisma/client.js';
-import { MONEY_DECIMAL_PLACES } from '../../../common/constants.js';
-import { Currency } from '../../../common/domain/banking.js';
+import {
+  CURRENCY_GBP,
+  MONEY_DECIMAL_PLACES,
+} from '../../../common/domain/banking.js';
 import type {
   LedgerAccountResponse,
   LedgerTransactionResponse,
@@ -17,7 +19,7 @@ export function mapLedgerTransaction(
   return {
     id: formatTransactionApiId(transaction.id),
     amount: Number(transaction.amount.toFixed(MONEY_DECIMAL_PLACES)),
-    currency: Currency.GBP,
+    currency: CURRENCY_GBP,
     type: transaction.type,
     ...(transaction.reference ? { reference: transaction.reference } : {}),
     userId: formatUserApiId(transaction.userId),
@@ -32,7 +34,7 @@ export function mapLedgerAccount(
     accountId: account.accountId,
     accountNumber: account.accountNumber,
     userId: formatUserApiId(account.userId),
-    currency: Currency.GBP,
+    currency: CURRENCY_GBP,
     availableBalance: Number(
       account.availableBalance.toFixed(MONEY_DECIMAL_PLACES),
     ),

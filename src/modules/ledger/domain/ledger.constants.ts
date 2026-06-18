@@ -17,13 +17,7 @@ export const LEDGER_JITTER_DIVISOR = 4;
 export const LEDGER_MINIMUM_JITTER_RANGE_MS = 1;
 export const LEDGER_MAX_ERROR_MESSAGE_LENGTH = 1000;
 
-export const LedgerEventType = {
-  TRANSACTION_POSTED: 'TransactionPosted',
-} as const;
+export const LEDGER_EVENT_TYPE_TRANSACTION_POSTED = 'TransactionPosted';
+export type LedgerEventType = typeof LEDGER_EVENT_TYPE_TRANSACTION_POSTED;
 
-export type LedgerEventType =
-  (typeof LedgerEventType)[keyof typeof LedgerEventType];
-
-export const SqsMessageDataType = {
-  STRING: 'String',
-} as const;
+export const SQS_MESSAGE_DATA_TYPE_STRING = 'String';

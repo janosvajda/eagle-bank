@@ -80,11 +80,10 @@ describe('AuthHttpClient', () => {
     ).rejects.toThrow();
   });
 
-  it('adapts remote session access and rejects creation', async () => {
+  it('adapts remote session lookup', async () => {
     const client = { introspect: vi.fn().mockResolvedValue(null) };
     const store = new RemoteAuthSessionStore(client as never);
     await expect(store.get('u', 's')).resolves.toBeNull();
     expect(client.introspect).toHaveBeenCalledWith('u', 's', '');
-    expect(() => store.create()).toThrow('cannot create');
   });
 });

@@ -56,8 +56,8 @@ describe('server entry point', () => {
     handlers.get('SIGINT')?.();
     handlers.get('SIGTERM')?.();
     await vi.waitFor(() => {
-      expect(close).toHaveBeenCalledTimes(2);
-      expect(disconnect).toHaveBeenCalledTimes(2);
+      expect(close).toHaveBeenCalledOnce();
+      expect(disconnect).toHaveBeenCalledOnce();
     });
   });
 

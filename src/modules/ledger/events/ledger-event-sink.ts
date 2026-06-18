@@ -1,6 +1,6 @@
 import type { LedgerOutboxEvent } from '../../../../generated/prisma/client.js';
 import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs';
-import { SqsMessageDataType } from '../domain/ledger.constants.js';
+import { SQS_MESSAGE_DATA_TYPE_STRING } from '../domain/ledger.constants.js';
 
 // Provider adapter for delivering committed ledger outbox events to SQS.
 // Client construction stays in service startup so one SDK client is reused.
@@ -21,7 +21,7 @@ export class SqsLedgerEventSink implements LedgerEventSink {
         MessageBody: JSON.stringify(event.payload),
         MessageAttributes: {
           eventType: {
-            DataType: SqsMessageDataType.STRING,
+            DataType: SQS_MESSAGE_DATA_TYPE_STRING,
             StringValue: event.eventType,
           },
         },

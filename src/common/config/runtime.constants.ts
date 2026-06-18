@@ -5,9 +5,6 @@ export const Environment = {
   TEST: 'test',
 } as const;
 
-export const ENVIRONMENT_ENABLED_VALUE = 'true';
-export const LOCAL_AWS_CREDENTIAL = 'test';
-
 export type Environment = (typeof Environment)[keyof typeof Environment];
 
 export function isAwsDeploymentEnvironment(environment: Environment): boolean {

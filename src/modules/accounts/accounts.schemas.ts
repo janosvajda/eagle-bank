@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import {
   ACCOUNT_NUMBER_CONTRACT_PATTERN,
-  AccountType,
+  ACCOUNT_TYPE_PERSONAL,
 } from '../../common/domain/banking.js';
 
 export const accountNumberSchema = z
@@ -14,14 +14,14 @@ export const accountParamsSchema = z.object({
 export const createAccountSchema = z
   .object({
     name: z.string().min(1),
-    accountType: z.literal(AccountType.PERSONAL),
+    accountType: z.literal(ACCOUNT_TYPE_PERSONAL),
   })
   .strict();
 
 export const updateAccountSchema = z
   .object({
     name: z.string().min(1).optional(),
-    accountType: z.literal(AccountType.PERSONAL).optional(),
+    accountType: z.literal(ACCOUNT_TYPE_PERSONAL).optional(),
   })
   .strict()
   .refine((value) => Object.keys(value).length > 0, {
