@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { constants as httpConstants } from 'node:http2';
 import { AppError } from '../../common/errors/AppError.js';
 import { ErrorCode } from '../../common/errors/error-codes.js';
-import { AuthTokenType } from '../../common/auth/auth.constants.js';
+import { AUTH_TOKEN_TYPE_BEARER } from '../../common/auth/auth.constants.js';
 import type { UsersRepository } from '../users/users.repository.js';
 import type { LoginInput } from './auth.schemas.js';
 import type { AuthSessionStore } from './auth-session.contracts.js';
@@ -43,7 +43,7 @@ export class AuthService {
         },
         { expiresIn: this.expiresIn },
       ),
-      tokenType: AuthTokenType.BEARER,
+      tokenType: AUTH_TOKEN_TYPE_BEARER,
       expiresIn: this.sessionTtlSeconds,
     };
   }

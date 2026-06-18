@@ -11,7 +11,7 @@ import type {
 } from './accounts.schemas.js';
 import type { LedgerGateway } from '../ledger/domain/ledger.contracts.js';
 import { PrismaErrorCode } from '../../common/errors/prisma-error-codes.js';
-import { Currency } from '../../common/domain/banking.js';
+import { CURRENCY_GBP } from '../../common/domain/banking.js';
 import type { FastifyBaseLogger } from 'fastify';
 import pino from 'pino';
 import { parseUserApiId } from '../users/user-id.js';
@@ -74,7 +74,7 @@ export class AccountsService {
             accountId: account.id,
             accountNumber: account.accountNumber,
             userId,
-            currency: Currency.GBP,
+            currency: CURRENCY_GBP,
           });
           const active = await this.accounts.setStatus(
             account.accountNumber,

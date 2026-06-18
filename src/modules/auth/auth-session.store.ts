@@ -9,11 +9,8 @@ import {
   PutCommand,
 } from '@aws-sdk/lib-dynamodb';
 import { MILLISECONDS_PER_SECOND } from '../../common/constants.js';
-import {
-  LOCAL_AWS_CREDENTIAL,
-  type Environment,
-  isAwsDeploymentEnvironment,
-} from '../../common/config/runtime.constants.js';
+import type { Environment } from '../../common/config/runtime.constants.js';
+import { localAwsEndpointConfig } from '../../common/aws/local-aws-config.js';
 import type {
   AuthSession,
   AuthSessionStore,
@@ -120,21 +117,11 @@ export function createDynamoDbClient(options: {
   accessKeyId?: string;
   secretAccessKey?: string;
 }): DynamoDBClient {
-  if (options.endpoint && isAwsDeploymentEnvironment(options.environment)) {
-    throw new Error(
-      'DynamoDB endpoint overrides are not allowed in AWS environments',
-    );
-  }
-  const config: DynamoDBClientConfig = { region: options.region };
-
   // Explicit endpoints and placeholder credentials are local-only. On AWS,
   // omitting both uses the normal ECS task-role credential provider chain.
-  if (options.endpoint) {
-    config.endpoint = options.endpoint;
-    config.credentials = {
-      accessKeyId: options.accessKeyId ?? LOCAL_AWS_CREDENTIAL,
-      secretAccessKey: options.secretAccessKey ?? LOCAL_AWS_CREDENTIAL,
-    };
-  }
+  const config: DynamoDBClientConfig = {
+    region: options.region,
+    ...localAwsEndpointConfig({ ...options, serviceName: 'DynamoDB' }),
+  };
   return new DynamoDBClient(config);
 }

@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
-import { MONEY_DECIMAL_PLACES } from '../../../common/constants.js';
-import { LedgerEventType } from '../domain/ledger.constants.js';
+import { MONEY_DECIMAL_PLACES } from '../../../common/domain/banking.js';
+import { LEDGER_EVENT_TYPE_TRANSACTION_POSTED } from '../domain/ledger.constants.js';
 import type { LedgerTransactionResponse } from '../domain/ledger.contracts.js';
 import type {
   LedgerPostingContext,
@@ -18,11 +18,11 @@ export function transactionPostedOutboxEvent(
   const eventId = randomUUID();
   return {
     eventId,
-    eventType: LedgerEventType.TRANSACTION_POSTED,
+    eventType: LEDGER_EVENT_TYPE_TRANSACTION_POSTED,
     aggregateId: state.account.accountNumber,
     payload: {
       eventId,
-      eventType: LedgerEventType.TRANSACTION_POSTED,
+      eventType: LEDGER_EVENT_TYPE_TRANSACTION_POSTED,
       occurredAt: response.createdTimestamp,
       transactionId: response.id,
       accountNumber: state.account.accountNumber,

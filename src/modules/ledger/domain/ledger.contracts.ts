@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import {
   ACCOUNT_NUMBER_CONTRACT_PATTERN,
-  Currency,
+  CURRENCY_GBP,
   TransactionType,
 } from '../../../common/domain/banking.js';
 import { USER_API_ID_CONTRACT_PATTERN } from '../../users/user-id.js';
@@ -20,7 +20,7 @@ export const ledgerAccountCommandSchema = z
     accountId: z.uuid(),
     accountNumber: ledgerAccountNumberSchema,
     userId: userIdSchema,
-    currency: z.literal(Currency.GBP),
+    currency: z.literal(CURRENCY_GBP),
   })
   .strict();
 
@@ -38,7 +38,7 @@ export const postLedgerTransactionCommandSchema = z
     userId: userIdSchema,
     type: transactionTypeSchema,
     amount: moneySchema,
-    currency: z.literal(Currency.GBP),
+    currency: z.literal(CURRENCY_GBP),
     reference: z.string().optional(),
     idempotencyKey: z
       .string()
@@ -57,7 +57,7 @@ export const ledgerTransactionResponseSchema = z
   .object({
     id: z.string().regex(TRANSACTION_API_ID_CONTRACT_PATTERN),
     amount: z.number().positive(),
-    currency: z.literal(Currency.GBP),
+    currency: z.literal(CURRENCY_GBP),
     type: transactionTypeSchema,
     reference: z.string().optional(),
     userId: userIdSchema,

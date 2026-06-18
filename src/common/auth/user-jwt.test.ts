@@ -2,8 +2,8 @@ import fastifyJwt from '@fastify/jwt';
 import fastify from 'fastify';
 import { describe, expect, it } from 'vitest';
 import {
+  JWT_HMAC_SHA_256_ALGORITHM,
   JWT_TYPE,
-  JwtAlgorithm,
   USER_JWT_AUDIENCE,
   USER_JWT_ISSUER,
 } from './auth.constants.js';
@@ -14,12 +14,12 @@ describe('user JWT configuration', () => {
     expect(userJwtOptions('secret')).toMatchObject({
       decode: { checkTyp: JWT_TYPE },
       sign: {
-        algorithm: JwtAlgorithm.HMAC_SHA_256,
+        algorithm: JWT_HMAC_SHA_256_ALGORITHM,
         iss: USER_JWT_ISSUER,
         aud: USER_JWT_AUDIENCE,
       },
       verify: {
-        algorithms: [JwtAlgorithm.HMAC_SHA_256],
+        algorithms: [JWT_HMAC_SHA_256_ALGORITHM],
         allowedIss: USER_JWT_ISSUER,
         allowedAud: USER_JWT_AUDIENCE,
       },

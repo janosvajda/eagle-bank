@@ -6,7 +6,7 @@ import {
 } from '../../../../generated/prisma/client.js';
 import type { FastifyBaseLogger } from 'fastify';
 import { ErrorCode } from '../../../common/errors/error-codes.js';
-import { MONEY_DECIMAL_PLACES } from '../../../common/constants.js';
+import { MONEY_DECIMAL_PLACES } from '../../../common/domain/banking.js';
 import { PrismaErrorCode } from '../../../common/errors/prisma-error-codes.js';
 import {
   ledgerTransactionResponseSchema,

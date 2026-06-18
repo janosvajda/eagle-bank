@@ -1,4 +1,4 @@
-import fastify, { type FastifyInstance } from 'fastify';
+import fastify, { type FastifyInstance, type FastifyRequest } from 'fastify';
 import { constants as httpConstants } from 'node:http2';
 import type { PrismaClient } from '../../generated/prisma/client.js';
 import { registerErrorHandler } from '../common/errors/error-handler.js';
@@ -28,6 +28,9 @@ import {
 import type { Environment } from '../common/config/runtime.constants.js';
 import { Environment as RuntimeEnvironment } from '../common/config/runtime.constants.js';
 import { secureLoggerOptions } from '../common/logging/logger-options.js';
+import { TRANSACTION_API_ID_CONTRACT_PATTERN } from '../modules/transactions/transaction-id.js';
+
+const INTERNAL_ROUTE_PREFIX = '/internal/';
 
 interface AccountNumberParams {
   accountNumber: string;
@@ -46,7 +49,7 @@ const accountNumberParamsSchema = z.object({
 });
 
 const transactionParamsSchema = accountNumberParamsSchema.extend({
-  transactionId: z.string().regex(/^tan-[A-Za-z0-9]+$/),
+  transactionId: z.string().regex(TRANSACTION_API_ID_CONTRACT_PATTERN),
 });
 
 const accountNumbersRequestSchema = z
@@ -76,33 +79,49 @@ export async function buildLedgerApp(options: {
   // Ledger has no public ALB route. The hook still authenticates every internal
   // request so private-network access alone is never treated as authorization.
   app.addHook('preHandler', async (request) => {
-    if (!request.url.startsWith('/internal/')) {
+    if (!request.url.startsWith(INTERNAL_ROUTE_PREFIX)) {
       return;
     }
 
-    const verification = verifyInternalServiceToken({
-      token: request.headers.authorization,
-      audience: ServiceIdentity.LEDGER,
-      allowedIssuers: [ServiceIdentity.API, ServiceIdentity.ACCOUNT_RECONCILER],
-      secret: options.internalSecret,
-    });
-    if (!verification.valid) {
-      request.log.warn(
-        {
-          authFailure: verification.reason,
-          method: request.method,
-          path: request.url,
-        },
-        'Internal Ledger request rejected',
-      );
-      throw new AppError(
-        httpConstants.HTTP_STATUS_UNAUTHORIZED,
-        ErrorCode.UNAUTHORIZED,
-        'Unauthorized',
-      );
-    }
+    authenticateInternalLedgerRequest(request, options.internalSecret);
   });
 
+  registerLedgerInternalRoutes(app, ledger);
+  await app.register(healthRoutes(options.prisma));
+  return app;
+}
+
+function authenticateInternalLedgerRequest(
+  request: FastifyRequest,
+  internalSecret: string,
+): void {
+  const verification = verifyInternalServiceToken({
+    token: request.headers.authorization,
+    audience: ServiceIdentity.LEDGER,
+    allowedIssuers: [ServiceIdentity.API, ServiceIdentity.ACCOUNT_RECONCILER],
+    secret: internalSecret,
+  });
+  if (!verification.valid) {
+    request.log.warn(
+      {
+        authFailure: verification.reason,
+        method: request.method,
+        path: request.url,
+      },
+      'Internal Ledger request rejected',
+    );
+    throw new AppError(
+      httpConstants.HTTP_STATUS_UNAUTHORIZED,
+      ErrorCode.UNAUTHORIZED,
+      'Unauthorized',
+    );
+  }
+}
+
+function registerLedgerInternalRoutes(
+  app: FastifyInstance,
+  ledger: LedgerService,
+): void {
   app.post<{ Body: LedgerAccountCommand; Reply: LedgerAccountResponse }>(
     '/internal/ledger/accounts',
     async (request, reply) => {
@@ -186,6 +205,4 @@ export async function buildLedgerApp(options: {
       return ledger.getTransaction(accountNumber, transactionId);
     },
   );
-  await app.register(healthRoutes(options.prisma));
-  return app;
 }

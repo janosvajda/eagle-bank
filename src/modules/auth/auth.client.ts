@@ -9,7 +9,7 @@ import {
 import type { PasswordHasher } from '../users/users.ports.js';
 import type {
   AuthSession,
-  AuthSessionStore,
+  AuthSessionReader,
 } from './auth-session.contracts.js';
 import {
   authErrorResponseSchema,
@@ -19,11 +19,6 @@ import {
   type LoginResult,
 } from './auth.contracts.js';
 import type { LoginInput } from './auth.schemas.js';
-import {
-  HttpHeader,
-  HttpMethod,
-  MediaType,
-} from '../../common/http/http.constants.js';
 import type { FastifyBaseLogger } from 'fastify';
 import pino from 'pino';
 import type { JsonValue } from '../../common/http/json.types.js';
@@ -31,6 +26,11 @@ import { PUBLIC_API_PREFIX } from '../../common/http/api-version.js';
 
 const AUTH_INTROSPECTION_TIMEOUT_MS = 300;
 const AUTH_REQUEST_TIMEOUT_MS = 1000;
+
+interface AuthRequestOptions {
+  internal?: boolean;
+  timeoutMs?: number;
+}
 
 export class AuthHttpClient implements PasswordHasher {
   constructor(
@@ -43,16 +43,16 @@ export class AuthHttpClient implements PasswordHasher {
     return this.request(
       `${PUBLIC_API_PREFIX}/auth/login`,
       {
-        method: HttpMethod.POST,
+        method: 'POST',
         body: JSON.stringify(input),
       },
-      false,
+      { internal: false },
     ).then((payload) => loginResultSchema.parse(payload));
   }
 
   hash(password: string): Promise<string> {
     return this.request('/internal/auth/password-hash', {
-      method: HttpMethod.POST,
+      method: 'POST',
       body: JSON.stringify({ password }),
     }).then(
       (payload) => passwordHashResponseSchema.parse(payload).passwordHash,
@@ -64,10 +64,16 @@ export class AuthHttpClient implements PasswordHasher {
     sessionId: string,
     tokenId: string,
   ): Promise<AuthSession | null> {
-    return this.request('/internal/auth/sessions/introspect', {
-      method: HttpMethod.POST,
-      body: JSON.stringify({ userId, sessionId, tokenId }),
-    }).then(
+    return this.request(
+      '/internal/auth/sessions/introspect',
+      {
+        method: 'POST',
+        body: JSON.stringify({ userId, sessionId, tokenId }),
+      },
+      {
+        timeoutMs: AUTH_INTROSPECTION_TIMEOUT_MS,
+      },
+    ).then(
       (payload) => sessionIntrospectionResponseSchema.parse(payload).session,
     );
   }
@@ -75,21 +81,18 @@ export class AuthHttpClient implements PasswordHasher {
   private async request(
     path: string,
     init: RequestInit,
-    internal = true,
+    options: AuthRequestOptions = {},
   ): Promise<JsonValue> {
     let response: Response;
+    const internal = options.internal ?? true;
     try {
-      // Session introspection sits on every authenticated API request, so it has
-      // a tighter timeout than login and password-hashing operations.
       response = await fetch(`${this.baseUrl}${path}`, {
         ...init,
         signal: AbortSignal.timeout(
-          path.includes('introspect')
-            ? AUTH_INTROSPECTION_TIMEOUT_MS
-            : AUTH_REQUEST_TIMEOUT_MS,
+          options.timeoutMs ?? AUTH_REQUEST_TIMEOUT_MS,
         ),
         headers: {
-          [HttpHeader.CONTENT_TYPE]: MediaType.JSON,
+          'content-type': 'application/json',
           ...(internal
             ? {
                 authorization: `${AUTHORIZATION_BEARER_PREFIX}${createInternalServiceToken(
@@ -137,14 +140,8 @@ export class AuthHttpClient implements PasswordHasher {
   }
 }
 
-export class RemoteAuthSessionStore implements AuthSessionStore {
+export class RemoteAuthSessionStore implements AuthSessionReader {
   constructor(private readonly client: AuthHttpClient) {}
-
-  create(): Promise<AuthSession> {
-    // Session creation belongs to Auth. The API-side adapter intentionally
-    // exposes only introspection through the shared store interface.
-    throw new Error('API service cannot create authentication sessions');
-  }
 
   get(
     userId: string,

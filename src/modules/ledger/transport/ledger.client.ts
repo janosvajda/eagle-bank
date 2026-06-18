@@ -19,11 +19,6 @@ import {
   type LedgerTransactionResponse,
   type PostLedgerTransactionCommand,
 } from '../domain/ledger.contracts.js';
-import {
-  HttpHeader,
-  HttpMethod,
-  MediaType,
-} from '../../../common/http/http.constants.js';
 import type { FastifyBaseLogger } from 'fastify';
 import pino from 'pino';
 import type { JsonValue } from '../../../common/http/json.types.js';
@@ -44,7 +39,7 @@ export class LedgerHttpClient implements LedgerGateway {
   ): Promise<LedgerAccountResponse> {
     return ledgerAccountResponseSchema.parse(
       await this.request('/internal/ledger/accounts', {
-        method: HttpMethod.POST,
+        method: 'POST',
         body: JSON.stringify(command),
       }),
     );
@@ -59,7 +54,7 @@ export class LedgerHttpClient implements LedgerGateway {
   async getBalances(accountNumbers: string[]): Promise<Record<string, number>> {
     return ledgerBalancesResponseSchema.parse(
       await this.request('/internal/ledger/accounts/balances', {
-        method: HttpMethod.POST,
+        method: 'POST',
         body: JSON.stringify({ accountNumbers }),
       }),
     ).balances;
@@ -67,7 +62,7 @@ export class LedgerHttpClient implements LedgerGateway {
 
   async closeAccount(accountNumber: string): Promise<void> {
     await this.request(`/internal/ledger/accounts/${accountNumber}/close`, {
-      method: HttpMethod.POST,
+      method: 'POST',
     });
   }
 
@@ -78,7 +73,7 @@ export class LedgerHttpClient implements LedgerGateway {
       await this.request(
         `/internal/ledger/accounts/${command.accountNumber}/transactions`,
         {
-          method: HttpMethod.POST,
+          method: 'POST',
           body: JSON.stringify({
             ...command,
             amount: fromDecimal(command.amount),
@@ -121,7 +116,7 @@ export class LedgerHttpClient implements LedgerGateway {
         ...init,
         signal: AbortSignal.timeout(LEDGER_REQUEST_TIMEOUT_MS),
         headers: {
-          ...(init.body ? { [HttpHeader.CONTENT_TYPE]: MediaType.JSON } : {}),
+          ...(init.body ? { 'content-type': 'application/json' } : {}),
           authorization: `${AUTHORIZATION_BEARER_PREFIX}${createInternalServiceToken(
             {
               issuer: ServiceIdentity.API,
