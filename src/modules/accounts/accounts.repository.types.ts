@@ -2,7 +2,7 @@ import type {
   AccountStatus,
   AccountType,
   Prisma,
-} from '../../generated/prisma/client.js';
+} from '../../../generated/prisma/client.js';
 
 // Account ownership checks need only the owner's database ID. Deriving the
 // result from Prisma keeps this type aligned with the selected relation.

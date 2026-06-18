@@ -12,6 +12,7 @@ import type {
   AuthSessionStore,
 } from './auth-session.contracts.js';
 import {
+  authErrorResponseSchema,
   loginResultSchema,
   passwordHashResponseSchema,
   sessionIntrospectionResponseSchema,
@@ -27,7 +28,6 @@ import type { FastifyBaseLogger } from 'fastify';
 import pino from 'pino';
 import type { JsonValue } from '../../common/http/json.types.js';
 import { PUBLIC_API_PREFIX } from '../../common/http/api-version.js';
-import { responseMessage } from '../../common/http/response-message.js';
 
 const AUTH_INTROSPECTION_TIMEOUT_MS = 300;
 const AUTH_REQUEST_TIMEOUT_MS = 1000;
@@ -118,6 +118,7 @@ export class AuthHttpClient implements PasswordHasher {
 
     const payload = (await response.json()) as JsonValue;
     if (!response.ok) {
+      const errorBody = authErrorResponseSchema.safeParse(payload);
       this.logger.warn(
         { path, statusCode: response.status },
         'Authentication service rejected request',
@@ -127,7 +128,9 @@ export class AuthHttpClient implements PasswordHasher {
         response.status === httpConstants.HTTP_STATUS_UNAUTHORIZED
           ? ErrorCode.UNAUTHORIZED
           : ErrorCode.SERVICE_UNAVAILABLE,
-        responseMessage(payload, 'Authentication request failed'),
+        errorBody.success
+          ? errorBody.data.message
+          : 'Authentication request failed',
       );
     }
     return payload;

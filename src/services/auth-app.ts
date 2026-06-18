@@ -1,7 +1,7 @@
 import fastify, { type FastifyInstance } from 'fastify';
 import { constants as httpConstants } from 'node:http2';
 import fastifyJwt from '@fastify/jwt';
-import type { PrismaClient } from '../generated/prisma/client.js';
+import type { PrismaClient } from '../../generated/prisma/client.js';
 import { registerErrorHandler } from '../common/errors/error-handler.js';
 import { registerOpenApiValidation } from '../common/openapi/openapi-validation.js';
 import { AppError } from '../common/errors/AppError.js';

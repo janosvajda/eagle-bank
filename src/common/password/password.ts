@@ -5,11 +5,6 @@ const ARGON2_TIME_COST = 2;
 const ARGON2_PARALLELISM = 1;
 const ARGON2_HASH_LENGTH_BYTES = 32;
 
-// A fixed non-user hash ensures unknown-email logins perform the same
-// memory-hard verification work as existing-user logins.
-const INVALID_USER_PASSWORD_HASH =
-  '$argon2id$v=19$m=19456,t=2,p=1$LVo9P1ywQTRbw7LrF2AF5Q$Pb8rHNe2usgjtunV1q8and751wtx31VtOKkoMO0GlKA';
-
 const ARGON2_OPTIONS = {
   type: argon2.argon2id,
   memoryCost: ARGON2_MEMORY_COST_KIB,
@@ -23,8 +18,8 @@ export function hashPassword(password: string): Promise<string> {
 }
 
 export function verifyPassword(
-  passwordHash: string | undefined,
+  passwordHash: string,
   password: string,
 ): Promise<boolean> {
-  return argon2.verify(passwordHash ?? INVALID_USER_PASSWORD_HASH, password);
+  return argon2.verify(passwordHash, password);
 }

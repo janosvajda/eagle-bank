@@ -1,4 +1,4 @@
-import { Prisma } from '../../generated/prisma/client.js';
+import { Prisma } from '../../../generated/prisma/client.js';
 import { constants as httpConstants } from 'node:http2';
 import { ZodError } from 'zod';
 import { AppError, type ErrorDetail } from './AppError.js';

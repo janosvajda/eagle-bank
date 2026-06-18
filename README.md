@@ -133,7 +133,7 @@ npm run infra:test
 npm run infra:synth
 ```
 
-The generated Prisma client is written to `src/generated/prisma` and excluded
+The generated Prisma client is written to `generated/prisma` and excluded
 from source control.
 
 ## Continuous Integration
@@ -803,13 +803,11 @@ API :3000 ---- signed 60s JWT ----> Auth service :3001
                                                           |
                                                           v
                                                     LocalStack SQS
-
-Ledger Worker -> SQS FIFO command queue (modeled, disabled locally)
 ```
 
 Runtime services are `api`, `auth-service`, `ledger-service`,
-`ledger-worker`, `ledger-event-publisher`, `shared-application-db`,
-`integration-test-db`, `auth-session-db`, and `localstack`.
+`ledger-event-publisher`, `shared-application-db`, `integration-test-db`,
+`auth-session-db`, and `localstack`.
 
 The public API service implements the OpenAPI contract but does not own the
 banking Ledger. Deposits, withdrawals, immutable transaction records,
@@ -830,8 +828,8 @@ would require event-driven coordination for cross-service workflows.
 ## Security
 
 - Passwords use explicitly configured Argon2id (`m=19456`, `t=2`, `p=1`) with
-  per-password salts. Unknown-user login performs a dummy Argon2 verification
-  to reduce email-enumeration timing differences.
+  per-password salts. Login failures return the same generic error response for
+  unknown emails and invalid passwords.
 - User JWTs pin `HS256`, `typ=JWT`, issuer, and audience. Internal Auth and
   Ledger tokens are audience-bound and expire after at most 60 seconds. Their
   separate signing secrets are injected from SSM `SecureString` parameters.
@@ -857,8 +855,6 @@ would require event-driven coordination for cross-service workflows.
   row locking, idempotency, outbox writes.
 - Ledger Event Publisher: leased outbox claiming, SQS publication, retry and
   terminal failure state.
-- Ledger Worker: future FIFO command consumer. It stays idle because
-  `LEDGER_ASYNC_COMMANDS_ENABLED=false`.
 
 Internal HTTP calls use HS256 service JWTs containing `iss`, `aud`, `iat`,
 `exp`, and `jti`; lifetime is at most 60 seconds. Private networking is still
@@ -1008,8 +1004,8 @@ task roles and native AWS service endpoints are used.
 ## AWS CDK
 
 The offline-synthesizable CDK stack models a two-AZ VPC, public ALB, private
-Fargate services, isolated RDS PostgreSQL, DynamoDB TTL, Ledger event and FIFO
-command queues with DLQs, SSM Parameter Store, CloudWatch logs, security groups,
+Fargate services, isolated RDS PostgreSQL, DynamoDB TTL, a Ledger event queue
+with a DLQ, SSM Parameter Store, CloudWatch logs, security groups,
 least-privilege task grants, a migration task, and WAF managed/rate rules.
 
 ALB routing is `/health` and `/ready` to API, `/v1/auth/*` to Auth, `/v1/*` to
@@ -1108,11 +1104,9 @@ PRIVATE
 - Auth Service
 - Ledger Service
 - Ledger Event Publisher Service
-- Ledger Worker Service
 - Shared PostgreSQL Database
 - DynamoDB Auth Sessions
 - SQS Ledger Events Queue
-- SQS Ledger Commands Queue
 
 Arrange the main request flow horizontally:
 
@@ -1180,17 +1174,11 @@ Label: publish Ledger events
 
 The Ledger Event Publisher is a private background service that reads PostgreSQL and publishes to SQS. Do not draw PostgreSQL as calling the service.
 
-Show the optional command flow separately:
-
-SQS Ledger Commands Queue
-→ Ledger Worker Service
-Label: consume asynchronous commands
-
 Important rules:
 
 - Only WAF and Application Load Balancer are public infrastructure.
 - API and Auth are reachable only through the load balancer.
-- Ledger Service, Event Publisher Service, Worker Service, databases and queues are private.
+- Ledger Service, Event Publisher Service, databases and queues are private.
 - Auth Service is the only service connected to DynamoDB.
 - Use one shared PostgreSQL box with labelled API, Auth and Ledger ownership sections.
 - Use direct arrows with labels.

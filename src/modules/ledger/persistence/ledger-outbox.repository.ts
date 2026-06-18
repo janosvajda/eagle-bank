@@ -3,7 +3,7 @@ import {
   Prisma,
   type LedgerOutboxEvent,
   type PrismaClient,
-} from '../../../generated/prisma/client.js';
+} from '../../../../generated/prisma/client.js';
 
 // Database access for the transactional outbox. The publisher uses this to
 // claim, retry, publish, and dead-letter events without knowing Prisma details.

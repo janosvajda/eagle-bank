@@ -55,7 +55,13 @@ const restrictedBusinessLiteralRules = restrictedBusinessLiterals.map(
 
 export default tseslint.config(
   {
-    ignores: ['cdk.out/**', 'coverage/**', 'dist/**', 'node_modules/**'],
+    ignores: [
+      'cdk.out/**',
+      'coverage/**',
+      'dist/**',
+      'generated/**',
+      'node_modules/**',
+    ],
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommended,

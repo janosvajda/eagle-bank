@@ -4,7 +4,6 @@ import {
   loadAuthServiceConfig,
   loadLedgerEventPublisherConfig,
   loadLedgerServiceConfig,
-  loadLedgerWorkerConfig,
 } from './env.js';
 
 const runtime = {
@@ -118,31 +117,17 @@ describe('runtime configuration', () => {
     });
   });
 
-  it('parses only the asynchronous-command flag for the worker', () => {
-    expect(
-      loadLedgerWorkerConfig({
-        NODE_ENV: 'prod',
-        LEDGER_ASYNC_COMMANDS_ENABLED: 'false',
-      }),
-    ).toEqual({
-      NODE_ENV: 'prod',
-      LEDGER_ASYNC_COMMANDS_ENABLED: 'false',
-    });
-    expect(() =>
-      loadLedgerWorkerConfig({
-        NODE_ENV: 'prod',
-        LEDGER_ASYNC_COMMANDS_ENABLED: 'yes',
-      }),
-    ).toThrow('LEDGER_ASYNC_COMMANDS_ENABLED');
-  });
-
   it('reads process.env when no explicit source is provided', () => {
     vi.stubEnv('NODE_ENV', 'test');
-    vi.stubEnv('LEDGER_ASYNC_COMMANDS_ENABLED', 'true');
+    vi.stubEnv('DATABASE_URL', runtime.DATABASE_URL);
+    vi.stubEnv(
+      'LEDGER_SERVICE_JWT_SECRET',
+      serviceJwt.LEDGER_SERVICE_JWT_SECRET,
+    );
 
-    expect(loadLedgerWorkerConfig()).toEqual({
+    expect(loadLedgerServiceConfig()).toMatchObject({
       NODE_ENV: 'test',
-      LEDGER_ASYNC_COMMANDS_ENABLED: 'true',
+      DATABASE_URL: runtime.DATABASE_URL,
     });
   });
 });

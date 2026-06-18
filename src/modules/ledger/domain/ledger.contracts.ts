@@ -7,6 +7,7 @@ import {
 import { USER_API_ID_CONTRACT_PATTERN } from '../../users/user-id.js';
 import { TRANSACTION_API_ID_CONTRACT_PATTERN } from '../../transactions/transaction-id.js';
 import { LEDGER_MINIMUM_IDEMPOTENCY_KEY_LENGTH } from './ledger.constants.js';
+import { moneySchema } from '../../../common/money/money.js';
 
 export const ledgerAccountNumberSchema = z
   .string()
@@ -36,7 +37,7 @@ export const postLedgerTransactionCommandSchema = z
     accountNumber: ledgerAccountNumberSchema,
     userId: userIdSchema,
     type: transactionTypeSchema,
-    amount: z.number().positive(),
+    amount: moneySchema,
     currency: z.literal(Currency.GBP),
     reference: z.string().optional(),
     idempotencyKey: z
@@ -67,6 +68,10 @@ export const ledgerTransactionResponseSchema = z
 export type LedgerTransactionResponse = z.infer<
   typeof ledgerTransactionResponseSchema
 >;
+
+export const ledgerErrorResponseSchema = z
+  .object({ message: z.string().min(1) })
+  .passthrough();
 
 export const ledgerBalanceResponseSchema = z
   .object({ balance: z.number().nonnegative() })

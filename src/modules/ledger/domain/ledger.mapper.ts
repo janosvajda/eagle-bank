@@ -1,7 +1,7 @@
 import type {
   LedgerAccount,
   LedgerTransaction,
-} from '../../../generated/prisma/client.js';
+} from '../../../../generated/prisma/client.js';
 import { MONEY_DECIMAL_PLACES } from '../../../common/constants.js';
 import { Currency } from '../../../common/domain/banking.js';
 import type {

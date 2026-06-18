@@ -1,4 +1,4 @@
-import { Prisma, type Transaction } from '../../generated/prisma/client.js';
+import { Prisma, type Transaction } from '../../../generated/prisma/client.js';
 import { describe, expect, it } from 'vitest';
 import { mapTransaction } from './transactions.mapper.js';
 

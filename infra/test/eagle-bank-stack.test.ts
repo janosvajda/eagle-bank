@@ -86,13 +86,13 @@ describe('EagleBankStack', () => {
   it('models the complete private runtime topology', () => {
     const output = template();
     output.resourceCountIs('AWS::EC2::VPC', 1);
-    output.resourceCountIs('AWS::ECS::Service', 5);
-    output.resourceCountIs('AWS::ECS::TaskDefinition', 6);
-    output.resourceCountIs('AWS::SQS::Queue', 4);
+    output.resourceCountIs('AWS::ECS::Service', 4);
+    output.resourceCountIs('AWS::ECS::TaskDefinition', 5);
+    output.resourceCountIs('AWS::SQS::Queue', 2);
     output.resourceCountIs('AWS::RDS::DBInstance', 1);
     output.resourceCountIs('AWS::RDS::DBParameterGroup', 1);
-    output.resourceCountIs('AWS::Logs::LogGroup', 6);
-    output.resourceCountIs('AWS::Logs::MetricFilter', 6);
+    output.resourceCountIs('AWS::Logs::LogGroup', 5);
+    output.resourceCountIs('AWS::Logs::MetricFilter', 5);
     output.resourceCountIs('AWS::CloudWatch::Dashboard', 1);
     output.resourceCountIs('AWS::SecretsManager::Secret', 0);
 
@@ -230,7 +230,6 @@ describe('EagleBankStack', () => {
     expect(publisherSecrets.map(({ Name }) => Name)).toEqual([
       'DATABASE_PASSWORD',
     ]);
-    expect(container(output, 'ledger-worker')).not.toHaveProperty('Secrets');
 
     const serializedTemplate = JSON.stringify(output.toJSON());
     expect(serializedTemplate).toContain('/eagle-bank-test/secrets/user-jwt');
@@ -270,10 +269,6 @@ describe('EagleBankStack', () => {
     });
     output.allResourcesProperties('AWS::SQS::Queue', {
       SqsManagedSseEnabled: true,
-    });
-    output.hasResourceProperties('AWS::SQS::Queue', {
-      FifoQueue: true,
-      QueueName: Match.stringLikeRegexp('ledger-commands\\.fifo$'),
     });
     output.hasResourceProperties('AWS::SQS::QueuePolicy', {
       PolicyDocument: Match.objectLike({
@@ -418,12 +413,6 @@ describe('EagleBankStack', () => {
       .filter(([id]) => id.startsWith('LedgerEventPublisherTaskTaskRole'))
       .map(([, policy]) => JSON.stringify(policy));
     expect(publisherPolicies.join('')).toContain('sqs:SendMessage');
-
-    const workerPolicies = Object.entries(policies)
-      .filter(([id]) => id.startsWith('LedgerWorkerTaskTaskRole'))
-      .map(([, policy]) => JSON.stringify(policy));
-    expect(workerPolicies.join('')).toContain('sqs:ReceiveMessage');
-    expect(workerPolicies.join('')).not.toContain('dynamodb:');
   });
 
   it('requires TLS and stronger availability for production', () => {

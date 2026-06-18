@@ -8,7 +8,6 @@ const DEFAULT_API_PORT = 3000;
 const DEFAULT_JWT_EXPIRES_IN = '1h';
 const DEFAULT_AWS_REGION = 'eu-west-2';
 const DEFAULT_AUTH_SESSIONS_TABLE = 'eagle-bank-auth-sessions';
-const DEFAULT_LEDGER_ASYNC_COMMANDS_ENABLED = 'false';
 const DEFAULT_LEDGER_EVENT_PUBLISHER_POLL_INTERVAL_MS = 1000;
 const DEFAULT_LEDGER_EVENT_PUBLISHER_BATCH_SIZE = 10;
 const DEFAULT_LEDGER_EVENT_PUBLISHER_MAX_ATTEMPTS = 5;
@@ -92,12 +91,4 @@ export const ledgerEventPublisherFields = {
   LEDGER_EVENT_PUBLISHER_BACKOFF_MAX_MS: positiveInteger.default(
     DEFAULT_LEDGER_EVENT_PUBLISHER_BACKOFF_MAX_MS,
   ),
-};
-
-// The worker currently needs only its runtime stage and feature toggle.
-export const ledgerWorkerFields = {
-  NODE_ENV: z.enum(Environment),
-  LEDGER_ASYNC_COMMANDS_ENABLED: z
-    .enum(['true', 'false'])
-    .default(DEFAULT_LEDGER_ASYNC_COMMANDS_ENABLED),
 };

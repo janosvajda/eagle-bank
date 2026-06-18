@@ -1,4 +1,4 @@
-import type { Transaction } from '../../generated/prisma/client.js';
+import type { Transaction } from '../../../generated/prisma/client.js';
 import { fromDecimal } from '../../common/money/money.js';
 import { formatUserApiId } from '../users/user-id.js';
 import { formatTransactionApiId } from './transaction-id.js';

@@ -1,3 +1,8 @@
+x-app-image: &app-image
+  image: eagle-bank/app:local
+  build:
+    context: .
+
 services:
   shared-application-db:
     image: postgres:16-alpine
@@ -31,6 +36,7 @@ services:
 
   test-suite:
     profiles: ['test']
+    image: eagle-bank/test-suite:local
     build:
       context: .
       dockerfile: Dockerfile.test
@@ -65,7 +71,7 @@ services:
       retries: 30
 
   migrate:
-    build: .
+    <<: *app-image
     command: ['node_modules/.bin/prisma', 'migrate', 'deploy']
     environment:
       DATABASE_URL: postgresql://eagle:eagle@shared-application-db:5432/eagle_bank?schema=public
@@ -99,7 +105,7 @@ services:
         condition: service_healthy
 
   auth-service:
-    build: .
+    <<: *app-image
     command: ['node', 'dist/src/services/auth-server.js']
     environment:
       NODE_ENV: local
@@ -125,7 +131,7 @@ services:
       retries: 20
 
   ledger-service:
-    build: .
+    <<: *app-image
     command: ['node', 'dist/src/services/ledger-server.js']
     environment:
       NODE_ENV: local
@@ -144,7 +150,7 @@ services:
       retries: 20
 
   api:
-    build: .
+    <<: *app-image
     environment:
       NODE_ENV: local
       PORT: 3000
@@ -171,7 +177,7 @@ services:
       retries: 20
 
   ledger-event-publisher:
-    build: .
+    <<: *app-image
     command: ['node', 'dist/src/services/ledger-event-publisher.js']
     environment:
       <<: *aws-local
@@ -189,17 +195,6 @@ services:
     depends_on:
       migrate:
         condition: service_completed_successfully
-      localstack-init:
-        condition: service_completed_successfully
-
-  ledger-worker:
-    build: .
-    command: ['node', 'dist/src/services/ledger-worker.js']
-    environment:
-      NODE_ENV: local
-      SERVICE_NAME: ledger-worker
-      LEDGER_ASYNC_COMMANDS_ENABLED: 'false'
-    depends_on:
       localstack-init:
         condition: service_completed_successfully
 

@@ -1,8 +1,7 @@
-import { Prisma } from '../../generated/prisma/client.js';
+import { Prisma } from '../../../generated/prisma/client.js';
 import { z } from 'zod';
 import { MONEY_DECIMAL_PLACES } from '../constants.js';
-
-export const MAX_TRANSACTION_AMOUNT = 10000;
+import { MAX_TRANSACTION_AMOUNT } from '../domain/banking.js';
 
 function hasSupportedDecimalPlaces(value: number): boolean {
   return new Prisma.Decimal(value).decimalPlaces() <= MONEY_DECIMAL_PLACES;
@@ -10,14 +9,17 @@ function hasSupportedDecimalPlaces(value: number): boolean {
 
 export const moneySchema = z
   .number()
-  .finite()
+  .refine(Number.isFinite, { message: 'Amount must be a finite number' })
   .positive()
   .max(MAX_TRANSACTION_AMOUNT)
   .refine(hasSupportedDecimalPlaces, {
     message: 'Amount must have no more than two decimal places',
-  });
+  })
+  .transform(toDecimal);
 
-export function toDecimal(value: number): Prisma.Decimal {
+export type MoneyAmount = z.infer<typeof moneySchema>;
+
+export function toDecimal(value: number | Prisma.Decimal): Prisma.Decimal {
   return new Prisma.Decimal(value.toFixed(MONEY_DECIMAL_PLACES));
 }
 

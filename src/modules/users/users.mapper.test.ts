@@ -1,4 +1,4 @@
-import type { User } from '../../generated/prisma/client.js';
+import type { User } from '../../../generated/prisma/client.js';
 import { describe, expect, it } from 'vitest';
 import { mapUser } from './users.mapper.js';
 

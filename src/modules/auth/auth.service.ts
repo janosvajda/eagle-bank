@@ -21,17 +21,11 @@ export class AuthService {
 
   async login(input: LoginInput): Promise<LoginResult> {
     const user = await this.users.findByEmail(input.email.toLowerCase());
-    const valid = await verifyPassword(user?.passwordHash, input.password);
-    if (!user || !valid) {
-      this.app.log.warn(
-        { authenticationResult: 'invalid_credentials' },
-        'Authentication attempt rejected',
-      );
-      throw new AppError(
-        httpConstants.HTTP_STATUS_UNAUTHORIZED,
-        ErrorCode.UNAUTHORIZED,
-        'Invalid email or password',
-      );
+    if (!user) {
+      this.rejectInvalidCredentials();
+    }
+    if (!(await verifyPassword(user.passwordHash, input.password))) {
+      this.rejectInvalidCredentials();
     }
 
     const userId = formatUserApiId(user.id);
@@ -52,5 +46,17 @@ export class AuthService {
       tokenType: AuthTokenType.BEARER,
       expiresIn: this.sessionTtlSeconds,
     };
+  }
+
+  private rejectInvalidCredentials(): never {
+    this.app.log.warn(
+      { authenticationResult: 'invalid_credentials' },
+      'Authentication attempt rejected',
+    );
+    throw new AppError(
+      httpConstants.HTTP_STATUS_UNAUTHORIZED,
+      ErrorCode.UNAUTHORIZED,
+      'Invalid email or password',
+    );
   }
 }

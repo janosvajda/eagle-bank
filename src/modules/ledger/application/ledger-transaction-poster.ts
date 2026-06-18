@@ -2,7 +2,7 @@ import { constants as httpConstants } from 'node:http2';
 import {
   LedgerEntryDirection,
   Prisma,
-} from '../../../generated/prisma/client.js';
+} from '../../../../generated/prisma/client.js';
 import type { FastifyBaseLogger } from 'fastify';
 import { ErrorCode } from '../../../common/errors/error-codes.js';
 import { TransactionType } from '../../../common/domain/banking.js';

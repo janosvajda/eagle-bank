@@ -1,5 +1,5 @@
 import { randomInt } from 'node:crypto';
-import { AccountStatus, Prisma } from '../../generated/prisma/client.js';
+import { AccountStatus, Prisma } from '../../../generated/prisma/client.js';
 import { constants as httpConstants } from 'node:http2';
 import { AppError } from '../../common/errors/AppError.js';
 import { ErrorCode } from '../../common/errors/error-codes.js';

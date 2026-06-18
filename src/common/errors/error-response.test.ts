@@ -1,4 +1,4 @@
-import { Prisma } from '../../generated/prisma/client.js';
+import { Prisma } from '../../../generated/prisma/client.js';
 import { z } from 'zod';
 import { describe, expect, it } from 'vitest';
 import { AppError } from './AppError.js';

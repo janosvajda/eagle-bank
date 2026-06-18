@@ -81,7 +81,6 @@ Runtime services:
 api
 auth-service
 ledger-service
-ledger-worker
 ledger-event-publisher
 shared-application-db
 integration-test-db
@@ -218,26 +217,15 @@ It must not be publicly exposed through the ALB.
 
 The API service calls the Ledger service over authenticated private service-to-service HTTP.
 
-## 3.4 Ledger worker
+## 3.4 Asynchronous Ledger command processing
 
-The Ledger worker models the future asynchronous command processor.
+Asynchronous Ledger command processing is out of scope for this assessment.
 
-It owns:
+The active and tested path is synchronous API-to-Ledger HTTP delegation, with
+committed Ledger events published later through the outbox publisher.
 
-- consuming Ledger commands from SQS FIFO when async command processing is enabled
-- preserving per-account command ordering
-- delegating commands to Ledger domain handlers
-- command retry and command DLQ behaviour
-
-For this take-home:
-
-```text
-LEDGER_ASYNC_COMMANDS_ENABLED=false
-```
-
-The synchronous API-to-Ledger path is the active path.
-
-The Ledger worker is included in Docker/CDK architecture but must not compete with synchronous transaction execution.
+Do not include a disabled Ledger command worker or command queue unless the full
+request/response, idempotency, retry, and operational model is implemented.
 
 ## 3.5 Ledger event publisher
 
@@ -753,7 +741,6 @@ Docker Compose must define:
 api
 auth-service
 ledger-service
-ledger-worker
 ledger-event-publisher
 shared-application-db
 integration-test-db
@@ -1948,22 +1935,9 @@ POST /v1/accounts/{accountNumber}/transactions
   -> API maps Ledger response to OpenAPI response
 ```
 
-Production future path:
-
-```text
-API -> SQS FIFO Ledger command queue
-Ledger worker -> process command
-Ledger worker -> emit result
-API -> wait/poll/correlate response
-```
-
-For this implementation:
-
-```text
-LEDGER_ASYNC_COMMANDS_ENABLED=false
-```
-
-This prevents competing synchronous and asynchronous execution paths.
+Do not add a parallel asynchronous command path for this assessment. A disabled
+worker or queue would be misleading unless command processing is implemented and
+covered by tests.
 
 ---
 
@@ -2173,22 +2147,11 @@ Purpose:
 - Ledger Event Publisher publishes `TransactionPosted` events here.
 - Future consumers may process audit, reporting, fraud, analytics, notifications.
 
-## 26.2 Required future Ledger command queue
+## 26.2 Ledger command queue
 
-```text
-eagle-bank-ledger-commands.fifo
-eagle-bank-ledger-command-dlq.fifo
-```
-
-Purpose:
-
-- future async Ledger command processing
-- disabled by default
-
-FIFO settings:
-
-- message group ID = `accountNumber`
-- deduplication ID = `idempotencyKey` or `commandId`
+Do not create a Ledger command queue for this assessment. The project uses the
+synchronous Ledger service call for transaction posting and the Ledger event
+queue only for committed event publication.
 
 ## 26.3 Generic events queue
 
@@ -2415,17 +2378,6 @@ Readiness checks:
 - SQS connectivity
 
 If an operational readiness endpoint is exposed for this service, it uses the same `ReadinessResponse` shape.
-
-## 32.5 Ledger Worker
-
-Readiness checks:
-
-- SQS connectivity
-- PostgreSQL connectivity if enabled
-
-If an operational readiness endpoint is exposed for this service, it uses the same `ReadinessResponse` shape.
-
----
 
 # 33. Public API scenarios
 
@@ -2742,25 +2694,6 @@ apps/
     package.json
     tsconfig.json
 
-  ledger-worker/
-    src/
-      worker.ts
-      worker.test.ts
-      command-consumer.ts
-      command-consumer.test.ts
-      command-handler.ts
-      command-handler.test.ts
-      retry-policy.ts
-      retry-policy.test.ts
-
-    test/
-      integration/
-        ledger-command-consumer.integration.test.ts
-        ledger-command-retry.integration.test.ts
-
-    package.json
-    tsconfig.json
-
   ledger-event-publisher/
     src/
       publisher.ts
@@ -2925,7 +2858,6 @@ infra/
     api-service.ts
     auth-service.ts
     ledger-service.ts
-    ledger-worker.ts
     ledger-event-publisher.ts
     migration-task.ts
     observability.ts
@@ -3502,7 +3434,6 @@ Services:
 api
 auth-service
 ledger-service
-ledger-worker
 ledger-event-publisher
 shared-application-db
 integration-test-db
@@ -3521,8 +3452,6 @@ LocalStack must create:
 ```text
 eagle-bank-ledger-events
 eagle-bank-ledger-events-dlq
-eagle-bank-ledger-commands.fifo
-eagle-bank-ledger-command-dlq.fifo
 ```
 
 Do not create generic `eagle-bank-events` queues unless a concrete non-Ledger event publisher exists.
@@ -3579,15 +3508,12 @@ CDK must model:
 - API Fargate service
 - Auth Fargate service
 - Ledger Fargate service
-- Ledger Worker Fargate service
 - Ledger Event Publisher Fargate service
 - migration task
 - RDS PostgreSQL
 - DynamoDB auth sessions table
 - SQS Ledger events queue
 - SQS Ledger events DLQ
-- SQS Ledger command FIFO queue
-- SQS Ledger command DLQ
 - Parameter Store `SecureString` parameters
 - CloudWatch log groups
 - least-privilege IAM roles
@@ -3613,7 +3539,6 @@ Private services:
 
 ```text
 ledger-service
-ledger-worker
 ledger-event-publisher
 ```
 
@@ -3717,8 +3642,7 @@ Deployment order:
 3. Deploy/update API.
 4. Deploy/update Auth service.
 5. Deploy/update Ledger service.
-6. Deploy/update Ledger Worker.
-7. Deploy/update Ledger Event Publisher.
+6. Deploy/update Ledger Event Publisher.
 
 Migration task:
 
@@ -3748,24 +3672,19 @@ Verify:
 - RDS not publicly accessible
 - DynamoDB auth sessions table exists
 - DynamoDB TTL configured
-- SQS Ledger command FIFO queue exists
-- SQS Ledger command DLQ exists
 - SQS Ledger events queue exists
 - SQS Ledger events DLQ exists
 - ECS API service exists
 - ECS Auth service exists
 - ECS Ledger service exists
-- ECS Ledger Worker exists
 - ECS Ledger Event Publisher exists
 - migration task exists
 - API behind ALB
 - Auth behind ALB for `/v1/auth/*`
 - Ledger service private
-- Ledger Worker private
 - Ledger Event Publisher private
 - Auth can read/write DynamoDB
 - Ledger Event Publisher can publish to SQS
-- Ledger Worker can consume command queue
 - API has no unnecessary DynamoDB permissions
 - CloudWatch log groups exist
 
@@ -3807,7 +3726,6 @@ Ledger:
 ```text
 LEDGER_MAX_BALANCE
 LEDGER_CURRENCY
-LEDGER_ASYNC_COMMANDS_ENABLED=false
 ```
 
 Ledger Event Publisher:
@@ -3827,8 +3745,6 @@ SQS:
 AWS_REGION
 SQS_LEDGER_EVENTS_QUEUE_URL
 SQS_LEDGER_EVENTS_DLQ_URL
-SQS_LEDGER_COMMANDS_QUEUE_URL
-SQS_LEDGER_COMMANDS_DLQ_URL
 ```
 
 Local emulator overrides:
@@ -3881,7 +3797,6 @@ docker:down
 api:dev
 auth:dev
 ledger:dev
-ledger-worker:dev
 ledger-event-publisher:dev
 infra:synth
 infra:diff
@@ -4101,7 +4016,7 @@ tests.
 28. Add Ledger domain.
 29. Add Ledger service.
 30. Add Ledger Event Publisher.
-31. Add Ledger Worker disabled-by-default architecture.
+31. Keep Ledger event publication asynchronous through the outbox publisher.
 32. Add request/correlation IDs.
 33. Add internal service authentication.
 34. Add timeout/retry policies.

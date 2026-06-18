@@ -1,4 +1,4 @@
-import { PrismaClient } from './generated/prisma/client.js';
+import { PrismaClient } from '../generated/prisma/client.js';
 import type { HTTPMethods } from 'fastify';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
