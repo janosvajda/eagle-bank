@@ -134,7 +134,9 @@ function createAuthSessionStore(
     createDynamoDbClient({
       environment: config.NODE_ENV,
       region: config.AWS_REGION,
-      ...(config.DYNAMODB_ENDPOINT ? { endpoint: config.DYNAMODB_ENDPOINT } : {}),
+      ...(config.DYNAMODB_ENDPOINT
+        ? { endpoint: config.DYNAMODB_ENDPOINT }
+        : {}),
       ...(config.AWS_ACCESS_KEY_ID
         ? { accessKeyId: config.AWS_ACCESS_KEY_ID }
         : {}),

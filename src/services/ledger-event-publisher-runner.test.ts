@@ -5,9 +5,7 @@ import { LedgerEventPublisherRunner } from './ledger-event-publisher-runner.js';
 
 const POLL_INTERVAL_MS = 1000;
 
-function publisher(
-  publishBatch: () => Promise<number>,
-): LedgerEventPublisher {
+function publisher(publishBatch: () => Promise<number>): LedgerEventPublisher {
   return { publishBatch } as unknown as LedgerEventPublisher;
 }
 

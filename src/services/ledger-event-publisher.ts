@@ -13,7 +13,9 @@ const sqsClient = createSqsClient({
   environment: config.NODE_ENV,
   region: config.AWS_REGION,
   ...(config.SQS_ENDPOINT ? { endpoint: config.SQS_ENDPOINT } : {}),
-  ...(config.AWS_ACCESS_KEY_ID ? { accessKeyId: config.AWS_ACCESS_KEY_ID } : {}),
+  ...(config.AWS_ACCESS_KEY_ID
+    ? { accessKeyId: config.AWS_ACCESS_KEY_ID }
+    : {}),
   ...(config.AWS_SECRET_ACCESS_KEY
     ? { secretAccessKey: config.AWS_SECRET_ACCESS_KEY }
     : {}),
@@ -21,10 +23,7 @@ const sqsClient = createSqsClient({
 
 const publisher = new LedgerEventPublisher(
   new LedgerOutboxRepository(prisma),
-  new SqsLedgerEventSink(
-    sqsClient,
-    config.SQS_LEDGER_EVENTS_QUEUE_URL,
-  ),
+  new SqsLedgerEventSink(sqsClient, config.SQS_LEDGER_EVENTS_QUEUE_URL),
   {
     batchSize: config.LEDGER_EVENT_PUBLISHER_BATCH_SIZE,
     maxAttempts: config.LEDGER_EVENT_PUBLISHER_MAX_ATTEMPTS,

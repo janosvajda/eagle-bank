@@ -1,7 +1,4 @@
-import fastify, {
-  type FastifyInstance,
-  type FastifyRequest,
-} from 'fastify';
+import fastify, { type FastifyInstance, type FastifyRequest } from 'fastify';
 import { constants as httpConstants } from 'node:http2';
 import type { PrismaClient } from '../../generated/prisma/client.js';
 import { registerErrorHandler } from '../common/errors/error-handler.js';
