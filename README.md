@@ -187,9 +187,10 @@ contain `"status": "ready"`.
 Initialize the shell variables used throughout the walkthrough:
 
 ```bash
-BASE_URL="http://localhost:3000"
-EMAIL="reviewer-$(date +%s)@example.com"
-PASSWORD="ReviewPassword123!"
+RUN_ID="$(date +%s)"
+BASE_URL='http://localhost:3000'
+EMAIL="reviewer-${RUN_ID}@example.com"
+PASSWORD='ReviewPassword123!'
 ```
 
 Routes under `/internal/auth/*` and `/internal/ledger/*` are intentionally not
